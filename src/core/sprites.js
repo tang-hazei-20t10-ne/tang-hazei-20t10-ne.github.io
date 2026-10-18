@@ -107,7 +107,7 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
   let bob = 0;
   if (pose === 'idle') bob = frame % 2 ? 1 : 0;
   if (pose === 'walk') bob = frame % 2 ? -1 : 0;
-  if (pose === 'sit') drop = 4;
+  if (pose === 'sit' || pose === 'piano') drop = 4;
   if (pose === 'crouch') drop = 6;
   if (pose === 'jump') bob = -3;
   const oy = (kid ? 5 : 2) + drop + bob; // head top offset
@@ -125,7 +125,7 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
 
   // --- legs
   const legLen = kid ? (dress ? 1 : 3) : (dress ? 2 : 4);
-  const showLegs = pose !== 'sit';
+  const showLegs = pose !== 'sit' && pose !== 'piano';
   if (showLegs) {
     let l = 0, r = 0;
     if (pose === 'walk') { if (frame === 1) l = -1; if (frame === 3) r = -1; }
@@ -185,6 +185,13 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
     case 'hold': case 'give': case 'pet': armL(armY); armFwdR(); break;
     case 'sing': armL(armY); P(16, armY, 2, 3, topS); P(14, headY + 8, 2, 3, skin); P(14, headY + 7, 2, 2, '#3a3a44'); P(14, headY + 6, 2, 1, '#9a9aa8'); break;
     case 'bouquet': P(6, armY + 2, 3, 2, top); P(15, armY + 2, 3, 2, topS); break;
+    case 'piano': { // both arms reaching down to the keys, hands moving
+      const a = frame % 2 ? 1 : 0, b = frame % 2 ? 0 : 1;
+      P(6, armY, 2, 3, top); P(16, armY, 2, 3, topS);
+      P(7, armY + 3, 2, 2, top); P(15, armY + 3, 2, 2, topS);
+      P(8 + a, armY + 5 - a, 2, 2, skin); P(14 - b, armY + 5 - b, 2, 2, skin);
+      break;
+    }
     case 'sip': armL(armY); P(16, armY, 2, 3, topS); P(15, headY + 9, 2, 2, skin); break;
     default: armL(armY + la); armR(armY + ra);
   }
@@ -220,7 +227,7 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
   // --- face
   const ex1 = FACE.eyeL, ex2 = FACE.eyeR, ey = headY + 5;
   const eye = '#2a1a24';
-  if (mood === 'happy' || mood === 'closed') {
+  if (mood === 'happy' || mood === 'closed' || mood === 'singHappy') {
     for (const ex of [ex1, ex2]) { P(ex, ey + 1, 1, 1, eye); P(ex + 1, ey, 1, 1, eye); P(ex + 2, ey + 1, 1, 1, eye); }
   } else if (mood === 'blink') {
     P(ex1, ey + 1, 2, 1, eye); P(ex2, ey + 1, 2, 1, eye);
@@ -237,7 +244,7 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
   // mouth
   const my = ey + 3;
   if (mood === 'happy' || mood === 'silly') { P(12, my, 2, 1, '#b8506a'); P(12, my + 1, 2, 1, '#e97f95'); }
-  else if (mood === 'surprise' || pose === 'sing') { P(12, my, 2, 2, '#8a3a52'); }
+  else if (mood === 'surprise' || pose === 'sing' || mood === 'sing' || mood === 'singHappy') { P(12, my, 2, 2, '#8a3a52'); P(12, my + 1, 2, 1, '#e97f95'); }
   else P(12, my, 2, 1, '#c26a7e');
   if (L.beard) { P(8, my - 1, 9, 2, L.hair); P(10, my + 1, 5, 1, L.hair); P(12, my, 2, 1, '#c26a7e'); }
 

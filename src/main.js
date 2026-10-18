@@ -42,7 +42,7 @@ const game = {
   // fade in from the transition color and show the chapter title card
   async enter({ title = true, dark = false } = {}) {
     const meta = content.chapters[this.chapterIndex];
-    ui.chapter(meta.title && this.chapterIndex > 0 && this.chapterIndex < ORDER.length - 1 ? `${content.ui.chapterWord} ${this.chapterIndex} · ${meta.title}` : '');
+    ui.chapter(meta.title && this.chapterIndex > 0 && this.chapterIndex < ORDER.length - 1 ? meta.title : '');
     if (this.handoff) {
       const h = this.handoff; this.handoff = null;
       ui.fadeEl.style.transitionDuration = '0ms'; ui.fadeEl.classList.remove('on');
@@ -105,7 +105,7 @@ async function boot() {
   const start = await new Promise((resolve) => {
     if (resumable) {
       const idx = ORDER.indexOf(state.data.chapter);
-      cta.innerHTML = `<div class="hint">${esc(content.ui.resumeTitle)} · ${esc(content.ui.chapterWord)} ${idx}: ${esc(content.chapters[idx].title)}</div><div class="resume"><button class="btn">${esc(content.ui.resume)}</button><button class="btn soft">${esc(content.ui.restart)}</button></div>`;
+      cta.innerHTML = `<div class="hint">${esc(content.ui.resumeTitle)} · ${esc(content.chapters[idx].title)}</div><div class="resume"><button class="btn">${esc(content.ui.resume)}</button><button class="btn soft">${esc(content.ui.restart)}</button></div>`;
       const [go, re] = cta.querySelectorAll('button');
       go.onclick = () => resolve(state.data.chapter);
       re.onclick = () => {

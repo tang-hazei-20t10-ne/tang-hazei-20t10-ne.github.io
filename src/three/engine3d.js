@@ -367,7 +367,7 @@ export class World3D {
     const dpr = Math.min(2, devicePixelRatio || 1);
     const cw = innerWidth, ch = innerHeight;
     const portrait = ch > cw * 1.1;
-    const target = this.opts.res || (portrait ? 300 : 216);
+    const target = this.opts.res || (this.opts.hires ? (portrait ? 540 : 400) : (portrait ? 300 : 216));
     const physH = ch * dpr, physW = cw * dpr;
     const scale = Math.max(1, Math.round(physH / target));
     const H = Math.ceil(physH / scale), W = Math.ceil(physW / scale);

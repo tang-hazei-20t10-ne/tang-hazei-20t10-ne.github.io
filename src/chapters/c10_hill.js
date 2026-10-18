@@ -28,7 +28,7 @@ export default async function hill(game) {
   ];
   const near = (x, z) => Math.hypot(x - deck.x, z - deck.z) < 16 && mountainWalkable(x, z);
   const start = new THREE.Vector3(deck.x + 6.5, 0, deck.z + 0.5);
-  const world = new World3D(game, { start: [start.x, surfaceHeight(start.x, start.z), start.z], yaw: Math.PI / 2, pitch: -0.05, heightAt: surfaceHeight, walkable: near, bloom: 0.6, bloomThreshold: 0.7, maxPitch: 1.5 });
+  const world = new World3D(game, { hires: true, start: [start.x, surfaceHeight(start.x, start.z), start.z], yaw: Math.PI / 2, pitch: -0.05, heightAt: surfaceHeight, walkable: near, bloom: 0.6, bloomThreshold: 0.7, maxPitch: 1.5 });
   const sunDir = new THREE.Vector3(-0.8, 0.02, -0.55);
   const sky = makeSky(['#252a5c', '#5a3f7c', '#c45a7a', '#f39a6a'], sunDir, { sun: '#ffc68a', glow: 0.6 });
   world.add(sky);

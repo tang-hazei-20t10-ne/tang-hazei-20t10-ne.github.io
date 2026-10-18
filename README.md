@@ -121,7 +121,8 @@ src/
                         pass, first-person controller, billboards, particles, pixel hands) + the island
 ```
 
-**One pixel world.** 2D scenes render to a canvas about 190 px tall, scaled by an integer factor with
+**One pixel world.** The mountain/city chapters and the concert render at a higher internal resolution
+(about 400 px tall) for more detail while keeping the pixel look. 2D scenes render to a canvas about 190 px tall, scaled by an integer factor with
 nearest-neighbour filtering. 3D scenes render at about 216 px tall, with 3-step toon shading, a bloom pass
 and a final pass that posterizes with ordered (Bayer) dithering, then upscale the same way. Characters,
 animals and flowers in 3D are billboards drawn by the same sprite code as the 2D chapters, so both halves
@@ -151,6 +152,9 @@ an `AnalyserNode` on the song.
 - **The partner** follows a step behind in all 2D chapters, sits beside Hazei on benches, at the omakase
   counter, the café table and on the train, crouches with her by the dog, reacts to every flower, and joins
   every photo-booth pose. In the 3D chapters he is present only as Discord toasts until the stage.
+- **Finale:** a concert hall (raked seating, two balcony levels, ~2,000 glow sticks, a 34 m LED wall with
+  music-reactive visuals, side screens with a close-up of Hazei, moving-head beams, lasers, a follow spot,
+  pyro and confetti at the climax). Hazei plays a grand piano while she sings. Chapter numbers are not shown.
 - **Story order:** Discord → meadow (dawn) → market + photo booth → train → bookshop → omakase → café →
   seaside → the mountain behind the school (golden hour; the telescope looks down on the city) → balloon
   (sunset, over the school and the city) → the summit at night (stars above, city lights below) →

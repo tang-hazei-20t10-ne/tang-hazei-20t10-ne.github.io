@@ -209,7 +209,7 @@ class UI {
     this.noteTimer = setTimeout(() => this.noteEl.classList.remove('show'), ms);
   }
   async titleCard(index, title, sub) {
-    this.titleEl.innerHTML = `<div class="k">${esc(T.chapterWord)} ${index}</div><div class="t">${esc(title)}</div>${sub ? `<div class="s">${esc(sub)}</div>` : ''}`;
+    this.titleEl.innerHTML = `<div class="t">${esc(title)}</div>${sub ? `<div class="s">${esc(sub)}</div>` : ''}`;
     this.titleEl.classList.add('show');
     await wait(2600);
     this.titleEl.classList.remove('show');

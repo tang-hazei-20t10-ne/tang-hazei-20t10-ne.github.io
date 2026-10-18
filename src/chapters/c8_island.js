@@ -28,7 +28,7 @@ export function flyFlowerFromBottom(f) {
 export default async function island(game) {
   const pal = TIMES.golden;
   const sunDir = new THREE.Vector3(-0.75, 0.16, -0.62);
-  const world = new World3D(game, {
+  const world = new World3D(game, { hires: true,
     start: [SPOTS.spawn.x, mountainHeight(SPOTS.spawn.x, SPOTS.spawn.z), SPOTS.spawn.z], yaw: 0, pitch: 0.05,
     heightAt: surfaceHeight,
     walkable: mountainWalkable,

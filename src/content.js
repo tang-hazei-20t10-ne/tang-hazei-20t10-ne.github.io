@@ -586,6 +586,8 @@ export default {
 
   stage: {
     intro: 'Đèn sân khấu lần lượt bật sáng…',
+    screenTitle: 'Hazei',
+    screenSub: 'Đêm nhạc 20/10',
     applause: 'Cả khán phòng vỗ tay rần rần!',
     bouquetLine: M.sanKhau.tangHoa,
     giftNote: M.sanKhau.themHoa,
