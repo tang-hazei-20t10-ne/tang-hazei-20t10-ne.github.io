@@ -30,7 +30,9 @@ bookmark, outfit, settings). Photos go to IndexedDB. Refreshing the page offers 
 
 ## Edit the words and personal details
 
-Everything player-facing lives in **one file: `src/content.js`** (UTF-8). Things you should fill in are
+**Mino's dialogue has its own file: `src/thoai-mino.js`**, in the order it appears in the game
+(Discord chat, every chapter, the 3D-chapter Discord toasts, the bouquet line, the wish, the final
+messages). All other player-facing text lives in **`src/content.js`** (UTF-8). Things you should fill in are
 marked `TODO`:
 
 - `partnerName` – your name as shown in dialogue (`Mino`). Dialogue uses cậu–tớ, as friends.

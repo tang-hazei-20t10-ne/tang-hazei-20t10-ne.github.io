@@ -2,7 +2,9 @@
 //  HAZEI'S JOURNEY · CONTENT FILE
 //  Every word the player sees lives here. Edit freely (keep UTF-8).
 //  Anything marked TODO is a placeholder the creator should replace.
+//  Thoại của Mino nằm riêng ở src/thoai-mino.js.
 // =====================================================================
+import M from './thoai-mino.js';
 
 export default {
   playerName: 'Hazei',
@@ -56,16 +58,7 @@ export default {
     activityPlayers: '2 người đang tham gia',
     // Each item: { from: 'partner' | 'hazei', text } or { replies: [...] }
     // A replies item pauses for Hazei to tap a quick reply (or "tiếp").
-    dm: [
-      { from: 'partner', text: 'ê Hazei' },
-      { from: 'partner', text: 'rảnh hông' },
-      { replies: ['Rảnh nè, sao á?', 'Đang nằm chill nè'] },
-      { from: 'partner', text: 'nay 20/10, tớ có làm cái này cho cậu 😆' },
-      { from: 'partner', text: 'một chuyến đi chơi nho nhỏ, chơi trong discord luôn' },
-      { replies: ['Hả, gì vậy 👀', 'Nghe hay á'] },
-      { from: 'partner', text: 'vô voice đi rồi biết' },
-      { from: 'partner', invite: true },
-    ],
+    dm: M.discordChat, // thoại: src/thoai-mino.js
   },
 
   ui: {
@@ -177,30 +170,30 @@ export default {
   // ---------------------------------------------------------------- 2D
   meadow: {
     intro: [
-      { who: 'partner', text: 'Sáng sớm đẹp ghê. Thấy hoa nào xinh thì cậu hái nha, lát có việc dùng tới đó.' },
+      { who: 'partner', text: M.dongCo.moDau },
     ],
-    firstFlower: 'Bông đó xinh nè.',
-    flowerReacts: ['Đẹp đó!', 'Thêm một bông 🌼', 'Ổn áp'],
-    dog: 'Bé Mochi chịu cậu rồi đó, đòi đi theo luôn.',
+    firstFlower: M.dongCo.boaDauTien,
+    flowerReacts: M.dongCo.khenHoa,
+    dog: M.dongCo.choMochi,
     dogName: 'Mochi',
-    bench: 'Ngồi nghỉ chút nè.',
+    bench: M.dongCo.ghe,
     benchSit: 'Gió sớm mát ghê…',
-    chickens: ['Cục ta cục tác!', 'Mấy bé gà dậy sớm hơn tụi mình luôn'],
-    windmill: 'Cối xay gió quay chậm rì.',
-    butterfly: 'Bướm đậu lên tay cậu kìa!',
-    exitHint: 'Ra chợ không? Chợ sáng vui lắm.',
+    chickens: M.dongCo.ga,
+    windmill: M.dongCo.coiXayGio,
+    butterfly: M.dongCo.buom,
+    exitHint: M.dongCo.ruDiTiep,
     exitSign: 'Chợ sáng →',
     // Mino offers to take a photo at the sunrise spot
-    photoAsk: 'Cậu muốn chụp hình ở đây không, tớ chụp cho?',
+    photoAsk: M.dongCo.hoiChupHinh,
     photoChoices: ['Chụp đi!', 'Thôi khỏi'],
-    photoReady: 'Rồi, cười lên nè… 1, 2, 3!',
-    photoNo: 'Oke!',
+    photoReady: M.dongCo.chupHinhSanSang,
+    photoNo: M.dongCo.khongChup,
     photoCaption: 'Bình minh trên đồng cỏ',
   },
 
   market: {
     intro: [
-      { who: 'partner', text: 'Tới chợ rồi. Cuối dãy có tiệm chụp hình, lát ghé chụp một dải nha.' },
+      { who: 'partner', text: M.cho.moDau },
     ],
     snack: {
       vendor: 'Cô bán bánh',
@@ -216,15 +209,15 @@ export default {
       vendor: 'Anh bán mũ',
       lines: ['Thử cái mũ cói này đi em, hợp lắm.', 'Hay kính râm cho ngầu?'],
       items: ['Mũ cói', 'Kính râm', 'Tháo ra'],
-      reactHat: 'Hợp phết!',
-      reactGlasses: 'Ngầu đó 😎',
+      reactHat: M.cho.khenMu,
+      reactGlasses: M.cho.khenKinh,
     },
     fruit: {
       vendor: 'Bác bán trái cây',
       lines: ['Chào hai đứa! Hôm nay xoài ngọt lắm nha.', 'Đi chơi vui vẻ nghen.'],
     },
     kids: { lines: ['Chị ơi chị xinh quá!', 'Chơi đuổi bắt hông chị?'] },
-    pigeons: 'Bồ câu bay hết rồi kìa!',
+    pigeons: M.cho.boCau,
     booth: {
       title: 'Tiệm Chụp Hình Tí Hon',
       intro: 'Chụp bốn tấm nha! Mỗi tấm chọn phông nền và kiểu tạo dáng.',
@@ -239,13 +232,13 @@ export default {
       download: 'Tải dải ảnh',
       continue: 'Đi tiếp',
     },
-    exitHint: 'Ra ga thôi, tàu sắp chạy rồi.',
+    exitHint: M.cho.ruDiTiep,
     exitSign: 'Ga tàu →',
   },
 
   train: {
     intro: [
-      { who: 'partner', text: 'Giờ thì ngồi ngắm cảnh thôi.' },
+      { who: 'partner', text: M.tau.moDau },
     ],
     // Real footage shown in the train window. Put a video in public/assets/
     // (mp4 or webm). If the file is missing, a pixel-art landscape is shown.
@@ -259,13 +252,13 @@ export default {
       kids: 'Mấy bé đang vẫy tay kìa!',
       balloons: 'Xa xa có khinh khí cầu…',
     },
-    arrive: 'Sắp tới ga rồi. Gần ga có tiệm sách cũ xinh lắm.',
+    arrive: M.tau.sapToiGa,
     arriveButton: 'Xuống tàu',
   },
 
   bookshop: {
     intro: [
-      { who: 'partner', text: 'Tiệm sách này có cả góc đĩa than nữa. Đừng đánh thức bé mèo nha 😴' },
+      { who: 'partner', text: M.tiemSach.moDau },
     ],
     // Original lines written for this game.
     books: [
@@ -283,17 +276,14 @@ export default {
       { title: 'Đèn đường', style: 'bossa' },
     ],
     recordsTitle: 'Chọn một đĩa than',
-    partnerRecs: [
-      'Cuốn “Thư gửi chính mình” hay lắm đó.',
-      'Đĩa “Đèn đường” nghe cuốn ghê.',
-    ],
-    cat: 'Bé mèo kêu rừ rừ kìa…',
+    partnerRecs: M.tiemSach.goiY,
+    cat: M.tiemSach.meo,
     bookmark: {
       name: 'Kẹp sách hoa ép',
       desc: 'Một chiếc kẹp sách có ép bông cúc nhỏ, quà của cô chủ tiệm.',
       line: 'Cô chủ tiệm nói: “Tặng cháu nè, giữ làm kỷ niệm nha.”',
     },
-    exitHint: 'Đói chưa? Đi ăn trưa thôi.',
+    exitHint: M.tiemSach.ruDiTiep,
     exitSign: 'Đi ăn trưa →',
   },
 
@@ -308,7 +298,7 @@ export default {
     fragmentNote: 'Một mảnh lời chúc đã được cất đi ✨',
     outro: [
       { who: 'chef', text: 'Năm lời chúc nhỏ, bác gói lại cho cháu rồi. Tối nay cháu sẽ thấy.' },
-      { who: 'partner', text: 'Cảm ơn bác, ngon thật sự!' },
+      { who: 'partner', text: M.omakase.camOnBac },
     ],
     rounds: [
       {
@@ -411,7 +401,7 @@ export default {
 
   cafe: {
     intro: [
-      { who: 'partner', text: 'Chọn nước đi, bữa nay tớ bao 😎' },
+      { who: 'partner', text: M.caPhe.moDau },
     ],
     menuTitle: 'Thực đơn',
     categories: [
@@ -441,12 +431,12 @@ export default {
         ],
       },
     ],
-    partnerOrder: 'Cho tớ một Caramel Macchiato nha!',
+    partnerOrder: M.caPhe.goiNuoc,
     partnerDrinkName: 'Caramel Macchiato',
     barista: 'Bạn pha chế',
     served: 'Nước của hai bạn đây ạ!',
     moments: [
-      { who: 'partner', text: 'Ngồi đây nhìn ra cửa sổ thấy chill ghê. Chiều mình ra biển nha.' },
+      { who: 'partner', text: M.caPhe.ngoiChill },
     ],
     sip: 'Nhấp một ngụm',
     sipReact: ['Ngon ghê…', 'Hợp gu ghê.', 'Đã thật.'],
@@ -457,38 +447,23 @@ export default {
 
   seaside: {
     intro: [
-      { who: 'partner', text: 'Biển nè! Cậu thử viết tên lên cát coi.' },
+      { who: 'partner', text: M.bien.moDau },
     ],
     sandWritten: 'Sóng mang tên cậu ra biển rồi.',
     shells: ['Vỏ ốc hồng!', 'Vỏ sò có vân như cầu vồng.', 'Một vỏ ốc nhỏ xíu, nghe được tiếng biển.'],
-    crab: 'Có bạn cua kìa 🦀',
-    lantern: 'Bay lên rồi kìa!',
+    crab: M.bien.cua,
+    lantern: M.bien.thaDen,
     lanternWish: 'Một điều ước nhỏ bay theo gió.',
     lighthouse: 'Ngọn hải đăng xa xa đẹp ghê.',
-    bench: 'Ngồi nghe sóng chút nha.',
-    exitHint: 'Lát lên núi sau trường ngắm hoàng hôn không?',
+    bench: M.bien.ghe,
+    exitHint: M.bien.ruDiTiep,
     exitSign: 'Núi sau trường →',
-    boatLine: 'Tớ phải về nhà một chút, cậu lên núi trước nha. Tớ vẫn ở trong voice đó 💬',
+    boatLine: M.bien.tamBiet,
   },
 
   // ---------------------------------------------------------------- 3D
   // Mino's Discord toasts during the 3D chapters. trigger ids are fixed.
-  toasts: {
-    island_arrive: 'lên núi chưa? giờ này nắng đẹp nhất đó 🌅',
-    island_flower: 'hái thêm vài bông nha, lát có việc dùng 😌',
-    island_cat: 'con mèo đó ngủ ngon ghê',
-    island_lighthouse: 'leo lên chòi ngắm cảnh thử đi, view đỉnh lắm',
-    island_swing: 'đu nhẹ thôi nha 😆',
-    island_boat: 'chèo thuyền giỏi ghê ta',
-    island_balloon: 'thấy khinh khí cầu chưa? lên thử đi ✨',
-    balloon_start: 'bay rồi!! nhìn xuống thành phố coi',
-    balloon_village: 'thành phố lên đèn rồi kìa',
-    balloon_land: 'đáp rồi hả. đợi trời tối chút nha',
-    hill_arrive: 'nằm xuống ngắm trời thử đi, sắp có sao rồi',
-    hill_star: 'thấy sao băng chưa? ước lẹ lên ⭐',
-    village_arrive: 'tới lễ hội rồi! chơi hết mấy trò đi',
-    village_stage: 'đi tới cuối phố đi, có bất ngờ đó',
-  },
+  toasts: M.tinNhanVoice, // thoại: src/thoai-mino.js
 
   island: {
     title: 'Núi sau trường',
@@ -570,8 +545,8 @@ export default {
   stage: {
     intro: 'Đèn sân khấu lần lượt bật sáng…',
     applause: 'Cả khán phòng vỗ tay rần rần!',
-    bouquetLine: 'Hát hay quá trời! Bó hoa này làm từ mấy bông cậu hái hôm nay đó, tớ chỉ gói lại thôi.',
-    giftNote: 'Tớ thêm vài bông cho đầy đặn nha.',
+    bouquetLine: M.sanKhau.tangHoa,
+    giftNote: M.sanKhau.themHoa,
     happy: 'Hazei ôm bó hoa, cười tít mắt.',
     wishTitle: 'Lời chúc cho Hazei',
     toEpilogue: 'Tiếp tục',
@@ -579,8 +554,8 @@ export default {
 
   // Final wish = opening + five omakase fragments + closing + footer.
   wish: {
-    opening: 'Hazei ơi, tớ chúc cậu…',
-    closing: 'Cảm ơn cậu đã là một người bạn tuyệt vời.', // TODO: lời của Mino
+    opening: M.loiChuc.moDau,
+    closing: M.loiChuc.ketThuc,
     footer: 'Chúc mừng ngày Phụ nữ Việt Nam 20/10!',
     // Used if the omakase was skipped somehow.
     defaultFragments: [
@@ -595,16 +570,13 @@ export default {
   },
 
   epilogue: {
-    messages: [
-      'hết chuyến đi rồi đó 😆',
-      'tớ gửi lại mấy tấm ảnh với kỷ niệm hôm nay nè',
-    ],
+    messages: M.cuoiNgay.tinNhan,
     attachmentsLabel: 'Tệp đính kèm',
     bouquetLabel: 'Bó hoa của Hazei',
     bookmarkLabel: 'Kẹp sách hoa ép',
     replay: 'Chơi lại từ đầu',
     replayConfirm: 'Chơi lại sẽ giữ album ảnh nhưng bắt đầu lại hành trình. Chơi lại nha?',
-    signoff: '20/10 vui vẻ nha 🌷', // TODO
+    signoff: M.cuoiNgay.loiChao,
     downloadAll: 'Tải tất cả',
     wishLabel: 'Lời chúc',
   },
