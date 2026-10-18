@@ -7,6 +7,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import content from '../content.js';
 import { input } from '../core/input.js';
 import { ui } from '../core/ui.js';
@@ -332,7 +333,7 @@ export function drawHands(x, W, H, pose, t, { bob = 0, item, skin = content.haze
 // ---------------------------------------------------------------- world
 export class World3D {
   constructor(game, opts = {}) {
-    this.game = game; this.opts = opts; game.current = this;
+    this.game = game; this.opts = opts; game.current = this; if (game.debug) game.THREE = THREE;
     const sh = getShared(game.stage);
     this.renderer = sh.renderer; this.canvas = sh.canvas; this.handsCanvas = sh.hands; this.hx = sh.handsCtx;
     this.scene = new THREE.Scene();
@@ -517,27 +518,54 @@ export class World3D {
 }
 
 // Simple low-poly helpers
+let treeMat = null;
+// A low-poly tree merged into a single mesh with vertex colours (one draw call).
 export function lowTree(kind = 'round', h = 3, seed = 1) {
-  const g = new THREE.Group();
   const r = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-  const trunkCol = kind === 'cherry' ? '#6b4436' : '#7a4a33';
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * h / 3, 0.2 * h / 3, h * 0.55, 6), toon(trunkCol));
-  trunk.position.y = h * 0.27; g.add(trunk);
-  const leafCols = { round: ['#5fae5a', '#6fbe5e', '#4f9a4f'], cherry: ['#f7b3c8', '#f4a1bb', '#ffc8d8'], pine: ['#3e8a5f', '#357a54'], golden: ['#e9b45a', '#d99a48', '#f2c46b'] }[kind];
+  const parts = [];
+  const add = (geo, col, pos, rot, scl) => {
+    const g = geo.index ? geo.toNonIndexed() : geo;
+    const m = new THREE.Matrix4().compose(pos, new THREE.Quaternion().setFromEuler(rot || new THREE.Euler()), scl || new THREE.Vector3(1, 1, 1));
+    g.applyMatrix4(m);
+    const c = new THREE.Color(col); const n = g.attributes.position.count; const arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i += 3) { const k = 0.92 + r() * 0.16; for (let v = 0; v < 3; v++) arr.set([c.r * k, c.g * k, c.b * k], (i + v) * 3); }
+    g.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+    g.deleteAttribute('uv');
+    parts.push(g);
+  };
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const trunkCol = kind === 'cherry' ? '#5e3a30' : kind === 'pine' ? '#6a4430' : '#7a4a33';
+  const tw = h / 3;
+  add(new THREE.CylinderGeometry(0.11 * tw, 0.2 * tw, h * 0.6, 6), trunkCol, V(0, h * 0.3, 0));
+  const pal = {
+    round: [['#4f9a4f', '#5fae5a', '#6fbe5e', '#86cf6a'], '#a6dc7a'],
+    golden: [['#d9943e', '#e9b45a', '#f2c46b', '#e08a4a'], '#ffe08a'],
+    cherry: [['#e889a8', '#f4a1bb', '#f7b3c8', '#ffc8d8'], '#fff0f5'],
+    pine: [['#2f6e4c', '#357a54', '#3e8a5f'], '#5aa878'],
+  }[kind] || [['#5fae5a'], '#8fd36a'];
+  const hue = r();
+  const cols = pal[0];
   if (kind === 'pine') {
-    for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(h * (0.42 - i * 0.1), h * 0.45, 7), toon(leafCols[i % 2], { flatShading: true })); c.position.y = h * (0.45 + i * 0.22); g.add(c); }
+    for (let i = 0; i < 4; i++) add(new THREE.ConeGeometry(h * (0.4 - i * 0.08), h * 0.38, 7), cols[i % cols.length], V(0, h * (0.42 + i * 0.17), 0), new THREE.Euler(0, r() * 3, 0));
+    add(new THREE.ConeGeometry(h * 0.06, h * 0.12, 5), pal[1], V(0, h * 1.12, 0));
   } else {
-    const n = 3 + Math.floor(r() * 2);
+    if (kind === 'cherry') for (const s of [-1, 1]) add(new THREE.CylinderGeometry(0.05 * tw, 0.09 * tw, h * 0.4, 5), trunkCol, V(s * h * 0.12, h * 0.62, 0), new THREE.Euler(0, 0, -s * 0.7));
+    const n = 6 + Math.floor(r() * 3);
     for (let i = 0; i < n; i++) {
-      const s = h * (0.3 + r() * 0.12);
-      const geo = new THREE.IcosahedronGeometry(s, 0);
-      const pa = geo.attributes.position; for (let k = 0; k < pa.count; k++) pa.setXYZ(k, pa.getX(k) * (0.9 + r() * 0.25), pa.getY(k) * (0.8 + r() * 0.2), pa.getZ(k) * (0.9 + r() * 0.25));
-      const m = new THREE.Mesh(geo, toon(leafCols[i % leafCols.length], { flatShading: true }));
-      m.position.set((r() - 0.5) * h * 0.35, h * (0.62 + r() * 0.18), (r() - 0.5) * h * 0.35);
-      m.rotation.set(r() * 3, r() * 3, r() * 3);
-      g.add(m);
+      const a = (i / n) * Math.PI * 2 + r();
+      const ring = i === 0 ? 0 : h * (0.18 + r() * 0.12);
+      const s = h * (i === 0 ? 0.36 : 0.2 + r() * 0.1);
+      const y = h * (i === 0 ? 0.78 : 0.62 + r() * 0.3);
+      const col = cols[Math.floor((i + hue * 4)) % cols.length];
+      add(new THREE.IcosahedronGeometry(s, 1), col, V(Math.cos(a) * ring, y, Math.sin(a) * ring), new THREE.Euler(r() * 3, r() * 3, r() * 3), V(1, 0.82 + r() * 0.2, 1));
     }
+    for (let i = 0; i < 4; i++) { const a = r() * Math.PI * 2; add(new THREE.IcosahedronGeometry(h * 0.09, 0), pal[1], V(Math.cos(a) * h * 0.22, h * (0.88 + r() * 0.15), Math.sin(a) * h * 0.22)); }
   }
+  const geo = mergeGeometries(parts);
+  geo.computeVertexNormals();
+  if (!treeMat) treeMat = toon('#ffffff', { vertexColors: true });
+  const mesh = new THREE.Mesh(geo, treeMat);
+  const g = new THREE.Group(); g.add(mesh);
   g.userData.sway = r() * 6;
   return g;
 }

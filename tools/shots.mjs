@@ -26,7 +26,7 @@ for (const a of acts) {
   else if (cmd === 'key') { await page.keyboard.down(arg); await page.waitForTimeout(+(arg2 || 100)); await page.keyboard.up(arg); }
   else if (cmd === 'hold') { await page.keyboard.down(arg); await page.waitForTimeout(+arg2); await page.keyboard.up(arg); }
   else if (cmd === 'click') await page.click(arg.replace(/~/g, ':'), { timeout: 5000 }).catch((e) => logs.push('click fail ' + arg));
-  else if (cmd === 'eval') await page.evaluate(decodeURIComponent(arg));
+  else if (cmd === 'eval') await page.evaluate(decodeURIComponent(a.slice(5)));
   else if (cmd === 'mouse') { await page.mouse.click(+arg, +arg2); }
   else if (cmd === 'drag') { const [x1, y1, x2, y2] = arg.split(',').map(Number); await page.mouse.move(x1, y1); await page.mouse.down(); await page.mouse.move(x2, y2, { steps: 10 }); await page.mouse.up(); }
 }

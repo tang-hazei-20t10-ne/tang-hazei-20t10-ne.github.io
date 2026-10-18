@@ -30,10 +30,10 @@ export default async function balloon(game) {
   world.handPose = 'rim';
 
   // flight path
-  const b0 = H(SPOTS.balloon.x, SPOTS.balloon.z), hs = H(-6, -24);
+  const b0 = H(SPOTS.balloon.x, SPOTS.balloon.z), hs = H(2, -27);
   const pts = [
     [SPOTS.balloon.x, b0, SPOTS.balloon.z], [2, b0 + 8, 0], [4, 24, 22], [-24, 30, 10], [12, 32, 0], [30, 36, -16],
-    [12, 38, 46], [0, 34, 84], [40, 40, 140], [88, 44, 186], [70, 46, 120], [14, 44, 40], [-6, hs + 10, -20], [-6, hs, -24],
+    [12, 38, 46], [0, 34, 84], [40, 40, 140], [88, 44, 186], [70, 46, 120], [14, 44, 40], [3, hs + 10, -22], [2, hs, -27],
   ].map((p) => new THREE.Vector3(...p));
   const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
   const fast = game.debug && new URLSearchParams(location.search).has('fast');
@@ -42,6 +42,7 @@ export default async function balloon(game) {
   let markI = 0;
   let flyT = 0, flying = false, bump = 0, flame = 0;
   const B = I.balloon;
+  B.userData.basket.visible = false; B.userData.rim.visible = false; // the hands overlay draws the rim
   const up = new THREE.Vector3();
 
   // birds

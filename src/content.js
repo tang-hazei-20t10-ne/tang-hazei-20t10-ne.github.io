@@ -146,6 +146,7 @@ export default {
     fireworks: 'Bắn pháo hoa',
     stage: 'Bước lên sân khấu',
     puddle: 'Nhảy vũng nước',
+    bell: 'Rung chuông',
     wave: 'Vẫy tay',
   },
 
@@ -483,6 +484,28 @@ export default {
     boat: 'Thuyền trôi chầm chậm giữa hồ.',
     butterfly: 'Bướm đậu lên tay rồi!',
     balloonReady: 'Khinh khí cầu đang đợi ở bãi cỏ giữa núi.',
+    ducks: 'Mấy bé vịt bơi lại ăn vụn bánh.',
+    bell: 'Leng keng… tiếng chuông vang khắp rừng anh đào.',
+    waterfall: 'Thác nước nhỏ róc rách.',
+    // step-by-step task list shown in the corner
+    guide: {
+      title: 'Khám phá núi',
+      optional: 'Thêm nếu thích',
+      flowers: 'Hái hoa ở đồi hoa',
+      grove: 'Dạo rừng anh đào',
+      boat: 'Chèo thuyền trên hồ',
+      tower: 'Leo lên chòi ngắm cảnh',
+      telescope: 'Lên đỉnh núi, nhìn thành phố qua ống nhòm',
+      balloon: 'Lên khinh khí cầu ở bãi cỏ',
+      dog: 'Chơi với bé cún',
+      cat: 'Vuốt ve bé mèo trên thảm picnic',
+      swing: 'Ngồi xích đu gần đỉnh núi',
+      ducks: 'Cho vịt ăn ở cầu gỗ',
+      bell: 'Rung chuông ở cổng đỏ',
+      photo: 'Chụp một tấm ảnh',
+      // short labels on the floating markers
+      m: { flowers: 'Đồi hoa', grove: 'Rừng anh đào', boat: 'Thuyền', tower: 'Chòi ngắm cảnh', telescope: 'Ống nhòm', balloon: 'Khinh khí cầu', dog: 'Bé cún', cat: 'Bé mèo', swing: 'Xích đu', ducks: 'Cầu gỗ', bell: 'Chuông' },
+    },
   },
 
   balloon: {
@@ -508,6 +531,18 @@ export default {
     shootingStar: 'Sao băng! Ước đi…',
     wishMade: 'Điều ước đã bay lên trời rồi.',
     goVillage: 'Xuống lễ hội đèn lồng',
+    guide: {
+      title: 'Ngắm sao',
+      optional: 'Thêm nếu thích',
+      lie: 'Nằm lên tấm thảm trên đài ngắm cảnh',
+      stars: 'Nhìn vào ngôi sao sáng để nối chòm sao',
+      wish: 'Chờ sao băng rồi ước',
+      village: 'Xuống lễ hội đèn lồng (nút góc phải)',
+      telescope: 'Nhìn thành phố về đêm qua ống nhòm',
+      swing: 'Ngồi xích đu dưới trời sao',
+      m: { lie: 'Tấm thảm', telescope: 'Ống nhòm', swing: 'Xích đu', star: 'Nhìn vào đây ✦' },
+      waiting: 'Đợi trời tối thêm chút nữa…',
+    },
   },
 
   village: {
@@ -540,6 +575,13 @@ export default {
       'Bánh trung thu nhân trứng muối nè, ăn hông?',
     ],
     gather: 'Mọi người đang kéo về phía sân khấu…',
+    guide: {
+      title: 'Lễ hội',
+      optional: 'Trò chơi',
+      stage: 'Đi dọc phố tới sân khấu cuối phố',
+      ring: 'Ném vòng', fish: 'Vớt cá vàng', paint: 'Vẽ và thả đèn lồng', fireworks: 'Bắn pháo hoa',
+      m: { stage: 'Sân khấu', ring: 'Ném vòng', fish: 'Vớt cá', paint: 'Vẽ đèn', fireworks: 'Pháo hoa' },
+    },
   },
 
   stage: {

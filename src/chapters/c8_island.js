@@ -1,7 +1,8 @@
 // Chapter 8: first-person walk on the mountain behind the school at golden hour.
 import content from '../content.js';
 import { World3D, THREE, makeSky, billboard } from '../three/engine3d.js';
-import { buildMountain, mountainHeight, mountainWalkable, pondLevel, SPOTS } from '../three/mountain.js';
+import { buildMountain, mountainHeight, surfaceHeight, mountainWalkable, pondLevel, SPOTS } from '../three/mountain.js';
+import { Guide } from '../three/guide.js';
 import { TIMES } from '../core/palette.js';
 import { flowerSprite, randomFlower, dogSprite, catSprite, butterflySprite, flowerBig } from '../core/sprites.js';
 import { ui, wait } from '../core/ui.js';
@@ -29,22 +30,40 @@ export default async function island(game) {
   const sunDir = new THREE.Vector3(-0.75, 0.16, -0.62);
   const world = new World3D(game, {
     start: [SPOTS.spawn.x, mountainHeight(SPOTS.spawn.x, SPOTS.spawn.z), SPOTS.spawn.z], yaw: 0, pitch: 0.05,
-    heightAt: mountainHeight,
+    heightAt: surfaceHeight,
     walkable: mountainWalkable,
-    bloom: 0.5, bloomThreshold: 0.78,
+    bloom: 0.32, bloomThreshold: 0.86,
   });
   world.add(makeSky(['#4b5aa0', '#b77aa0', '#f5a46a', '#ffd796'], sunDir, { sun: '#fff1c0', glow: 0.8, sunSize: 0.9982 }));
-  world.setTime({ fog: '#f3b27e', fogNear: 70, fogFar: 560, ambient: '#ffd9b8', ambientI: 0.5, sun: '#ffcf8a', sunI: 1.6, sunPos: [sunDir.x * 100, sunDir.y * 100 + 20, sunDir.z * 100], hemiSky: '#ffc890', hemiGround: '#6a5a7a', hemiI: 0.55 });
-  world.grade.uniforms.tint.value.set('#fff2e4');
+  world.setTime({ fog: '#f0c4b0', fogNear: 120, fogFar: 1000, ambient: '#e6e0ff', ambientI: 0.42, sun: '#ffe2a8', sunI: 1.45, sunPos: [sunDir.x * 100, sunDir.y * 100 + 30, sunDir.z * 100], hemiSky: '#b8c4ff', hemiGround: '#7a5a5a', hemiI: 0.6 });
+  world.grade.uniforms.tint.value.set('#ffffff'); world.grade.uniforms.saturation.value = 1.12;
   const I = buildMountain(world);
-  I.city.userData.setNight(0.15);
-  world.every((dt, t) => I.city.userData.setNight(0.15 + Math.min(0.25, t / 900), t));
+  I.city.userData.setNight(0.3);
+  world.every((dt, t) => I.city.userData.setNight(0.3 + Math.min(0.25, t / 900)));
   const S = world.scene;
   const H = mountainHeight;
   const at = I.at;
   const done = { meadow: false, grove: false, lake: false, hill: false, lighthouse: false };
   let interactions = 0;
-  const did = () => { interactions++; };
+  const G = C.guide;
+  const tPos = (v) => () => v;
+  const guide = new Guide(world, { title: G.title, optionalTitle: G.optional, steps: [
+    { id: 'flowers', text: G.flowers, label: G.m.flowers, pos: SPOTS.meadow.clone().setY(H(SPOTS.meadow.x, SPOTS.meadow.z)), total: 3 },
+    { id: 'grove', text: G.grove, label: G.m.grove, pos: SPOTS.grove.clone().setY(H(SPOTS.grove.x, SPOTS.grove.z)) },
+    { id: 'boat', text: G.boat, label: G.m.boat, pos: () => I.boat.position },
+    { id: 'tower', text: G.tower, label: G.m.tower, pos: null },
+    { id: 'telescope', text: G.telescope, label: G.m.telescope, pos: () => I.telescope.position },
+    { id: 'balloon', text: G.balloon, label: G.m.balloon, pos: () => I.balloon.position, hidden: true },
+    { id: 'dog', text: G.dog, short: G.m.dog, optional: true, pos: null },
+    { id: 'cat', text: G.cat, short: G.m.cat, optional: true, pos: null },
+    { id: 'ducks', text: G.ducks, short: G.m.ducks, optional: true, pos: SPOTS.pier.clone().setY(pondLevel() + 0.4) },
+    { id: 'bell', text: G.bell, short: G.m.bell, optional: true, pos: null },
+    { id: 'swing', text: G.swing, short: G.m.swing, optional: true, pos: () => I.swing.position },
+    { id: 'photo', text: G.photo, optional: true },
+  ] });
+  world.opts.cleanup = () => guide.destroy();
+  let picked = 0;
+  const did = (id) => { interactions++; if (id) guide.done(id); };
 
   // ------------------------------------------------ pickable flowers
   const pickSpots = [];
@@ -71,7 +90,7 @@ export default async function island(game) {
         await wait(700);
         game.addFlower(f); flyFlowerFromBottom(f);
         world.handPose = 'idle'; world.handItem = null;
-        world.toastOnce('island_flower'); did();
+        world.toastOnce('island_flower'); picked++; guide.progress('flowers', picked); did();
       },
     });
     // twinkle
@@ -104,7 +123,7 @@ export default async function island(game) {
       audio.sfx('woof'); audio.sfx('pet');
       for (let k = 0; k < 6; k++) world.glow.emit(dog.position.clone().add(new THREE.Vector3((Math.random() - 0.5), 1 + Math.random() * 0.5, (Math.random() - 0.5))), new THREE.Vector3(0, 0.9, 0), ['#ff8fb0', '#ffc2d4'][k % 2], 1.6);
       ui.note(C.dog, 2600);
-      await wait(600); dogS.pet = false; world.handPose = 'idle'; dogS.follow = 70; did();
+      await wait(600); dogS.pet = false; world.handPose = 'idle'; dogS.follow = 70; did('dog');
     } });
 
   // ------------------------------------------------ cat on the blanket
@@ -114,7 +133,7 @@ export default async function island(game) {
   world.interact.add({ pos: cat.position, range: 2.2, hold: 1.0, label: P.pet, priority: 1,
     onHold: () => { world.handPose = 'pet'; catHappy = 0.5; },
     onRelease: () => { world.handPose = 'idle'; },
-    onDone: async () => { audio.sfx('purr'); audio.sfx('meow'); catHappy = 3; ui.note(C.cat, 2600); world.toastOnce('island_cat'); for (let k = 0; k < 5; k++) world.glow.emit(cat.position.clone().add(new THREE.Vector3(0, 0.6, 0)), new THREE.Vector3((Math.random() - 0.5) * 0.4, 0.8, 0), '#ff8fb0', 1.4); await wait(500); world.handPose = 'idle'; did(); } });
+    onDone: async () => { audio.sfx('purr'); audio.sfx('meow'); catHappy = 3; ui.note(C.cat, 2600); world.toastOnce('island_cat'); for (let k = 0; k < 5; k++) world.glow.emit(cat.position.clone().add(new THREE.Vector3(0, 0.6, 0)), new THREE.Vector3((Math.random() - 0.5) * 0.4, 0.8, 0), '#ff8fb0', 1.4); await wait(500); world.handPose = 'idle'; did('cat'); } });
 
   // ------------------------------------------------ butterflies
   const bflies = [];
@@ -161,7 +180,7 @@ export default async function island(game) {
       world.locked = true; world.handPose = 'lantern';
       world.player.pos.copy(I.swing.position); world.player.eye = 1.0;
       world.player.yaw = Math.atan2(-(SPOTS.city.x - I.swing.position.x), -(SPOTS.city.z - I.swing.position.z));
-      world.toastOnce('island_swing'); ui.note(C.swing, 3000); did();
+      world.toastOnce('island_swing'); ui.note(C.swing, 3000); did('swing');
       const f = new THREE.Vector3(-Math.sin(world.player.yaw), 0, -Math.cos(world.player.yaw));
       const stop = world.every((dt, t) => {
         const k = Math.sin(t * 2.2);
@@ -189,7 +208,7 @@ export default async function island(game) {
         x.fillStyle = '#120d18'; x.beginPath(); x.rect(0, 0, W, Hh); x.arc(W / 2, Hh / 2, r, 0, Math.PI * 2, true); x.fill();
         x.strokeStyle = '#c9a24a'; x.lineWidth = 3; x.beginPath(); x.arc(W / 2, Hh / 2, r, 0, Math.PI * 2); x.stroke();
       });
-      ui.note(C.telescope, 4000); audio.sfx('chime'); did();
+      ui.note(C.telescope, 4000); audio.sfx('chime'); did('telescope');
       await wait(6000);
       stop(); world.camera.fov = save.fov; world.camera.updateProjectionMatrix();
       world.player.pos.copy(save.pos); world.player.yaw = save.yaw; world.player.pitch = save.pitch;
@@ -201,7 +220,7 @@ export default async function island(game) {
     onDone: async () => {
       const save = world.player.pos.clone();
       world.locked = true; world.handPose = 'rim';
-      world.toastOnce('island_boat'); ui.note(C.boat, 3000); audio.sfx('splash'); did();
+      world.toastOnce('island_boat'); ui.note(C.boat, 3000); audio.sfx('splash'); did('boat');
       const c = new THREE.Vector3(20, 0, 4); const r = 4.6; const wl = pondLevel();
       const a0 = Math.atan2(I.boat.position.z - c.z, I.boat.position.x - c.x);
       const dur = 16; let k = 0;
@@ -235,8 +254,26 @@ export default async function island(game) {
       { const v = SPOTS.city.clone().sub(world.player.pos); world.player.yaw = Math.atan2(-v.x, -v.z); world.player.pitch = -0.1; }
       ui.actions([{ label: '📷 ' + content.ui.photo, onClick: () => world.photo(C.lighthouseTop, content.ui.photo) }, { label: P.descend, onClick: climbDown }]);
       await ui.fade(false, { ms: 600 });
-      ui.note(C.lighthouseTop, 3500); audio.sfx('chime'); did();
+      ui.note(C.lighthouseTop, 3500); audio.sfx('chime'); did('tower');
     } });
+
+  guide.step('tower').pos = door.clone();
+  guide.step('dog').pos = dog.position; guide.step('cat').pos = cat.position;
+
+  // ------------------------------------------------ ducks at the pier, bell at the red gate
+  world.interact.add({ pos: SPOTS.pier.clone().setY(pondLevel()), range: 2.4, hold: 0.5, label: P.feed, onDone: async () => {
+    world.handPose = 'reach'; audio.sfx('pop');
+    for (let k = 0; k < 16; k++) world.fx.emit(SPOTS.pier.clone().setY(pondLevel() + 0.8), new THREE.Vector3((SPOTS.lake.x - SPOTS.pier.x) * 0.2 + (Math.random() - 0.5), 1 + Math.random(), (SPOTS.lake.z - SPOTS.pier.z) * 0.2 + (Math.random() - 0.5)), '#f2d16b', 1.2, { kind: 2 });
+    await wait(500); audio.sfx('quack'); ui.note(C.ducks, 2600); world.handPose = 'idle'; did('ducks');
+  } });
+  I.shrine.updateMatrixWorld();
+  const bellPos = SPOTS.shrine.clone().setY(H(SPOTS.shrine.x, SPOTS.shrine.z));
+  guide.step('bell').pos = bellPos;
+  world.interact.add({ pos: bellPos, range: 2.6, hold: 0.4, label: P.bell, onDone: async () => {
+    world.handPose = 'reach'; audio.sting([84, 91, 88, 96], 'bell', 0.16);
+    for (let k = 0; k < 10; k++) world.glow.emit(bellPos.clone().add(new THREE.Vector3(0, 2, 0)), new THREE.Vector3((Math.random() - 0.5) * 1.5, Math.random() * 1.2, (Math.random() - 0.5) * 1.5), '#ffe9a8', 1.2);
+    ui.note(C.bell, 2800); await wait(600); world.handPose = 'idle'; did('bell');
+  } });
 
   // ------------------------------------------------ balloon
   let balloonReady = false;
@@ -249,9 +286,11 @@ export default async function island(game) {
   world.every((dt, t) => {
     startT += dt;
     const p = world.player.pos;
-    for (const [k, v] of order) if (!done[k] && Math.hypot(p.x - v.x, p.z - v.z) < 10) { done[k] = true; ui.note(C.hints[k], 2400); if (k === 'lighthouse') world.toastOnce('island_lighthouse'); }
-    if (!balloonReady && (interactions >= 4 || startT > 200)) { balloonReady = true; setTimeout(() => { world.toastOnce('island_balloon'); ui.note(C.balloonReady, 3000); }, 1200); }
-    const next = balloonReady && (interactions >= 6 || Object.values(done).every(Boolean) || startT > 320) ? I.balloon.position : (order.find(([k]) => !done[k])?.[1] || I.balloon.position);
+    for (const [k, v] of order) if (!done[k] && Math.hypot(p.x - v.x, p.z - v.z) < 10) { done[k] = true; ui.note(C.hints[k], 2400); if (k === 'lighthouse') world.toastOnce('island_lighthouse'); if (k === 'grove') guide.done('grove'); }
+    const mainDone = ['flowers', 'grove', 'boat', 'tower', 'telescope'].filter((id) => guide.step(id).done).length;
+    if (!balloonReady && (mainDone >= 3 || startT > 300)) { balloonReady = true; guide.show('balloon'); setTimeout(() => { world.toastOnce('island_balloon'); ui.note(C.balloonReady, 3000); }, 1200); }
+    if (balloonReady && !guide.forced && (mainDone >= 5 || startT > 480)) guide.force('balloon');
+    const next = guide.current ? guide.posOf(guide.current) || I.balloon.position : I.balloon.position;
     wispT -= dt;
     if (wispT < 0 && !world.locked) {
       wispT = 2.8;
@@ -272,7 +311,7 @@ export default async function island(game) {
     if (fireT < 0) { fireT = 0.25; world.glow.emit(new THREE.Vector3(20 + (Math.random() - 0.5) * 14, pondLevel() + 0.6 + Math.random() * 1.5, 4 + (Math.random() - 0.5) * 14), new THREE.Vector3(), '#e9ff9a', 6, { kind: 3 }); world.glow.emit(p.clone().add(new THREE.Vector3((Math.random() - 0.5) * 8, 0.5 + Math.random() * 2.5, (Math.random() - 0.5) * 8)), new THREE.Vector3(0, 0.05, 0), '#fff4c8', 5, { kind: 3 }); }
   });
 
-  const baseActions = () => [{ label: '📷 ' + content.ui.photo, onClick: () => world.photo(C.title, content.ui.photo) }];
+  const baseActions = () => [{ label: '📷 ' + content.ui.photo, onClick: async () => { guide.hide(true); await world.photo(C.title, content.ui.photo); guide.hide(false); guide.done('photo'); } }];
   ui.actions(baseActions());
 
   audio.scene('island', [['wind', 0.5], ['birds', 0.8]]);

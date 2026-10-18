@@ -15,35 +15,35 @@ export default {
   // { replies: [...] } là chỗ Hazei chọn câu trả lời nhanh;
   // { from: 'partner', invite: true } là thẻ mời vào kênh thoại (giữ ở cuối).
   discordChat: [
-    { from: 'partner', text: 'ê Hazei' },
-    { from: 'partner', text: 'rảnh hông' },
-    { replies: ['Rảnh nè, sao á?', 'Đang nằm chill nè'] },
+    { from: 'partner', text: 'Hi Hazei' },
+    { from: 'partner', text: 'Cậu coá đang rảnh hông' },
+    { replies: ['Rảnh á', 'Đang nằm chill nè'] },
     { from: 'partner', text: 'nay 20/10, tớ có làm cái này cho cậu 😆' },
-    { from: 'partner', text: 'một chuyến đi chơi nho nhỏ, chơi trong discord luôn' },
+    { from: 'partner', text: 'Cậu vào link discord này nha' },
     { replies: ['Hả, gì vậy 👀', 'Nghe hay á'] },
-    { from: 'partner', text: 'vô voice đi rồi biết' },
+    { from: 'partner', text: 'Vô đi là biết á' },
     { from: 'partner', invite: true },
   ],
 
   // ---------------------------------------------------------- Chương 1: Đồng cỏ
   dongCo: {
-    moDau: 'Sáng sớm đẹp ghê. Thấy hoa nào xinh thì cậu hái nha, lát có việc dùng tới đó.',
+    moDau: 'Đồng hoa vào sáng sớm đẹp ghê.',
     boaDauTien: 'Bông đó xinh nè.', // khi Hazei hái bông hoa đầu tiên
-    khenHoa: ['Đẹp đó!', 'Thêm một bông 🌼', 'Ổn áp'], // thỉnh thoảng nói khi hái hoa
-    choMochi: 'Bé Mochi chịu cậu rồi đó, đòi đi theo luôn.',
-    ghe: 'Ngồi nghỉ chút nè.',
-    ga: ['Cục ta cục tác!', 'Mấy bé gà dậy sớm hơn tụi mình luôn'],
-    coiXayGio: 'Cối xay gió quay chậm rì.',
+    khenHoa: ['Đẹp ha', 'Thêm một bông 🌼', 'Yayy'], // thỉnh thoảng nói khi hái hoa
+    choMochi: 'Con này đòi đi theo mình luôn nè.',
+    ghe: 'Ngồi nghỉ chút nhe.',
+    ga: ['Cục ta cục tác!', 'Mấy con gà dậy sớm dữ'],
+    coiXayGio: 'Cối xay gió gì quay chậm rì.',
     buom: 'Bướm đậu lên tay cậu kìa!',
     hoiChupHinh: 'Cậu muốn chụp hình ở đây không, tớ chụp cho?',
     chupHinhSanSang: 'Rồi, cười lên nè… 1, 2, 3!',
     khongChup: 'Oke!',
-    ruDiTiep: 'Ra chợ không? Chợ sáng vui lắm.',
+    ruDiTiep: 'Mình đi hội chợ ha',
   },
 
   // ---------------------------------------------------------- Chương 2: Chợ
   cho: {
-    moDau: 'Tới chợ rồi. Cuối dãy có tiệm chụp hình, lát ghé chụp một dải nha.',
+    moDau: 'Tới hội chợ rồi. Cuối dãy có photobooth á, lát ghé xem thử ha.',
     khenMu: 'Hợp phết!',
     khenKinh: 'Ngầu đó 😎',
     boCau: 'Bồ câu bay hết rồi kìa!',
@@ -58,31 +58,31 @@ export default {
 
   // ---------------------------------------------------------- Chương 4: Tiệm sách
   tiemSach: {
-    moDau: 'Tiệm sách này có cả góc đĩa than nữa. Đừng đánh thức bé mèo nha 😴',
+    moDau: 'Tiệm sách này có một bé mèo xinh yêu lắm á 😴',
     goiY: ['Cuốn “Thư gửi chính mình” hay lắm đó.', 'Đĩa “Đèn đường” nghe cuốn ghê.'],
-    meo: 'Bé mèo kêu rừ rừ kìa…',
-    ruDiTiep: 'Đói chưa? Đi ăn trưa thôi.',
+    meo: 'Nó kêu rừ rừ thì phải :)))',
+    ruDiTiep: 'Cậu đói chưa, mình đi ăn nha.',
   },
 
   // ---------------------------------------------------------- Chương 5: Omakase
   omakase: {
-    camOnBac: 'Cảm ơn bác, ngon thật sự!',
+    camOnBac: 'Cảm ơn bác ạ!',
   },
 
   // ---------------------------------------------------------- Chương 6: Cà phê
   caPhe: {
-    moDau: 'Chọn nước đi, bữa nay tớ bao 😎',
+    moDau: 'Cậu chọn nước đi.',
     goiNuoc: 'Cho tớ một Caramel Macchiato nha!',
-    ngoiChill: 'Ngồi đây nhìn ra cửa sổ thấy chill ghê. Chiều mình ra biển nha.',
+    ngoiChill: 'Ngồi đây nhìn ra cửa sổ thấy chill ghê. Uống nước xong mình sẽ ra biển á.',
   },
 
   // ---------------------------------------------------------- Chương 7: Biển
   bien: {
     moDau: 'Biển nè! Cậu thử viết tên lên cát coi.',
-    ghe: 'Ngồi nghe sóng chút nha.',
+    ghe: 'Ngồi nghe sóng vỗ từng lớp xa',
     cua: 'Có bạn cua kìa 🦀',
-    thaDen: 'Bay lên rồi kìa!',
-    ruDiTiep: 'Lát lên núi sau trường ngắm hoàng hôn không?',
+    thaDen: 'Bay lên rùi hehe!',
+    ruDiTiep: 'Giờ mình ra núi sau trường ngắm hoàng hôn ha!',
     tamBiet: 'Tớ phải về nhà một chút, cậu lên núi trước nha. Tớ vẫn ở trong voice đó 💬',
   },
 
@@ -113,13 +113,13 @@ export default {
   // ---------------------------------------------------------- Lời chúc
   // Lời chúc = mởĐầu + 5 ý chúc từ bữa omakase + kếtThúc + "Chúc mừng ngày Phụ nữ Việt Nam 20/10!"
   loiChuc: {
-    moDau: 'Hazei ơi, tớ chúc cậu…',
-    ketThuc: 'Cảm ơn cậu đã là một người bạn tuyệt vời.',
+    moDau: 'Đây là những lời chúc cậu có qua những lựa chọn xuyên suốt hành trình',
+    ketThuc: 'Cảm ơn cậu đã đi chơi với tớ nha.',
   },
 
   // ---------------------------------------------------------- Kết: Discord
   cuoiNgay: {
-    tinNhan: ['hết chuyến đi rồi đó 😆', 'tớ gửi lại mấy tấm ảnh với kỷ niệm hôm nay nè'],
+    tinNhan: ['hết chuyến đi rồi đó 😆', 'gửi lại mấy tấm ảnh với kỷ niệm hôm nay nè'],
     loiChao: '20/10 vui vẻ nha 🌷', // tin nhắn cuối cùng
   },
 };

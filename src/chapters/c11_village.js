@@ -5,6 +5,7 @@ import { canvas, charSprite, LOOKS, fishSprite, mix, shade, light } from '../cor
 import { ui, wait, esc, el } from '../core/ui.js';
 import { audio } from '../core/audio.js';
 import { input } from '../core/input.js';
+import { Guide } from '../three/guide.js';
 import { state } from '../core/state.js';
 
 const C = content.village;
@@ -259,11 +260,21 @@ export default async function village(game) {
 
   // ------------------------------------------------ interactions
   const stallItem = (st, label, fn) => world.interact.add({ pos: new THREE.Vector3(st.x * 0.75, 0, st.z), range: 2.4, hold: 0.3, label, onDone: fn });
+  const G = C.guide;
+  const stallPos = (st) => new THREE.Vector3(st.x * 0.75, 0, st.z);
+  const guide = new Guide(world, { title: G.title, optionalTitle: G.optional, steps: [
+    { id: 'stage', text: G.stage, label: G.m.stage, pos: new THREE.Vector3(0, 0, STREET_END + 2) },
+    { id: 'ring', text: G.ring, short: G.m.ring, optional: true, pos: stallPos(stalls[1]) },
+    { id: 'fish', text: G.fish, short: G.m.fish, optional: true, pos: stallPos(stalls[2]) },
+    { id: 'paint', text: G.paint, short: G.m.paint, optional: true, pos: stallPos(stalls[3]) },
+    { id: 'fireworks', text: G.fireworks, short: G.m.fireworks, optional: true, pos: launcher.position },
+  ] });
+  world.opts.cleanup = () => guide.destroy();
   stallItem(stalls[0], P.taste, async () => { world.say(C.npcs[3], stalls[0].v.position.clone().add(new THREE.Vector3(0, 2.1, 0)), 2800); audio.sfx('yay'); for (let k = 0; k < 6; k++) world.glow.emit(world.player.pos.clone().add(new THREE.Vector3(0, 1.2, -1)), new THREE.Vector3((Math.random() - 0.5), 1, 0), '#ff8fb0', 1.4); });
   stallItem(stalls[4], P.taste, async () => { world.say(C.npcs[0], stalls[4].v.position.clone().add(new THREE.Vector3(0, 2.1, 0)), 2800); audio.sfx('yay'); });
-  stallItem(stalls[1], P.ring, async () => { await ringToss(); audio.sfx('chime'); });
+  stallItem(stalls[1], P.ring, async () => { await ringToss(); audio.sfx('chime'); guide.done('ring'); });
   stallItem(stalls[2], P.fish, async () => {
-    const rel = await goldfish();
+    const rel = await goldfish(); guide.done('fish');
     if (rel) {
       ui.note(C.fish.released, 3000); audio.sfx('splash');
       for (let k = 0; k < 20; k++) world.fx.emit(new THREE.Vector3((Math.random() - 0.5) * 6, 0.1, -34 + (Math.random() - 0.5) * 2), new THREE.Vector3((Math.random() - 0.5) * 2, 0.05, (Math.random() - 0.5) * 0.4), '#ff8a3d', 3);
@@ -272,6 +283,7 @@ export default async function village(game) {
   stallItem(stalls[3], P.paint, async () => {
     const cols = await paintLantern();
     if (!cols) return;
+    guide.done('paint');
     world.handPose = 'lantern';
     const g = new THREE.Group();
     const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.26, 0.6, 8), new THREE.MeshBasicMaterial({ color: cols[0] })); g.add(body);
@@ -284,7 +296,7 @@ export default async function village(game) {
     await wait(1500); world.handPose = 'idle';
   });
   world.interact.add({ pos: launcher.position, range: 2.6, hold: 0.5, label: P.fireworks, onDone: async () => {
-    ui.note(C.fireworks, 2500);
+    ui.note(C.fireworks, 2500); guide.done('fireworks');
     for (let n = 0; n < 7; n++) {
       const from = new THREE.Vector3(-3.2 + (Math.random() - 0.5) * 2, 1, -66 - Math.random() * 10);
       const top = from.clone().add(new THREE.Vector3((Math.random() - 0.5) * 10, 22 + Math.random() * 10, -5));

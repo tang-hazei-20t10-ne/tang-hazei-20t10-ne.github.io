@@ -164,6 +164,10 @@ an `AnalyserNode` on the song.
   It appears on the stage, in the Discord epilogue, and as a downloadable card.
 - **Album:** every polaroid and the photo strip are kept in IndexedDB and shown as attachments in the epilogue,
   along with the bouquet image, the wish card and the bookmark keepsake (if she took it in the bookshop).
+- **Step-by-step guidance in the 3D maps:** a task list in the corner (collapsed to the current step on
+  phones; tap to expand), a floating marker with distance over the current goal, small markers on nearby
+  optional things, and an arrow at the screen edge when the goal is off-screen. While lying on the summit
+  blanket, the marker points at the next star to look at. Signposts on the mountain paths name each area.
 - **Gentle guidance:** on the mountain, golden wisps drift toward the next unexplored area; the balloon appears
   after a few interactions or a few minutes. Boundaries are a ring of trees and the school fence, never a message.
 - **Accessibility/robustness:** respects `prefers-reduced-motion`, pauses (and suspends audio) when the tab is
