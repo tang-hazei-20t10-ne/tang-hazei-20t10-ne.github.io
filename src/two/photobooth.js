@@ -77,45 +77,88 @@ function preview(c, size = 96) {
 }
 
 // Runs the booth flow. Returns when the strip is saved.
+// Runs the whole booth inside one window: pick backdrop + pose, countdown on
+// the preview, flash, the new photo grows big then drops into the strip.
 export async function runBooth(onFlash) {
   const frames = [];
-  for (let i = 0; i < 4; i++) {
-    const choice = await new Promise((resolve) => {
-      let bd = i % 4, ps = i;
-      ui.modal((s) => {
-        s.insertAdjacentHTML('beforeend', `<h2>${esc(B.title)}</h2><p class="sub">${esc(i === 0 ? B.intro : '')} ${esc(B.frame)} ${i + 1}/4</p>`);
-        const pv = el('div', 'center'); s.appendChild(pv);
-        const redraw = () => { pv.innerHTML = ''; pv.appendChild(preview(upscale(boothFrame(bd, ps), 3), 240)); };
-        s.insertAdjacentHTML('beforeend', `<div class="menu-cat">${esc(B.chooseBackdrop)}</div>`);
-        const g1 = el('div', 'grid-opts'); g1.style.gridTemplateColumns = 'repeat(auto-fill,minmax(110px,1fr))';
-        B.backdrops.forEach((name, k) => {
-          const o = el('button', 'opt' + (k === bd ? ' sel' : ''));
-          const [bc, bx] = canvas(32, 24); drawBackdrop(bx, k, 32, 24);
-          o.append(preview(bc, 64), el('span', 'n', esc(name)));
-          o.onclick = () => { bd = k; g1.querySelectorAll('.opt').forEach((e, j) => e.classList.toggle('sel', j === k)); audio.sfx('select'); redraw(); };
-          g1.appendChild(o);
-        });
-        s.appendChild(g1);
-        s.insertAdjacentHTML('beforeend', `<div class="menu-cat">${esc(B.choosePose)}</div>`);
-        const g2 = el('div', 'grid-opts'); g2.style.gridTemplateColumns = 'repeat(auto-fill,minmax(110px,1fr))';
-        B.poses.forEach((name, k) => {
-          const o = el('button', 'opt' + (k === ps ? ' sel' : ''), `<span class="n">${esc(name)}</span>`);
-          o.onclick = () => { ps = k; g2.querySelectorAll('.opt').forEach((e, j) => e.classList.toggle('sel', j === k)); audio.sfx('select'); redraw(); };
-          g2.appendChild(o);
-        });
-        s.appendChild(g2);
-        const row = el('div', 'row mt'); row.style.justifyContent = 'center';
-        const go = el('button', 'btn', '📷 ' + esc(content.ui.photo)); go.onclick = () => { ui.closeModal(); resolve({ bd, ps }); };
-        row.appendChild(go); s.appendChild(row);
-        redraw();
-      }, { closeable: false });
+  let bd = 0, ps = 0, idx = 0, busy = false;
+  let finish;
+  const finished = new Promise((r) => { finish = r; });
+  ui.modal((s) => {
+    s.classList.add('booth');
+    s.insertAdjacentHTML('beforeend', `<h2>${esc(B.title)}</h2><p class="sub booth-sub"></p>`);
+    const wrap = el('div', 'booth-wrap'); s.appendChild(wrap);
+    const strip = el('div', 'booth-strip'); wrap.appendChild(strip);
+    const slots = [0, 1, 2, 3].map(() => { const d = el('div', 'booth-slot'); strip.appendChild(d); return d; });
+    strip.insertAdjacentHTML('beforeend', `<div class="booth-strip-title">${esc(B.stripTitle)}</div>`);
+    const right = el('div', 'booth-right'); wrap.appendChild(right);
+    const pv = el('div', 'booth-pv'); right.appendChild(pv);
+    const count = el('div', 'booth-count'); pv.appendChild(count);
+    const sub = s.querySelector('.booth-sub');
+    const redraw = () => {
+      pv.querySelector('canvas')?.remove();
+      pv.prepend(preview(upscale(boothFrame(bd, ps), 3), 260));
+      sub.textContent = `${idx === 0 ? B.intro + ' ' : ''}${B.frame} ${idx + 1}/4`;
+      slots.forEach((d, i) => d.classList.toggle('next', i === idx));
+    };
+    right.insertAdjacentHTML('beforeend', `<div class="menu-cat">${esc(B.chooseBackdrop)}</div>`);
+    const g1 = el('div', 'grid-opts booth-opts');
+    B.backdrops.forEach((name, k) => {
+      const o = el('button', 'opt' + (k === bd ? ' sel' : ''));
+      const [bc, bx] = canvas(32, 24); drawBackdrop(bx, k, 32, 24);
+      o.append(preview(bc, 56), el('span', 'n', esc(name)));
+      o.onclick = () => { if (busy) return; bd = k; g1.querySelectorAll('.opt').forEach((e, j) => e.classList.toggle('sel', j === k)); audio.sfx('select'); redraw(); };
+      g1.appendChild(o);
     });
-    // countdown
-    for (const n of B.countdown) { ui.note(n, 600); audio.sfx(n === B.countdown[3] ? 'shutter' : 'tick'); await wait(n === B.countdown[3] ? 200 : 650); }
-    ui.flash(); onFlash?.(choice.ps);
-    frames.push(boothFrame(choice.bd, choice.ps));
-    await wait(500);
-  }
+    right.appendChild(g1);
+    right.insertAdjacentHTML('beforeend', `<div class="menu-cat">${esc(B.choosePose)}</div>`);
+    const g2 = el('div', 'grid-opts booth-opts');
+    B.poses.forEach((name, k) => {
+      const o = el('button', 'opt' + (k === ps ? ' sel' : ''), `<span class="n">${esc(name)}</span>`);
+      o.onclick = () => { if (busy) return; ps = k; g2.querySelectorAll('.opt').forEach((e, j) => e.classList.toggle('sel', j === k)); audio.sfx('select'); redraw(); };
+      g2.appendChild(o);
+    });
+    right.appendChild(g2);
+    const row = el('div', 'row mt'); row.style.justifyContent = 'center';
+    const go = el('button', 'btn', '📷 ' + esc(content.ui.photo));
+    row.appendChild(go); right.appendChild(row);
+    redraw();
+
+    go.onclick = async () => {
+      if (busy) return; busy = true; s.classList.add('busy');
+      // countdown on the preview
+      for (const n of B.countdown.slice(0, 3)) { count.textContent = n; count.classList.remove('pop'); void count.offsetWidth; count.classList.add('pop'); audio.sfx('tick'); await wait(650); }
+      count.textContent = '';
+      audio.sfx('shutter'); onFlash?.(ps);
+      const fl = el('div', 'booth-flash'); pv.appendChild(fl); setTimeout(() => fl.remove(), 500);
+      const shot = boothFrame(bd, ps); frames.push(shot);
+      // the photo grows big in the middle of the screen, then drops into its slot
+      const big = upscale(shot, 6); big.className = 'booth-photo';
+      const r0 = pv.querySelector('canvas').getBoundingClientRect();
+      const W = Math.min(innerWidth * 0.7, 520), H = W * shot.height / shot.width;
+      Object.assign(big.style, { left: r0.left + 'px', top: r0.top + 'px', width: r0.width + 'px', height: r0.height + 'px' });
+      document.body.appendChild(big);
+      await wait(260);
+      Object.assign(big.style, { left: (innerWidth - W) / 2 + 'px', top: (innerHeight - H) / 2 + 'px', width: W + 'px', height: H + 'px', transform: 'rotate(-2deg)' });
+      await wait(1500);
+      const r1 = slots[idx].getBoundingClientRect();
+      Object.assign(big.style, { left: r1.left + 'px', top: r1.top + 'px', width: r1.width + 'px', height: r1.height + 'px', transform: 'none', borderWidth: '2px' });
+      await wait(650);
+      big.remove();
+      const thumb = preview(shot, 10); thumb.style.width = '100%'; thumb.style.height = '100%';
+      slots[idx].innerHTML = ''; slots[idx].appendChild(thumb); slots[idx].classList.add('filled');
+      audio.sfx('pop');
+      idx++;
+      if (idx >= 4) { finish(); return; }
+      bd = idx % B.backdrops.length; ps = idx % B.poses.length;
+      g1.querySelectorAll('.opt').forEach((e, j) => e.classList.toggle('sel', j === bd));
+      g2.querySelectorAll('.opt').forEach((e, j) => e.classList.toggle('sel', j === ps));
+      redraw();
+      busy = false; s.classList.remove('busy');
+    };
+  }, { closeable: false });
+  await finished;
+  await wait(500);
   const strip = boothStrip(frames);
   audio.sfx('yay');
   await savePhoto(strip, { title: B.title, kind: 'strip', filename: 'dai-anh-hazei.png' });
