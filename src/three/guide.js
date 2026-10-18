@@ -50,6 +50,7 @@ export class Guide {
     this.override = null; // { pos, label } — e.g. a star to look at
     this.render();
     this.off = world.every(() => this.update());
+    if (world.game.debug) window.__guide = this;
   }
   step(id) { return this.steps.find((s) => s.id === id); }
   done(id) { const s = this.step(id); if (!s || s.done) return; s.done = true; audio.sfx('chime', { up: 7 }); this.render(); }

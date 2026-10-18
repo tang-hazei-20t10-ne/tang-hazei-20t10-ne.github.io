@@ -72,7 +72,8 @@ export default {
   // ---------------------------------------------------------- Chương 6: Cà phê
   caPhe: {
     moDau: 'Cậu chọn nước đi.',
-    goiNuoc: 'Cho tớ một Caramel Macchiato nha!',
+    // {nuoc} sẽ được thay bằng tên nước Hazei đã chọn
+    goiNuoc: 'Cho tớ một cà phê muối, với một {nuoc} cho bạn này nha!',
     ngoiChill: 'Ngồi đây nhìn ra cửa sổ thấy chill ghê. Uống nước xong mình sẽ ra biển á.',
   },
 
@@ -111,7 +112,8 @@ export default {
   },
 
   // ---------------------------------------------------------- Lời chúc
-  // Lời chúc = mởĐầu + 5 ý chúc từ bữa omakase + kếtThúc + "Chúc mừng ngày Phụ nữ Việt Nam 20/10!"
+  // Lời chúc = mởĐầu + ý chúc từ donut + 5 ý chúc từ omakase + ý chúc từ ly nước + kếtThúc
+  //           + "Chúc mừng ngày Phụ nữ Việt Nam 20/10!"
   loiChuc: {
     moDau: 'Đây là những lời chúc cậu có qua những lựa chọn xuyên suốt hành trình',
     ketThuc: 'Cảm ơn cậu đã đi chơi với tớ nha.',

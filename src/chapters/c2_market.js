@@ -2,7 +2,8 @@
 import content from '../content.js';
 import { Scene2D, drawGrassBlades } from '../two/engine2d.js';
 import { TIMES } from '../core/palette.js';
-import { canvas, mix, shade, light, LOOKS, randomFlower, flowerSprite, outline } from '../core/sprites.js';
+import { canvas, mix, shade, light, LOOKS, randomFlower, flowerSprite, outline, donutSprite } from '../core/sprites.js';
+import { upscale } from '../core/photo.js';
 import { ridgeStrip, cloudSprite, facadeStrip, cobbleStrip, stall, bunting, treeSprite, drawSway, lamp, rand } from '../two/props.js';
 import { addNPC, addExit, intro, Pigeon, flyToChip } from '../two/common.js';
 import { runBooth } from '../two/photobooth.js';
@@ -33,7 +34,7 @@ function goods(kind) {
   const [c, x] = canvas(52, 12);
   const R = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
   const r = rand(kind.length * 13);
-  if (kind === 'bread') for (let i = 0; i < 6; i++) { const bx = 3 + i * 8; R(bx, 6, 7, 5, '#e8a85c'); R(bx + 1, 5, 5, 1, '#f2c47a'); R(bx + 2, 7, 1, 1, '#fbe2a8'); R(bx + 4, 8, 1, 1, '#fbe2a8'); }
+  if (kind === 'bread') { const ds = content.market.snack.donuts; for (let i = 0; i < 4; i++) { const img = donutSprite(ds[i]); x.drawImage(img, 0, 0, 18, 13, 2 + i * 12, 3, 12, 9); } }
   if (kind === 'flowers') for (let i = 0; i < 5; i++) { const bx = 3 + i * 10; R(bx, 6, 8, 6, '#7f9fdc'); R(bx, 6, 8, 1, '#a9c4ff'); for (let k = 0; k < 4; k++) { const f = randomFlower(r); R(bx + 1 + k * 2, 1 + (k % 2), 2, 2, f.color); R(bx + 1 + k * 2, 3, 1, 3, '#4f9a4a'); } }
   if (kind === 'hats') { for (let i = 0; i < 3; i++) { const bx = 3 + i * 14; R(bx, 8, 12, 2, '#f2d48a'); R(bx + 3, 5, 6, 3, '#e8c776'); R(bx + 3, 7, 6, 1, ['#e05a7a', '#7f9fdc', '#8fd3b6'][i]); } R(44, 7, 6, 2, '#1a1420'); R(45, 7, 1, 1, '#6a6a90'); R(48, 7, 1, 1, '#6a6a90'); }
   if (kind === 'fruit') for (let i = 0; i < 4; i++) { const bx = 2 + i * 12; R(bx, 7, 11, 5, '#a8703f'); const col = ['#ffc94d', '#e9473f', '#8fd36a', '#f59a3a'][i]; for (let k = 0; k < 4; k++) R(bx + 1 + k * 3 - (k % 2), 4 + (k % 2), 3, 3, col); }
@@ -113,9 +114,25 @@ export default async function market(game) {
   scene.interact.add({ x: 150, range: 22, hold: 0.3, label: P.taste, onDone: async () => {
     const h = scene.hazei;
     scene.say(npcs.bread, C.snack.lines[0], 2600);
+    const pick = await new Promise((resolve) => {
+      ui.modal((s) => {
+        s.insertAdjacentHTML('beforeend', `<h2>🍩 ${esc(C.snack.title)}</h2><p class="sub">${esc(C.snack.choose)}</p>`);
+        const g = el('div', 'grid-opts');
+        C.snack.donuts.forEach((d, i) => {
+          const b = el('button', 'opt');
+          const img = upscale(donutSprite(d), 5); img.style.width = '90px'; img.style.height = '65px'; img.style.imageRendering = 'pixelated';
+          b.append(img, el('span', 'n', esc(d.name)), el('span', 'd', `${esc(d.kind === 'sweet' ? C.snack.sweet : C.snack.savory)} · ${esc(d.desc)}`));
+          b.onclick = () => { audio.sfx('select'); resolve(i); ui.closeModal(); };
+          g.appendChild(b);
+        });
+        s.appendChild(g);
+      }, { closeable: false });
+    });
+    state.set({ donut: pick });
+    const dn = C.snack.donuts[pick];
     h.forcePose = 'hold'; h.hold = 'snack'; await wait(900);
     h.hold = null; h.forcePose = null; h.forceMood = 'happy'; audio.sfx('yay');
-    scene.hearts(h.x, scene.groundY - 30, 5); scene.say(h, C.snack.react, 2600);
+    scene.hearts(h.x, scene.groundY - 30, 5); scene.say(h, dn.react, 2600);
     scene.partner.emote('thumb');
     await wait(1600); h.forceMood = null;
     scene.say(npcs.bread, C.snack.lines[1], 2600);
@@ -143,7 +160,7 @@ export default async function market(game) {
       ui.modal((s) => {
         s.insertAdjacentHTML('beforeend', `<h2>${esc(C.hats.vendor)}</h2>`);
         const row = el('div', 'row');
-        C.hats.items.forEach((name, i) => { const b = el('button', 'btn ' + (i === 2 ? 'soft' : ''), esc(name)); b.onclick = () => { ui.closeModal(); resolve(i); }; row.appendChild(b); });
+        C.hats.items.forEach((name, i) => { const b = el('button', 'btn ' + (i === 2 ? 'soft' : ''), esc(name)); b.onclick = () => { resolve(i); ui.onModalClose = null; ui.closeModal(); }; row.appendChild(b); });
         s.appendChild(row);
       });
       ui.onModalClose = () => resolve(-1);
@@ -152,7 +169,7 @@ export default async function market(game) {
     if (pick === 0) { h.hat = !h.hat; }
     if (pick === 1) { h.sunglasses = !h.sunglasses; }
     if (pick === 2) { h.hat = false; h.sunglasses = false; }
-    state.data.outfit = { hat: h.hat, glasses: h.sunglasses }; state.save();
+    scene.tryingOn = h.hat || h.sunglasses;
     audio.sfx('pop'); scene.sparkles(h.x, scene.groundY - 26, 10);
     if (pick < 2) { await wait(400); scene.say(scene.partner, pick === 0 ? C.hats.reactHat : C.hats.reactGlasses, 2600); scene.partner.emote(pick === 0 ? 'sparkle' : 'thumb'); }
   } });
@@ -178,6 +195,8 @@ export default async function market(game) {
     ou?.(s, dt);
     steamT -= dt;
     if (steamT < 0) { steamT = 0.18; s.spawn({ x: 896 + Math.random() * 6, y: s.groundY - 7 - 26, vx: (Math.random() - 0.5) * 3, vy: -8 - Math.random() * 4, life: 2.2, color: '#ffffff', size: 2, wobble: 1, layer: 'mid' }); }
+    // borrowed hat/glasses come off once she walks away from the stall
+    if (s.tryingOn && Math.abs(s.hazei.x - 520) > 70) { s.tryingOn = false; s.hazei.hat = false; s.hazei.sunglasses = false; audio.sfx('pop'); s.sparkles(s.hazei.x, s.groundY - 26, 8); }
     const near = Math.abs(s.hazei.x - 608) < 40;
     kidA.forcePose = near ? (Math.floor(s.t * 3) % 2 ? 'wave' : 'idle') : (Math.floor(s.t * 2) % 4 === 0 ? 'jump' : null);
     kidB.forcePose = near ? 'cheer' : (Math.floor(s.t * 2 + 1) % 4 === 0 ? 'jump' : null);

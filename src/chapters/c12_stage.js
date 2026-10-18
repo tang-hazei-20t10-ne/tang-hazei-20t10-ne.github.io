@@ -448,7 +448,7 @@ export default async function stage(game) {
       const b = el('button', 'btn', esc(content.ui.next)); b.onclick = () => ui.closeModal(); row.appendChild(b); s.appendChild(row);
     }, { closeable: false });
   });
-  const wp = wishParts(state.data.omakase);
+  const wp = wishParts(state.data);
   await new Promise((resolve) => {
     ui.onModalClose = resolve;
     ui.modal((s) => {

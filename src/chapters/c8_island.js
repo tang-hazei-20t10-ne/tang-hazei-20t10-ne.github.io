@@ -164,15 +164,6 @@ export default async function island(game) {
     if (world.handPose === 'palm' && world.handItem) { const lb = bflies.find((b) => b.userData.landed); if (lb) world.handItem = butterflySprite(Math.floor(t * 2) % 2, lb.userData.col); }
   });
 
-  // ------------------------------------------------ blanket sit
-  let sitting = false;
-  world.interact.add({ pos: I.blanket.position, range: 2.0, hold: 0.3, label: () => (sitting ? P.stand : P.blanket),
-    onDone: async () => {
-      sitting = !sitting;
-      if (sitting) { world.locked = true; world.player.eye = 0.75; audio.sfx('pop'); ui.note(C.blanket, 3000); did(); }
-      else { world.locked = false; world.player.eye = 1.5; }
-    } });
-
   // ------------------------------------------------ swing
   world.interact.add({ pos: I.swing.position, range: 2.4, hold: 0.4, label: P.swing,
     onDone: async () => {

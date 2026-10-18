@@ -112,7 +112,6 @@ export class Scene2D {
     this.minX = cfg.minX ?? 16; this.maxX = cfg.maxX ?? this.worldW - 16;
     if (cfg.hazei !== false) {
       this.hazei = new Character(LOOKS.hazei(), cfg.startX ?? 40, { speed: 42 });
-      this.hazei.hat = state.data.outfit.hat; this.hazei.sunglasses = state.data.outfit.glasses;
       this.entities.push(this.hazei);
     }
     if (cfg.partner !== false) {

@@ -20,12 +20,26 @@ export default async function hill(game) {
   const deck = SPOTS.deck;
   // constellations sit in the part of the sky you see when lying down facing the city
   const cityAz = THREE.MathUtils.radToDeg(Math.atan2(SPOTS.city.x - deck.x, -(SPOTS.city.z - deck.z)));
+  // Shapes are drawn in a flat tangent plane (degrees) and projected onto the
+  // sky around a centre direction, so they keep their proportions.
+  const heart = []; for (let i = 0; i <= 28; i++) { const t = (i / 28) * Math.PI * 2; heart.push([16 * Math.sin(t) ** 3 * 0.42, (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * 0.42]); }
+  const flower = []; for (let i = 0; i <= 40; i++) { const t = (i / 40) * Math.PI * 2; const r = 4 + 3.4 * Math.abs(Math.cos(2.5 * t)); flower.push([Math.cos(t + Math.PI / 2) * r, Math.sin(t + Math.PI / 2) * r + 2]); }
+  const cat = [[-6, -5], [-7, 0], [-6.5, 4], [-7, 9], [-3, 6], [0, 6.5], [3, 6], [7, 9], [6.5, 4], [7, 0], [6, -5], [3, -7], [-3, -7], [-6, -5]];
+  const crown = [[-8, -4], [-8, 4], [-4.5, 1], [-2.5, 7], [0, 2], [2.5, 7], [4.5, 1], [8, 4], [8, -4], [-8, -4]];
   const SHAPES = [
-    { name: 0, center: [cityAz, 66], pts: [[0, -6], [-5, 0], [-6, 5], [-3, 8], [0, 5], [3, 8], [6, 5], [5, 0], [0, -6]] }, // heart
-    { name: 1, center: [cityAz - 38, 52], pts: [[0, 0], [0, 6], [0, 0], [5, 2], [0, 0], [4, -4], [0, 0], [-4, -4], [0, 0], [-5, 2]] }, // flower
-    { name: 2, center: [cityAz + 38, 52], pts: [[-5, 0], [-4, 6], [-1, 3], [1, 3], [4, 6], [5, 0], [0, -4], [-5, 0]] }, // cat
-    { name: 3, center: [cityAz, 44], pts: [[-7, 0], [-6, 6], [-3, 2], [0, 7], [3, 2], [6, 6], [7, 0], [-7, 0]] }, // crown
+    { name: 0, center: [cityAz, 66], line: heart, anchors: [0, 7, 11, 14, 17, 21] },
+    { name: 1, center: [cityAz - 32, 56], line: flower, anchors: [0, 8, 16, 24, 32], extra: [[[0, -2], [0, -10], [3, -7]]] },
+    { name: 2, center: [cityAz + 32, 56], line: cat, anchors: [0, 3, 7, 10, 12], extra: [[[-3.2, 1.2], [-2.4, 1.2]], [[2.4, 1.2], [3.2, 1.2]], [[-1.5, -3], [0, -2], [1.5, -3]], [[-4, -2.4], [-9.5, -1.4]], [[4, -2.4], [9.5, -1.4]]] },
+    { name: 3, center: [cityAz, 40], line: crown, anchors: [0, 1, 3, 5, 7, 8], extra: [[[-2.5, 8.2], [-2.5, 8.8]], [[2.5, 8.2], [2.5, 8.8]], [[0, 3.2], [0, 3.8]]] },
   ];
+  const UP = new THREE.Vector3(0, 1, 0);
+  const project = (center, [x, y]) => {
+    const c = dirFrom(center[0], center[1]);
+    const right = new THREE.Vector3().crossVectors(c, UP).normalize();
+    const up = new THREE.Vector3().crossVectors(right, c).normalize();
+    const k = Math.PI / 180;
+    return c.clone().addScaledVector(right, Math.tan(x * k)).addScaledVector(up, Math.tan(y * k)).normalize();
+  };
   const start = new THREE.Vector3(deck.x + 6.5, 0, deck.z + 0.5);
   const world = new World3D(game, { hires: 'ultra', start: [start.x, surfaceHeight(start.x, start.z), start.z], yaw: Math.PI / 2, pitch: -0.05, heightAt: surfaceHeight, walkable: mountainWalkable, bloom: 0.6, bloomThreshold: 0.7, maxPitch: 1.5 });
   const sunDir = new THREE.Vector3(-0.8, 0.02, -0.55);
@@ -46,16 +60,27 @@ export default async function hill(game) {
   const bandMat = new THREE.PointsMaterial({ size: 1, sizeAttenuation: false, color: '#c8b8ff', transparent: true, opacity: 0, fog: false });
   S.add(new THREE.Points(bandG, bandMat));
 
-  // constellations
+  // constellations: thick glowing ribbons between sky points
+  const lineMat = new THREE.MeshBasicMaterial({ color: '#ffe9a8', transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+  const glowMat = new THREE.MeshBasicMaterial({ color: '#ff9ac8', transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+  const segment = (a, b, group) => {
+    const A = a.clone().multiplyScalar(770), B = b.clone().multiplyScalar(770);
+    const len = A.distanceTo(B);
+    for (const [r, m] of [[1.4, lineMat], [3.6, glowMat]]) {
+      const g = new THREE.CylinderGeometry(r, r, len, 5, 1, true); g.translate(0, len / 2, 0); g.rotateX(Math.PI / 2);
+      const mesh = new THREE.Mesh(g, m); mesh.position.copy(A); mesh.lookAt(B); group.add(mesh);
+    }
+  };
   const cons = SHAPES.map((sh) => {
-    const uniq = []; sh.pts.forEach(([a, e]) => { if (!uniq.some((u) => u[0] === a && u[1] === e)) uniq.push([a, e]); });
-    const dirs = uniq.map(([a, e]) => dirFrom(sh.center[0] + a, sh.center[1] + e));
-    const g = new THREE.BufferGeometry().setFromPoints(dirs.map((d) => d.clone().multiplyScalar(780)));
-    const m = new THREE.PointsMaterial({ size: 5, sizeAttenuation: false, color: '#fff3c8', transparent: true, opacity: 0, fog: false });
-    const pts = new THREE.Points(g, m); S.add(pts);
-    const lines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: '#ffe9a8', transparent: true, opacity: 0.9, fog: false }));
-    S.add(lines);
-    return { sh, uniq, dirs, pts, lit: new Set(), lines, done: false };
+    const pts = sh.line.map((p) => project(sh.center, p));
+    const anchors = sh.anchors.map((i) => pts[i]);
+    const am = new THREE.PointsMaterial({ size: 7, sizeAttenuation: false, color: '#fff3c8', transparent: true, opacity: 0, fog: false });
+    S.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints(anchors.map((d) => d.clone().multiplyScalar(780))), am));
+    // faint dotted preview of the whole shape so it's clear what to trace
+    const pm = new THREE.PointsMaterial({ size: 2, sizeAttenuation: false, color: '#c8c0ff', transparent: true, opacity: 0, fog: false });
+    S.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints(pts.map((d) => d.clone().multiplyScalar(785))), pm));
+    const group = new THREE.Group(); S.add(group);
+    return { sh, pts, anchors, am, pm, group, lit: new Set(), drawn: new Set(), done: false };
   });
   const starWorld = (d) => d.clone().multiplyScalar(780);
 
@@ -105,15 +130,17 @@ export default async function hill(game) {
     const fwd = new THREE.Vector3(); world.camera.getWorldDirection(fwd);
     const ready = k >= 0.4;
     cons.forEach((c) => {
-      c.pts.material.opacity = Math.min(1, Math.max(0, (k - 0.35) * 2)) * (c.done ? 1 : 0.75 + Math.sin(t * 3) * 0.25);
+      const vis = Math.min(1, Math.max(0, (k - 0.35) * 2));
+      c.am.opacity = vis * (c.done ? 1 : 0.7 + Math.sin(t * 3) * 0.3);
+      c.pm.opacity = vis * (c.done ? 0.15 : 0.45);
       if (!ready || c.done) return;
-      c.dirs.forEach((d, i) => { if (!c.lit.has(i) && fwd.angleTo(starWorld(d).sub(world.camera.position)) < THREE.MathUtils.degToRad(lying ? 6 : 4)) { c.lit.add(i); audio.sfx('pop', { pitch: c.lit.size * 2 }); updateLines(c); } });
+      c.anchors.forEach((d, i) => { if (!c.lit.has(i) && fwd.angleTo(starWorld(d).sub(world.camera.position)) < THREE.MathUtils.degToRad(lying ? 6 : 4)) { c.lit.add(i); audio.sfx('pop', { pitch: c.lit.size * 2 }); updateLines(c); } });
     });
     // point at the next star to look at while lying down
     if (lying && ready && !guide.step('stars').done) {
       const c = cons.find((cc) => !cc.done);
-      const i = c ? c.dirs.findIndex((_, j) => !c.lit.has(j)) : -1;
-      guide.override = i >= 0 ? { pos: starWorld(c.dirs[i]), label: G.m.star, sky: true } : null;
+      const i = c ? c.anchors.findIndex((_, j) => !c.lit.has(j)) : -1;
+      guide.override = i >= 0 ? { pos: starWorld(c.anchors[i]), label: G.m.star, sky: true } : null;
     } else guide.override = null;
     if (lying && !ready && !waitNoted) { waitNoted = true; ui.note(G.waiting, 3000); }
     // fireflies
@@ -122,21 +149,26 @@ export default async function hill(game) {
     if (!wished && !shooting && ((nDone >= 2 && lying) || (night >= 1 && world.clock > 260))) shootingStar();
   });
 
+  // draw the part of the outline between two neighbouring lit anchors
   const updateLines = (c) => {
-    const verts = [];
-    const idx = (p) => c.uniq.findIndex((u) => u[0] === p[0] && u[1] === p[1]);
-    for (let i = 0; i < c.sh.pts.length - 1; i++) {
-      const a = idx(c.sh.pts[i]), b = idx(c.sh.pts[i + 1]);
-      if (c.lit.has(a) && c.lit.has(b)) verts.push(starWorld(c.dirs[a]), starWorld(c.dirs[b]));
+    const idx = c.sh.anchors; const n = idx.length;
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      if (c.drawn.has(i) || !c.lit.has(i) || !c.lit.has(j)) continue;
+      c.drawn.add(i);
+      const from = idx[i], to = j === 0 ? c.pts.length - 1 : idx[j];
+      for (let p = from; p < to; p++) segment(c.pts[p], c.pts[p + 1], c.group);
     }
-    c.lines.geometry.dispose(); c.lines.geometry = new THREE.BufferGeometry().setFromPoints(verts);
-    if (c.lit.size === c.uniq.length && !c.done) {
-      c.done = true; audio.sfx('chime'); ui.note(`✦ ${C.constellationDone} ${C.constellations[c.sh.name]} ✦`, 3000);
-      const n = cons.filter((cc) => cc.done).length;
-      guide.progress('stars', n);
-      if (n >= 2) guide.show('wish');
+    if (c.lit.size === n && !c.done) {
+      c.done = true;
+      for (const ln of c.sh.extra || []) { const ps = ln.map((p) => project(c.sh.center, p)); for (let p = 0; p < ps.length - 1; p++) segment(ps[p], ps[p + 1], c.group); }
+      audio.sfx('chime'); ui.note(`✦ ${C.constellationDone} ${C.constellations[c.sh.name]} ✦`, 3000);
+      const done = cons.filter((cc) => cc.done).length;
+      guide.progress('stars', done);
+      if (done >= 2) guide.show('wish');
     }
   };
+
 
   // ---- shooting star
   let shooting = false;

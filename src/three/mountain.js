@@ -58,6 +58,9 @@ function rawHeight(x, z) {
   return h;
 }
 const deckLevel = rawHeight(DECK.x, DECK.z) + 0.2;
+const SCHOOL_PAD = { x: -13, z: 82, hw: 49, hd: 25 };
+const SCHOOL_LEVEL = rawHeight(0, 57);
+export const schoolLevel = () => SCHOOL_LEVEL;
 function baseHeight(x, z) {
   let h = rawHeight(x, z);
   const d = Math.hypot(x - DECK.x, z - DECK.z);
@@ -65,10 +68,21 @@ function baseHeight(x, z) {
   h = h * (1 - f) + deckLevel * f;
   const R = Math.hypot(x * 0.92, z - 6);
   const edge = sstep(60, 100, R);
-  return h * (1 - edge * 0.7) + (PLAIN - h * 0.3) * edge;
+  h = h * (1 - edge * 0.7) + (PLAIN - h * 0.3) * edge;
+  // a flat terrace for the school, its yard and the football field
+  const ox = Math.max(0, Math.abs(x - SCHOOL_PAD.x) - SCHOOL_PAD.hw), oz = Math.max(0, Math.abs(z - SCHOOL_PAD.z) - SCHOOL_PAD.hd);
+  const sf = (1 - sstep(0, 12, ox)) * (1 - sstep(0, 12, oz));
+  return h * (1 - sf) + SCHOOL_LEVEL * sf;
 }
-export const pondLevel = () => baseHeight(POND.x, POND.z) - 1.6;
-export function mountainHeight(x, z) { return baseHeight(x, z) - POND.dip * gauss(x, z, POND.x, POND.z, POND.r); }
+const POND_LEVEL = baseHeight(POND.x, POND.z) - 1.6;
+export const pondLevel = () => POND_LEVEL;
+export function mountainHeight(x, z) {
+  let h = baseHeight(x, z) - POND.dip * gauss(x, z, POND.x, POND.z, POND.r);
+  // a grassy bank around the pond so the water never floats above the ground
+  const d = Math.hypot(x - POND.x, z - POND.z);
+  if (d > 6.2 && d < 12) h = Math.max(h, POND_LEVEL + 0.25 - Math.max(0, d - 7.2) * 0.7);
+  return h;
+}
 const DECK_TOP = deckLevel + 0.45;
 export function inDeck(x, z) { return Math.abs(x - DECK.x) < 4.2 && Math.abs(z - DECK.z) < 4.2; }
 // Height the player stands on (includes the summit deck and the pond pier).
@@ -392,7 +406,7 @@ export function city(rnd) {
   rx.fillStyle = '#b8b4c0'; rx.fillRect(7, 7, 20, 20);
   const rt = pixelTex(rc); rt.wrapS = rt.wrapT = THREE.RepeatWrapping; rt.repeat.set(392 / 14, 238 / 14);
   const streets = new THREE.Mesh(new THREE.PlaneGeometry(392, 238).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: rt }));
-  streets.position.set(-137 + 196, PLAIN + 0.03, 105 + 119); g.add(streets);
+  streets.position.set(-137 + 196, PLAIN + 0.09, 105 + 119); g.add(streets);
   // street trees + park trees
   const treeGeo = new THREE.IcosahedronGeometry(1.4, 0);
   const trees = new THREE.InstancedMesh(treeGeo, toon('#5fae5a'), 500); let ntr = 0;
@@ -717,7 +731,7 @@ export function buildMountain(world) {
   deck.position.set(DECK.x, 0, DECK.z); S.add(deck);
 
   // ---- school at the foot, city on the plain
-  const sch = school(); sch.position.set(SPOTS.school.x, H(SPOTS.school.x, SPOTS.school.z - 18) - 0.3, SPOTS.school.z); S.add(sch);
+  const sch = school(); sch.position.set(SPOTS.school.x, SCHOOL_LEVEL - 0.02, SPOTS.school.z); S.add(sch);
   const cty = city(rnd); S.add(cty);
   world.every((dt, t) => { sch.userData.flag.rotation.y = Math.sin(t * 2) * 0.2; cty.userData.update(dt, t); fallMat.uniforms.time.value = t; pond.userData.uniforms.time.value = t;
     ducks.forEach((o) => { const a = t * 0.25 + o.ph; o.d.position.set(POND.x + Math.cos(a) * o.r, wl + Math.sin(t * 2 + o.ph) * 0.02, POND.z + Math.sin(a) * o.r); o.d.setCanvas(duckSprite(Math.floor(t * 2 + o.ph) % 2), Math.sin(a) > 0); });

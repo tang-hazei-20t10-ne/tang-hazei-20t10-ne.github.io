@@ -97,7 +97,7 @@ export default async function epilogue(game) {
   for (const t of E.messages) { await type(Math.min(2400, 700 + t.length * 30)); addMsg('partner', t); audio.sfx('notify'); await wait(500); }
 
   // wish
-  const parts = wishParts(state.data.omakase);
+  const parts = wishParts(state.data);
   await type(1800);
   addMsg('partner', el('div', 'dc-wish', `<div class="o">${esc(parts.opening)}</div><ul>${parts.fragments.map((f) => `<li>${esc(f)}</li>`).join('')}</ul><div>${esc(parts.closing)}</div><div class="f">${esc(parts.footer)}</div>`));
   audio.sfx('chime');

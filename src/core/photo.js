@@ -130,12 +130,18 @@ export function drawBouquet(picked, size = 256) {
 }
 
 // ---------------------------------------------------------------- wish
-export function wishParts(omakaseChoices) {
-  const rounds = content.omakase.rounds;
-  const frags = rounds.map((r, i) => {
-    const ch = omakaseChoices[i];
-    return ch != null ? r.options[ch].fragment : content.wish.defaultFragments[i];
+// The wish collects one line from every choice made during the day:
+// the donut at the fair, the five omakase dishes and the café drink.
+export function wishParts(choices = {}) {
+  const frags = [];
+  const donut = content.market.snack.donuts[choices.donut];
+  if (donut) frags.push(donut.fragment);
+  content.omakase.rounds.forEach((r, i) => {
+    const ch = (choices.omakase || [])[i];
+    frags.push(ch != null ? r.options[ch].fragment : content.wish.defaultFragments[i]);
   });
+  const drink = content.cafe.fragments[choices.drink];
+  if (drink) frags.push(drink);
   return { opening: content.wish.opening, fragments: frags, closing: content.wish.closing, footer: content.wish.footer };
 }
 

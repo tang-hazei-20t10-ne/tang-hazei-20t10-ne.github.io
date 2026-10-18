@@ -82,8 +82,31 @@ export function charSprite(look, o = {}) {
   const frame = o.frame || 0;
   const mood = o.mood || 'normal';
   const hat = o.hat || look.strawHat; const sung = o.sunglasses;
-  const key = [look.kind, look.hair, look.top, look.dress, look.bottom, look.hairStyle, look.glasses, look.apron, pose, frame, mood, hat, sung, look.chefHat, o.hold || ''].join('|');
-  return cached(key, () => outline(drawChar(look, pose, frame, mood, hat, sung, o.hold)));
+  const key = [look.kind, look.hair, look.top, look.dress, look.bottom, look.hairStyle, look.glasses, look.apron, pose, frame, mood, hat, sung, look.chefHat, o.hold || '', o.back ? 'back' : ''].join('|');
+  return cached(key, () => outline(o.back ? drawBack(look, pose, frame) : drawChar(look, pose, frame, mood, hat, sung, o.hold)));
+}
+
+// Seen from behind (used for the chef, who faces the customers).
+function drawBack(L, pose, frame) {
+  const [c, x] = canvas(24, 34);
+  const P = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+  const top = L.top || '#fff', topS = shade(top, 0.18), hair = L.hair || '#333', skin = L.skin || '#f2c49c';
+  const headY = 6, bodyY = 16;
+  // torso + arms (raised a little when working)
+  P(7, bodyY, 10, 12, top); P(7, bodyY, 2, 12, topS); P(15, bodyY, 2, 12, topS);
+  const up = pose === 'give' || pose === 'hold' ? (frame % 2 ? -3 : -2) : 0;
+  P(4, bodyY + 1 + up, 3, 6, top); P(17, bodyY + 1 + up, 3, 6, top);
+  P(4, bodyY + 7 + up, 3, 1, skin); P(17, bodyY + 7 + up, 3, 1, skin);
+  if (L.apron || L.chefHat) { P(8, bodyY + 6, 8, 1, '#c9c2b8'); P(11, bodyY + 6, 2, 3, '#c9c2b8'); P(10, bodyY + 9, 1, 2, '#c9c2b8'); P(13, bodyY + 9, 1, 2, '#c9c2b8'); }
+  P(8, bodyY + 12, 8, 6, L.bottom || '#3c3a4a');
+  // neck, ears, back of the head
+  P(10, headY + 9, 4, 2, skin);
+  P(5, headY + 1, 14, 9, hair); P(6, headY, 12, 10, hair); P(4, headY + 4, 1, 2, skin); P(19, headY + 4, 1, 2, skin);
+  P(8, headY + 1, 4, 1, light(hair, 0.25));
+  if (L.chefHat) { const hy = headY - 7; P(7, hy, 10, 6, '#fbfbf6'); P(6, hy + 1, 12, 3, '#fbfbf6'); P(7, hy + 5, 10, 2, '#e8e2d8'); P(16, hy + 1, 1, 4, '#e2dcd2'); }
+  // towel tied around the head, ramen-chef style
+  else { P(5, headY + 3, 14, 2, '#f4f1ea'); P(17, headY + 4, 3, 3, '#f4f1ea'); }
+  return c;
 }
 
 function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
@@ -623,5 +646,32 @@ export function cupSprite(color, art = false, kind = 'mug') {
       if (art) { P(8, 6, 2, 1, '#fff8ee'); P(11, 6, 2, 1, '#fff8ee'); P(9, 7, 3, 1, '#fff8ee'); }
     }
     return outline(c);
+  });
+}
+
+// Donut seen slightly from above. kind: sweet | savory, glaze colour, toppings.
+export function donutSprite(d) {
+  return cached('donut' + d.id, () => {
+    const [c, x] = canvas(18, 13);
+    const P = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+    const dough = '#e0a868', doughS = shade(dough, 0.25);
+    // ring body
+    for (let j = 0; j < 13; j++) for (let i = 0; i < 18; i++) {
+      const dx = (i - 8.5) / 8.5, dy = (j - 6) / 5.6; const r = dx * dx + dy * dy;
+      const hole = ((i - 8.5) / 2.6) ** 2 + ((j - 5.2) / 1.8) ** 2;
+      if (r <= 1 && hole > 1) P(i, j, 1, 1, j > 8 ? doughS : dough);
+    }
+    // glaze on top
+    for (let j = 0; j < 9; j++) for (let i = 1; i < 17; i++) {
+      const dx = (i - 8.5) / 7.6, dy = (j - 5) / 4.4; const r = dx * dx + dy * dy;
+      const hole = ((i - 8.5) / 3) ** 2 + ((j - 5.2) / 2) ** 2;
+      if (r <= 1 && hole > 1 && !(j > 6 && (i % 4 === 0))) P(i, j, 1, 1, d.glaze);
+    }
+    P(4, 2, 3, 1, light(d.glaze, 0.4));
+    if (d.sprinkles) [[3, 4, '#ff6fb0'], [6, 1, '#7fe0ff'], [12, 2, '#ffe066'], [14, 5, '#8fd36a'], [10, 7, '#ffffff'], [5, 7, '#b48aff']].forEach(([a, b, col]) => P(a, b, 2, 1, col));
+    if (d.id === 'floss') { for (let k = 0; k < 14; k++) P(2 + ((k * 7) % 14), 1 + ((k * 5) % 7), 2, 1, k % 2 ? '#c8803a' : '#a86a2a'); P(5, 3, 1, 1, '#5fae5a'); P(11, 2, 1, 1, '#5fae5a'); P(13, 6, 1, 1, '#5fae5a'); }
+    if (d.id === 'cheese') { P(3, 6, 2, 3, '#ffd860'); P(13, 6, 2, 4, '#ffd860'); P(7, 1, 1, 1, '#e8503a'); P(10, 3, 1, 1, '#e8503a'); P(5, 3, 1, 1, '#e8503a'); }
+    if (d.id === 'strawberry') { P(6, 1, 1, 1, '#ffffff'); P(12, 3, 1, 1, '#ffffff'); P(4, 5, 1, 1, '#ffffff'); }
+    return outline(c, '#5a3423');
   });
 }

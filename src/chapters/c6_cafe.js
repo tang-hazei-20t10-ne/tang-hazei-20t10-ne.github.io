@@ -103,7 +103,6 @@ export default async function cafe(game) {
   const hz = scene.addEntity(new Character(LOOKS.hazei(), 0, { z: -6, dir: 1 }));
   const pt = scene.addEntity(new Character(LOOKS.partner(), 0, { z: -6, dir: -1 }));
   const barista = scene.addEntity(new Character(LOOKS.barista, 0, { z: -12, dir: -1 }));
-  hz.hat = state.data.outfit.hat; hz.sunglasses = state.data.outfit.glasses;
   hz.forcePose = 'sit'; pt.forcePose = 'sit'; hz.dy = -6; pt.dy = -6;
   let baristaX = null;
   const place = () => { hz.x = tx() - 26; pt.x = tx() + 26; barista.x = baristaX ?? Math.round(W() * 0.8); };
@@ -137,15 +136,16 @@ export default async function cafe(game) {
   drink = choice.it; state.set({ drink: drink.id });
   hz.forceMood = 'happy'; setTimeout(() => { hz.forceMood = null; }, 1200);
   await wait(400);
-  scene.say(pt, C.partnerOrder, 2800); pt.emote('thumb');
-  await wait(2600);
+  const lc = (n) => n.charAt(0).toLowerCase() + n.slice(1);
+  scene.say(pt, C.partnerOrder.replace('{nuoc}', lc(drink.name)), 3600); pt.emote('thumb');
+  await wait(3400);
   // barista brings the drinks
   barista.forcePose = 'hold'; barista.hold = 'snack';
   const from = W() * 0.8, to = tx() + 8;
   for (let k = 0; k <= 1; k += 0.02) { baristaX = from + (to - from) * k; barista.forcePose = 'walk'; barista.dir = -1; await wait(28); }
   barista.forcePose = 'give';
   cups.push({ img: cupSprite(drink.color, drink.art, choice.glass ? 'glass' : 'mug'), hot: !choice.glass && !['peach'].includes(drink.id) });
-  cups.push({ img: cupSprite('#c98a54', true, 'mug'), hot: true });
+  cups.push({ img: cupSprite(C.partnerDrinkColor, true, 'mug'), hot: true });
   audio.sfx('clink');
   scene.say(barista, C.served, 3000);
   await wait(2200);

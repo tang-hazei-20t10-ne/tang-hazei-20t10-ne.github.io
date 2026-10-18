@@ -131,7 +131,6 @@ export default async function train(game) {
 
   seats.hz = { pose: 'sit', mood: 'normal', hat: false, sun: false, hold: null };
   seats.pt = { pose: 'sit', mood: 'normal', hold: null, emoteT: 0, emote: 'heart' };
-  seats.hz.hat = state.data.outfit.hat; seats.hz.sun = state.data.outfit.glasses;
 
   const say = (who, text, ms = 2800) => {
     const cx = scene.W / 2; const px = who === 'pt' ? cx - 14 : cx + 12;

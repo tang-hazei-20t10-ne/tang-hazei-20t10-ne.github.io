@@ -6,6 +6,7 @@ const defaults = () => ({
   started: false,
   flowers: [], // { species, color }
   omakase: [], // chosen option index per round
+  donut: null, // chosen donut index at the fair
   drink: null,
   bookmark: false,
   outfit: { hat: false, glasses: false },
