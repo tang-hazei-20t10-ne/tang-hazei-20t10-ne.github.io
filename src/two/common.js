@@ -212,8 +212,8 @@ export function addBench(scene, x, { z = -3, line, sitLine, onSit, onStand } = {
   const sit = async () => {
     const h = scene.hazei;
     sitting = true; h.locked = true; h.target = null;
-    h.x = x - 6; h.z = z + 1; h.dy = -6; h.forcePose = 'sit'; h.dir = 1;
-    scene.partnerAt(x + 8, 'sit', -1);
+    h.x = x - 17; h.z = z + 1; h.dy = -6; h.forcePose = 'sit'; h.dir = 1;
+    scene.partnerAt(x + 19, 'sit', -1);
     if (scene.partner) { scene.partner._sitZ = true; }
     audio.sfx('pop');
     if (line && state.once('bench' + scene.cfg.id + x)) scene.say(scene.partner, line, 2600);
@@ -227,7 +227,7 @@ export function addBench(scene, x, { z = -3, line, sitLine, onSit, onStand } = {
     h.dy = 0; h.z = 0; h.forcePose = null; h.locked = false;
     scene.partnerAt(null); onStand?.();
   };
-  scene.interact.add({ x, range: 18, hold: 0.3, label: () => (sitting ? P.stand : P.sit), onDone: () => (sitting ? stand() : sit()) });
+  scene.interact.add({ x, range: 22, hold: 0.3, label: () => (sitting ? P.stand : P.sit), onDone: () => (sitting ? stand() : sit()) });
   // partner sitting offset handled through a draw hook
   const origUpdate = scene.cfg.update;
   scene.cfg.update = (s, dt) => {

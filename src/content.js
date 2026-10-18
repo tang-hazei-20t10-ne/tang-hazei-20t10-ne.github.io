@@ -302,7 +302,7 @@ export default {
   },
 
   omakase: {
-    chefName: 'Bác đầu bếp',
+    chefName: 'Bác đầu bếp tên Độ',
     intro: [
       { who: 'chef', text: 'Chào hai cháu! Hôm nay có năm lượt món, mỗi lượt hai món, cháu chọn món nào cũng được.' },
       { who: 'chef', text: 'Món nào cũng mang một lời chúc riêng đó.' },

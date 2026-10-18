@@ -80,11 +80,12 @@ export function bushSprite(seed = 1, col = '#5fae5a', flowers = null) {
 
 export function bench(color = '#b5794a') {
   return cached('bench' + color, () => {
-    const [c, x] = canvas(30, 16);
+    const W = 60; // long enough for two people with a little space between them
+    const [c, x] = canvas(W, 16);
     const P = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
-    P(2, 2, 26, 2, color); P(2, 5, 26, 2, color); P(2, 2, 26, 1, light(color, 0.3));
-    P(1, 9, 28, 2, color); P(1, 9, 28, 1, light(color, 0.3)); P(1, 11, 28, 1, shade(color, 0.3));
-    P(4, 4, 2, 12, '#4a3a44'); P(24, 4, 2, 12, '#4a3a44'); P(3, 12, 4, 1, '#4a3a44'); P(23, 12, 4, 1, '#4a3a44');
+    P(2, 2, W - 4, 2, color); P(2, 5, W - 4, 2, color); P(2, 2, W - 4, 1, light(color, 0.3));
+    P(1, 9, W - 2, 2, color); P(1, 9, W - 2, 1, light(color, 0.3)); P(1, 11, W - 2, 1, shade(color, 0.3));
+    for (const lx of [4, W / 2 - 1, W - 6]) { P(lx, 4, 2, 12, '#4a3a44'); P(lx - 1, 12, 4, 1, '#4a3a44'); }
     return outline(c);
   });
 }
