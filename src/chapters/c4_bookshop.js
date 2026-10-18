@@ -160,7 +160,7 @@ export default async function bookshop(game) {
         const cov = document.createElement('canvas'); cov.width = 30; cov.height = 40; cov.getContext('2d').drawImage(bookCover(i), 0, 0);
         cov.style.cssText = 'width:90px;height:120px;image-rendering:pixelated;float:left;margin:0 16px 8px 0';
         s.appendChild(cov);
-        s.insertAdjacentHTML('beforeend', `<h2>${esc(b.title)}</h2><p style="font-size:20px;line-height:1.55;font-weight:700;margin:10px 0 0">${esc(b.line)}</p><div style="clear:both"></div>`);
+        s.insertAdjacentHTML('beforeend', `<h2>${esc(b.title)}</h2>${b.author ? `<p class="sub" style="margin:2px 0 0">${esc(b.author)}</p>` : ''}<p style="font-size:20px;line-height:1.55;font-weight:700;margin:10px 0 0">${esc(b.line)}</p><div style="clear:both"></div>`);
         const row = el('div', 'row mt'); row.style.justifyContent = 'flex-end'; const ok = el('button', 'btn soft', esc(content.ui.close)); ok.onclick = () => ui.closeModal(); row.appendChild(ok); s.appendChild(row);
       });
     });

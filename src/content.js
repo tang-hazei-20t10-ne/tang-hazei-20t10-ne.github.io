@@ -155,7 +155,7 @@ export default {
     { id: 'discord', title: 'Mở đầu', time: '' },
     { id: 'meadow', title: 'Bình minh trên đồng cỏ', time: 'Bình minh' },
     { id: 'market', title: 'Hội chợ & tiệm chụp hình', time: 'Buổi sáng' },
-    { id: 'train', title: 'Chuyến tàu về miền quê', time: 'Gần trưa' },
+    { id: 'train', title: 'Chuyến tàu đến địa điểm tổ chức lễ hội', time: 'Gần trưa' },
     { id: 'bookshop', title: 'Tiệm sách cũ & góc đĩa than', time: 'Gần trưa' },
     { id: 'omakase', title: 'Bữa trưa omakase', time: 'Giữa trưa' },
     { id: 'cafe', title: 'Một góc cà phê', time: 'Đầu giờ chiều' },
@@ -186,7 +186,7 @@ export default {
     exitSign: 'Hội chợ →',
     // Mino offers to take a photo at the sunrise spot
     photoAsk: M.dongCo.hoiChupHinh,
-    photoChoices: ['Chụp đi!', 'Thôi khỏi'],
+    photoChoices: ['Okela!', 'Chụp phải đẹp đó nha'],
     photoReady: M.dongCo.chupHinhSanSang,
     photoNo: M.dongCo.khongChup,
     photoCaption: 'Bình minh trên đồng cỏ',
@@ -213,7 +213,7 @@ export default {
     },
     flowers: {
       vendor: 'Chị bán hoa',
-      lines: ['Hoa sáng nay mới về, em ngửi thử đi.', 'Ngày 20/10 mà, chị tặng em một bông nè.'],
+      lines: ['Hoa sáng nay mới về, em ngửi thử đi.', 'Chị tặng bé một bông nè.'],
       react: 'Thơm dịu dịu.',
     },
     hats: {
@@ -272,13 +272,13 @@ export default {
       { who: 'partner', text: M.tiemSach.moDau },
     ],
     // Original lines written for this game.
+    // Real books with short quotes (one per shelf). Translations are ours.
     books: [
-      { title: 'Những buổi sáng chậm', line: '“Không cần vội. Hoa nở đúng mùa của nó, và cậu cũng vậy.”' },
-      { title: 'Bản đồ của gió', line: '“Can đảm đôi khi chỉ là bước thêm một bước nhỏ, dù tim còn run.”' },
-      { title: 'Cô gái giữ ánh đèn', line: '“Cứ là chính mình đi. Thế giới có đủ người khác rồi, nhưng chỉ có một bạn thôi.”' },
-      { title: 'Mùa hè ở ga xép', line: '“Hy vọng giống chuyến tàu đêm: chậm thôi, nhưng chưa bao giờ ngừng tới.”' },
-      { title: 'Ngày mưa có nắng', line: '“Có những ngày mây nhiều, nhưng mặt trời chưa từng đi đâu xa.”' },
-      { title: 'Thư gửi chính mình', line: '“Bạn đã đi được xa đến vậy rồi. Dịu dàng với bản thân thêm chút nữa nhé.”' },
+      { title: 'Anne tóc đỏ dưới chái nhà xanh', author: 'L.M. Montgomery', line: '“Nghĩ tới việc ngày mai là một ngày mới, chưa có lỗi lầm nào, chẳng phải dễ chịu lắm sao?”' },
+      { title: 'Nhà giả kim', author: 'Paulo Coelho', line: '“Khi bạn thật lòng mong muốn điều gì, cả vũ trụ sẽ hợp lực giúp bạn đạt được điều đó.”' },
+      { title: 'Alice ở xứ sở thần tiên', author: 'Lewis Carroll', line: '“Tôi không thể quay về ngày hôm qua, vì khi ấy tôi đã là một người khác rồi.”' },
+      { title: 'Những cô gái nhỏ', author: 'Louisa May Alcott', line: '“Em không sợ giông bão, vì em đang học cách lái con thuyền của mình.”' },
+      { title: 'Hoàng tử bé', author: 'Antoine de Saint-Exupéry', line: '“Chính thời gian cậu dành cho bông hồng của cậu đã khiến bông hồng ấy trở nên quan trọng đến thế.”' },
     ],
     records: [
       { title: 'Chiều phố cũ', style: 'jazz' },
@@ -364,7 +364,7 @@ export default {
             dish: 'Nhím biển uni',
             short: 'Vị của biển đọng lại, quý và hiếm có.',
             chef: 'Uni phải lặn sâu mới tìm được, vị của nó không lẫn vào đâu. Đừng quên là cháu cũng hiếm có như vậy nghe.',
-            fragment: 'nhớ rằng mình quý và hiếm có',
+            fragment: 'nhớ rằng cậu là duy nhất',
             sprite: 'uni',
           },
         ],
@@ -402,7 +402,7 @@ export default {
             dish: 'Pudding matcha',
             short: 'Đắng nhẹ rồi hậu ngọt.',
             chef: 'Matcha đắng một chút ở đầu lưỡi, rồi ngọt dần ra. Ngày nào khó khăn, cháu nhớ là cuối cùng sẽ ngọt lại thôi.',
-            fragment: 'ngày khó nào cũng có hậu ngọt',
+            fragment: 'ngày khó nào cũng sẽ có điều ngọt ngào',
             sprite: 'matcha',
           },
         ],
@@ -607,8 +607,10 @@ export default {
     npcs: [
       'Chúc chị một tối thật vui nha!',
       'Hoa đăng năm nay đẹp quá trời.',
-      'Cuối phố sắp có biểu diễn đó, đi coi đi chị!',
-      'Bánh trung thu nhân trứng muối nè, ăn hông?',
+      'Cuối phố sắp có ca sĩ biểu diễn đó, đi coi đi chị!',
+      'Bánh trung thu nhân không trứng muối nè, ăn hông?',
+      'Chuẩn bị bắn pháo hoa rồi đó',
+      'Lễ hội năm nay đông vui ghê!',
     ],
     gather: 'Mọi người đang kéo về phía sân khấu…',
     guide: {
@@ -627,7 +629,7 @@ export default {
     applause: 'Cả khán phòng vỗ tay rần rần!',
     bouquetLine: M.sanKhau.tangHoa,
     giftNote: M.sanKhau.themHoa,
-    happy: 'Hazei ôm bó hoa, cười tít mắt.',
+    happy: 'Món quà đầu tiên của tớ.',
     wishTitle: 'Lời chúc cho Hazei',
     toEpilogue: 'Tiếp tục',
   },
