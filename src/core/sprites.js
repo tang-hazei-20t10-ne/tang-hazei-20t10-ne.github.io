@@ -82,8 +82,35 @@ export function charSprite(look, o = {}) {
   const frame = o.frame || 0;
   const mood = o.mood || 'normal';
   const hat = o.hat || look.strawHat; const sung = o.sunglasses;
-  const key = [look.kind, look.hair, look.top, look.dress, look.bottom, look.hairStyle, look.glasses, look.apron, pose, frame, mood, hat, sung, look.chefHat, o.hold || '', o.back ? 'back' : ''].join('|');
-  return cached(key, () => outline(o.back ? drawBack(look, pose, frame) : drawChar(look, pose, frame, mood, hat, sung, o.hold)));
+  const view = o.top ? 'top' : o.back ? 'back' : '';
+  const key = [look.kind, look.hair, look.top, look.dress, look.bottom, look.hairStyle, look.glasses, look.apron, pose, frame, mood, hat, sung, look.chefHat, o.hold || '', view].join('|');
+  return cached(key, () => outline(o.top ? drawTop(look, frame) : o.back ? drawBack(look, pose, frame) : drawChar(look, pose, frame, mood, hat, sung, o.hold)));
+}
+
+// Seen from straight above (camera high over a seated player): crown of the
+// head with a parting, long hair over the shoulders, arms reaching forward.
+function drawTop(L, frame) {
+  const [c, x] = canvas(24, 30);
+  const P = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+  const hair = L.hair || '#333', hairL = light(hair, 0.22), hairS = shade(hair, 0.25);
+  const top = L.top || '#fff', topS = shade(top, 0.18), skin = L.skin || '#ffdcc4';
+  const dress = L.dress || L.bottom || top;
+  // lap / skirt toward the camera (bottom of the sprite)
+  P(6, 18, 12, 6, dress); P(6, 23, 12, 1, shade(dress, 0.2));
+  // shoulders
+  P(3, 12, 18, 6, top); P(3, 16, 18, 2, topS);
+  // arms reaching forward to the keys, hands moving a little
+  const a = frame % 2;
+  P(3, 15, 3, 9, top); P(18, 15, 3, 9, top);
+  P(4 + a, 24, 3, 3, skin); P(17 - a, 24, 3, 3, skin);
+  // head from above: round crown, long hair spilling over the back/shoulders
+  P(5, 3, 14, 12, hairS); P(4, 5, 16, 8, hairS);
+  P(6, 4, 12, 10, hair); P(5, 6, 14, 6, hair);
+  P(11, 4, 2, 9, shade(hair, 0.4)); // parting
+  P(8, 5, 2, 3, hairL); P(14, 6, 2, 2, hairL);
+  P(4, 12, 3, 5, hair); P(17, 12, 3, 5, hair); P(9, 1, 6, 3, hairS); // hair over shoulders & down the back
+  P(9, 15, 6, 1, skin); // a glimpse of forehead/nose toward the front
+  return c;
 }
 
 // Seen from behind (used for the chef, who faces the customers).
@@ -98,14 +125,16 @@ function drawBack(L, pose, frame) {
   P(4, bodyY + 1 + up, 3, 6, top); P(17, bodyY + 1 + up, 3, 6, top);
   P(4, bodyY + 7 + up, 3, 1, skin); P(17, bodyY + 7 + up, 3, 1, skin);
   if (L.apron || L.chefHat) { P(8, bodyY + 6, 8, 1, '#c9c2b8'); P(11, bodyY + 6, 2, 3, '#c9c2b8'); P(10, bodyY + 9, 1, 2, '#c9c2b8'); P(13, bodyY + 9, 1, 2, '#c9c2b8'); }
-  P(8, bodyY + 12, 8, 6, L.bottom || '#3c3a4a');
+  P(L.dress ? 6 : 8, bodyY + 12, L.dress ? 12 : 8, 6, L.dress || L.bottom || '#3c3a4a');
   // neck, ears, back of the head
   P(10, headY + 9, 4, 2, skin);
   P(5, headY + 1, 14, 9, hair); P(6, headY, 12, 10, hair); P(4, headY + 4, 1, 2, skin); P(19, headY + 4, 1, 2, skin);
   P(8, headY + 1, 4, 1, light(hair, 0.25));
   if (L.chefHat) { const hy = headY - 7; P(7, hy, 10, 6, '#fbfbf6'); P(6, hy + 1, 12, 3, '#fbfbf6'); P(7, hy + 5, 10, 2, '#e8e2d8'); P(16, hy + 1, 1, 4, '#e2dcd2'); }
   // towel tied around the head, ramen-chef style
-  else { P(5, headY + 3, 14, 2, '#f4f1ea'); P(17, headY + 4, 3, 3, '#f4f1ea'); }
+  else if (L.towel) { P(5, headY + 3, 14, 2, '#f4f1ea'); P(17, headY + 4, 3, 3, '#f4f1ea'); }
+  // long hair falls down the back
+  if (L.hairStyle === 'long') { P(6, headY + 9, 12, 9, hair); P(7, headY + 18, 10, 2, hair); P(8, headY + 3, 2, 12, light(hair, 0.18)); }
   return c;
 }
 
@@ -130,7 +159,7 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
   let bob = 0;
   if (pose === 'idle') bob = frame % 2 ? 1 : 0;
   if (pose === 'walk') bob = frame % 2 ? -1 : 0;
-  if (pose === 'sit' || pose === 'piano') drop = 4;
+  if (pose === 'sit' || pose === 'piano' || pose === 'sitwave') drop = 4;
   if (pose === 'crouch') drop = 6;
   if (pose === 'jump') bob = -3;
   const oy = (kid ? 5 : 2) + drop + bob; // head top offset
@@ -148,7 +177,7 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
 
   // --- legs
   const legLen = kid ? (dress ? 1 : 3) : (dress ? 2 : 4);
-  const showLegs = pose !== 'sit' && pose !== 'piano';
+  const showLegs = pose !== 'sit' && pose !== 'piano' && pose !== 'sitwave';
   if (showLegs) {
     let l = 0, r = 0;
     if (pose === 'walk') { if (frame === 1) l = -1; if (frame === 3) r = -1; }
@@ -201,6 +230,12 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
   const armFwdR = () => { P(17, armY, 3, 2, topS); P(20, armY, 2, 2, skin); };
   switch (pose) {
     case 'wave': armL(armY + la); armUpR(); if (frame % 2) P(19, armY - 7, 1, 2, skin); break;
+    case 'sitwave': { // seated, one hand up swaying slowly left/right
+      armL(armY); const sx = frame % 2 ? 2 : 0;
+      P(17, armY - 1, 2, 2, topS);
+      P(18 + sx / 2, headY + 2, 2, bodyY - headY - 2, topS);
+      P(18 + sx, headY - 3, 3, 5, skin); P(18 + sx, headY - 4, 1, 1, skin); P(20 + sx, headY - 4, 1, 1, skin); break;
+    }
     case 'cheer': armUpL(); armUpR(); break;
     case 'heart': // hands above head
       P(5, armY - 3, 2, 4, top); P(17, armY - 3, 2, 4, topS); P(6, headY - 3, 3, 2, skin); P(15, headY - 3, 3, 2, skin); break;

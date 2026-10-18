@@ -386,18 +386,29 @@ export default async function stage(game) {
     [0.86, [18, 10, 30], [0, RY(1), -6]],
     [1.0, [0.8, RY(1.6), 0.5], [0, RY(0.95), -6.2]],
   ].map(([f, p, l]) => [f, new THREE.Vector3(...p), new THREE.Vector3(...l)]);
-  let lyricIdx = -1;
+  let lyricIdx = -1; let mouthOpen = false, mouthT = 0;
   await new Promise((resolve) => {
     const stop = world.every((dt, t) => {
       const st = fast ? Math.min(song.time * (song.duration / 12), song.duration) : song.time;
-      const f = songF = Math.min(1, Math.max(0, st / song.duration));
+      const f = songF = game.debugSongF ?? Math.min(1, Math.max(0, st / song.duration)); // debugSongF: jump the camera (debug only)
       let i = 0; while (i < keys.length - 2 && keys[i + 1][0] < f) i++;
       const [f0, p0, l0] = keys[i], [f1, p1, l1] = keys[i + 1];
       const k = ease(Math.min(1, (f - f0) / (f1 - f0)));
       setCam(p0.clone().lerp(p1, k).add(new THREE.Vector3(Math.sin(t * 0.4) * 0.2, Math.sin(t * 0.33) * 0.1, 0)), l0.clone().lerp(l1, k));
-      const open = energy.mid > 0.3 && Math.floor(t * 5) % 2 === 0;
-      hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'piano', frame: Math.floor(t * (3 + energy.mid * 6)), mood: open ? (energy.bass > 0.55 ? 'singHappy' : 'sing') : (Math.sin(t * 0.7) > 0.9 ? 'closed' : 'normal') }));
-      partner.setCanvas(charSprite(LOOKS.partner(), { pose: f > 0.72 && Math.floor(t * 2) % 2 ? 'cheer' : 'sit', mood: 'happy' }));
+      // mouth: open/close at a relaxed, syllable-like pace while she sings
+      mouthT -= dt;
+      if (mouthT <= 0) {
+        if (energy.mid > 0.26) { mouthOpen = !mouthOpen; mouthT = mouthOpen ? 0.34 + Math.random() * 0.16 : 0.18 + Math.random() * 0.1; }
+        else { mouthOpen = false; mouthT = 0.2; }
+      }
+      const open = mouthOpen;
+      // pick the view that matches where the camera is: from high above we
+      // see the top of her head, from behind her back
+      const v = camPos.clone().sub(hazei.position);
+      const elev = Math.atan2(v.y, Math.hypot(v.x, v.z));
+      const view = elev > 0.8 ? { top: true } : v.z < -0.3 ? { back: true } : {};
+      hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'piano', frame: Math.floor(t * (1.6 + energy.mid * 1.6)), mood: open ? (energy.bass > 0.6 ? 'singHappy' : 'sing') : (Math.sin(t * 0.7) > 0.9 ? 'closed' : 'normal'), ...view }));
+      partner.setCanvas(charSprite(LOOKS.partner(), { pose: 'sitwave', frame: Math.floor(t * (f > 0.72 && f < 0.92 ? 1.5 : 1.0)), mood: 'happy' })); // slow wave along with the song
       if (lyrics.length) { let j = lyrics.length - 1; while (j >= 0 && lyrics[j].t > st) j--; if (j !== lyricIdx) { lyricIdx = j; ui.lyrics(j >= 0 ? lyrics[j].text : ''); } }
       if ((fast && song.time >= 12) || song.time >= song.duration + 0.3) { stop(); resolve(); }
     });
