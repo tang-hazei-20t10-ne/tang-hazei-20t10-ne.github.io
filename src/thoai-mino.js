@@ -59,7 +59,7 @@ export default {
   // ---------------------------------------------------------- Chương 4: Tiệm sách
   tiemSach: {
     moDau: 'Tiệm sách này có một bé mèo xinh yêu lắm á 😴',
-    goiY: ['Cuốn “Hoàng tử bé” hay lắm đó.', 'Đĩa “Đèn đường” nghe cuốn ghê.'],
+    goiY: ['Cuốn “Hoàng tử bé” hay lắm đó.', 'Đĩa “Arabesque” nghe êm ghê.'],
     meo: 'Nó kêu rừ rừ thì phải :)))',
     ruDiTiep: 'Cậu đói chưa, mình đi ăn nha.',
   },

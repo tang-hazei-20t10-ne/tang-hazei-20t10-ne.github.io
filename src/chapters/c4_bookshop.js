@@ -175,13 +175,15 @@ export default async function bookshop(game) {
       ui.modal((s) => {
         s.insertAdjacentHTML('beforeend', `<h2>${esc(C.recordsTitle)}</h2>`);
         const g = el('div', 'grid-opts');
-        C.records.forEach((r, i) => { const b = el('button', 'opt', `<span class="n">♪ ${esc(r.title)}</span>`); b.onclick = () => { resolve(i); ui.onModalClose = null; ui.closeModal(); }; g.appendChild(b); });
+        C.records.forEach((r, i) => { const b = el('button', 'opt', `<span class="n">♪ ${esc(r.title)}</span>${r.composer ? `<span class="d">${esc(r.composer)}</span>` : ''}`); b.onclick = () => { resolve(i); ui.onModalClose = null; ui.closeModal(); }; g.appendChild(b); });
         s.appendChild(g);
       });
     });
     if (pick < 0) return;
     audio.sfx('scratch'); spin = 1;
-    audio.playMusic(C.records[pick].style, 1.2);
+    const rec = C.records[pick];
+    if (!(rec.file && await audio.playRecord(rec.file))) { audio.stopRecord(); audio.playMusic(rec.style, 1.2); }
+    ui.note(`♪ ${rec.title}${rec.composer ? ' · ' + rec.composer : ''}`, 3500);
     scene.partner.emote('note');
     if (pick === 3) setTimeout(() => scene.say(scene.partner, C.partnerRecs[1], 3000), 1500);
   } });
@@ -217,6 +219,7 @@ export default async function bookshop(game) {
   addExit(scene, W - 36, C.exitSign.replace(' →', ''), { hint: C.exitHint });
 
   audio.scene('bookshop', [['room', 0.6], ['clock', 0.5]]);
+  scene.cfg.cleanup = () => audio.stopRecord(1.2);
   const done = scene.start();
   await intro(game, scene, C.intro);
   await done;

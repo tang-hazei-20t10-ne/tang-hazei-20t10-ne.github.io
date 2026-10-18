@@ -280,11 +280,14 @@ export default {
       { title: 'Những cô gái nhỏ', author: 'Louisa May Alcott', line: '“Em không sợ giông bão, vì em đang học cách lái con thuyền của mình.”' },
       { title: 'Hoàng tử bé', author: 'Antoine de Saint-Exupéry', line: '“Chính thời gian cậu dành cho bông hồng của cậu đã khiến bông hồng ấy trở nên quan trọng đến thế.”' },
     ],
+    // Record corner: public-domain / Creative Commons piano recordings in
+    // public/assets/records/ (credits in the README). If a file is missing,
+    // the generated loop in `style` plays instead.
     records: [
-      { title: 'Chiều phố cũ', style: 'jazz' },
-      { title: 'Mưa trên mái ngói', style: 'lofi' },
-      { title: 'Vũ điệu tách trà', style: 'waltz' },
-      { title: 'Đèn đường', style: 'bossa' },
+      { title: 'Gymnopédie No. 1', composer: 'Erik Satie', style: 'lofi', file: 'assets/records/1.mp3' },
+      { title: 'Nocturne Op. 9 No. 2', composer: 'Frédéric Chopin', style: 'waltz', file: 'assets/records/2.mp3' },
+      { title: 'Träumerei (Mơ mộng)', composer: 'Robert Schumann', style: 'jazz', file: 'assets/records/3.mp3' },
+      { title: 'Arabesque No. 1', composer: 'Claude Debussy', style: 'bossa', file: 'assets/records/4.mp3' },
     ],
     recordsTitle: 'Chọn một đĩa than',
     partnerRecs: M.tiemSach.goiY,

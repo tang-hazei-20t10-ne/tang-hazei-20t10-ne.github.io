@@ -181,6 +181,20 @@ an `AnalyserNode` on the song.
 ## Licensing
 
 All code, art and sound in this project are original and generated in code, except the train-window
-video (CC BY-SA 4.0, credited above). Fonts: VT323 and Nunito
+video (CC BY-SA 4.0, credited above) and the record-corner piano recordings (credited below). Fonts: VT323 and Nunito
 (SIL Open Font License) via `@fontsource`. Three.js is MIT. The Discord look and logo are used privately
 for a personal, non-commercial gift. The song belongs to its owner and is not included.
+
+### Record-corner piano recordings (bookshop)
+
+Files in `public/assets/records/` were trimmed and loudness-matched; the originals are on Wikimedia Commons.
+
+| # | Piece | Performer | License |
+|---|---|---|---|
+| 1 | Erik Satie – Gymnopédie No. 1 | Kevin MacLeod (incompetech.com) | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) |
+| 2 | Frédéric Chopin – Nocturne Op. 9 No. 2 | Frank Lévy | Public domain |
+| 3 | Robert Schumann – Träumerei (Kinderszenen Op. 15 No. 7) | Musopen | Public domain |
+| 4 | Claude Debussy – Arabesque No. 1 | Patrizia Prati | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+
+To use other music, replace `1.mp3`–`4.mp3` and edit `bookshop.records` in `src/content.js`. If a file is
+missing, the record falls back to a generated loop.

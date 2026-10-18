@@ -418,6 +418,32 @@ class AudioEngine {
     notes.forEach((m, i) => { INST[inst](this.ctx, this.sfxBus, t + i * gap, m, 0.4, 0.7); INST[inst](this.ctx, this.sfxVerb, t + i * gap, m, 0.4, 0.5); });
   }
 
+  // ---------------------------------------------------------- record player
+  // Plays an audio file in a loop through the music bus (so mute/volume apply).
+  // Resolves false if the file is missing, so callers can fall back.
+  async playRecord(url) {
+    this.stopRecord();
+    if (!this.ctx) return false;
+    const el = new Audio(url); el.loop = true; el.preload = 'auto';
+    const ok = await new Promise((res) => { el.oncanplay = () => res(true); el.onerror = () => res(false); setTimeout(() => res(false), 8000); });
+    if (!ok) return false;
+    const src = this.ctx.createMediaElementSource(el);
+    const g = this.ctx.createGain(); g.gain.value = 0.0001;
+    src.connect(g); g.connect(this.musicBus);
+    g.gain.linearRampToValueAtTime(1, this.ctx.currentTime + 1.2);
+    this.playMusic(null, 1);
+    try { await el.play(); } catch { return false; }
+    this.record = { el, g };
+    return true;
+  }
+  stopRecord(fade = 1) {
+    const r = this.record; if (!r) return; this.record = null;
+    r.g.gain.cancelScheduledValues(this.ctx.currentTime);
+    r.g.gain.setValueAtTime(r.g.gain.value, this.ctx.currentTime);
+    r.g.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + fade);
+    setTimeout(() => { r.el.pause(); r.el.src = ''; }, fade * 1000 + 100);
+  }
+
   // ---------------------------------------------------------- song
   async loadSong(url) {
     try {
