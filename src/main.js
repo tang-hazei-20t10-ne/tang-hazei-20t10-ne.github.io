@@ -156,6 +156,12 @@ document.addEventListener('visibilitychange', () => {
   game.paused = document.hidden;
   if (document.hidden) audio.suspend(); else audio.resume();
 });
+// Background window (another app in front): scenes slow down to a crawl to
+// save power; they return to full speed the moment the window is focused.
+game.focused = document.hasFocus();
+addEventListener('focus', () => { game.focused = true; });
+addEventListener('blur', () => { game.focused = false; });
+for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => { game.focused = true; }, true);
 addEventListener('error', (e) => console.warn('runtime', e.message));
 addEventListener('unhandledrejection', (e) => console.warn('promise', e.reason));
 

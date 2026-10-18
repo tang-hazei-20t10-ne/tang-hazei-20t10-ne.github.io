@@ -419,10 +419,14 @@ export class World3D {
     const loop = () => {
       if (this.dead) return;
       this.raf = requestAnimationFrame(loop);
-      const now = performance.now(); const raw = (now - this.last) / 1000; const dt = Math.min(0.05, raw); this.last = now;
+      const now = performance.now();
+      // full speed while Hazei is looking at the game; only idle along when
+      // the window is in the background
+      if (this.game.focused === false && now - this.last < 250) return;
+      const raw = (now - this.last) / 1000; const dt = Math.min(0.05, raw); this.last = now;
       if (this.game.paused) return;
       this.update(dt); this.render();
-      this.adapt(raw);
+      if (this.game.focused !== false) this.adapt(raw);
     };
     this.raf = requestAnimationFrame(loop);
     return this.done;
@@ -514,7 +518,7 @@ export class World3D {
     this.fpsT = (this.fpsT || 0) + raw; this.fpsN = (this.fpsN || 0) + 1;
     if (this.fpsT < 2.5) return;
     const fps = this.fpsN / this.fpsT; this.fpsT = 0; this.fpsN = 0;
-    if (this.realT < 3 || fps >= 38 || this.H <= 240) return;
+    if (this.realT < 3 || fps >= 24 || this.H <= 240) return; // only when it would really stutter
     this.qualityCap = Math.max(240, Math.round(this.H * 0.72));
     this.resize();
   }

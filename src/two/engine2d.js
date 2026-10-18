@@ -178,6 +178,10 @@ export class Scene2D {
       if (this.dead) return;
       this.raf = requestAnimationFrame(loop);
       const now = performance.now();
+      // 2D scenes are slow-paced pixel art: 30 fps is plenty, and a few fps
+      // is enough while the window is in the background (keeps the laptop cool)
+      const step = this.game.focused === false ? 250 : 1000 / 30;
+      if (now - this.last < step - 2) return;
       const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now;
       if (this.game.paused) return;
       this.update(dt); this.draw();
