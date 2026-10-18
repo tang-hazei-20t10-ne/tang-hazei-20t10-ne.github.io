@@ -27,17 +27,17 @@ function drawBackdrop(x, kind, w, h) {
     x.fillStyle = '#fff3d0'; for (let j = -5; j <= 5; j++) { const ww = Math.round(Math.sqrt(25 - j * j)); x.fillRect(w * 0.2 - ww, h * 0.25 + j, ww * 2, 1); }
   } else { // candy
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { x.fillStyle = ((i + j) >> 3) % 2 ? '#ffd2e0' : '#fff0f5'; x.fillRect(i, j, 1, 1); }
-    for (let i = 0; i < 10; i++) x.drawImage(heartSprite(['#ef5a7a', '#f590a8', '#ffb3c6'][i % 3]), r() * (w - 8) | 0, r() * (h - 30) | 0);
+    for (let i = 0; i < 14; i++) { x.fillStyle = ['#f6c45f', '#7f9fdc', '#8fd3b6', '#f08fa8'][i % 4]; const sx = r() * (w - 6) | 0, sy = r() * (h - 30) | 0; x.fillRect(sx + 1, sy, 1, 3); x.fillRect(sx, sy + 1, 3, 1); }
   }
 }
 
 const POSES = [
-  { hz: { pose: 'heart', mood: 'happy' }, pt: { pose: 'heart', mood: 'happy' } },
-  { hz: { pose: 'peace', mood: 'happy' }, pt: { pose: 'peace', mood: 'normal' } },
-  { hz: { pose: 'idle', mood: 'closed' }, pt: { pose: 'idle', mood: 'happy' }, lean: true },
+  { hz: { pose: 'peace', mood: 'happy' }, pt: { pose: 'peace', mood: 'happy' } },
   { hz: { pose: 'idle', mood: 'silly' }, pt: { pose: 'cheer', mood: 'silly' } },
-  { hz: { pose: 'cheer', mood: 'happy', hat: true }, pt: { pose: 'idle', mood: 'happy', sunglasses: true } },
+  { hz: { pose: 'wave', mood: 'happy' }, pt: { pose: 'wave', mood: 'happy' }, five: true },
+  { hz: { pose: 'idle', mood: 'happy' }, pt: { pose: 'idle', mood: 'happy' }, close: true },
   { hz: { pose: 'jump', mood: 'happy' }, pt: { pose: 'jump', mood: 'happy' } },
+  { hz: { pose: 'idle', mood: 'normal', sunglasses: true }, pt: { pose: 'idle', mood: 'normal', sunglasses: true } },
 ];
 
 export function boothFrame(backdrop, pose, w = 64, h = 52) {
@@ -46,12 +46,12 @@ export function boothFrame(backdrop, pose, w = 64, h = 52) {
   const p = POSES[pose];
   const hz = charSprite(LOOKS.hazei(), p.hz);
   const pt = charSprite(LOOKS.partner(), p.pt);
-  const gap = p.lean ? 15 : 19;
+  const gap = p.close ? 14 : p.five ? 24 : 19;
   const cx = w / 2;
   // partner on the left facing right, Hazei on the right facing left
   x.drawImage(pt, Math.round(cx - gap / 2 - 12), h - 30);
   x.save(); x.translate(Math.round(cx + gap / 2), 0); x.scale(-1, 1); x.drawImage(hz, -12, h - 30); x.restore();
-  if (p.lean) x.drawImage(heartSprite('#ef5a7a'), cx - 4, h - 42);
+  if (p.five) { x.fillStyle = '#ffe066'; [[0, -3], [0, 3], [-3, 0], [3, 0], [-2, -2], [2, 2], [2, -2], [-2, 2]].forEach(([dx, dy]) => x.fillRect(Math.round(cx + dx), h - 22 + dy, 1, 1)); }
   return c;
 }
 

@@ -133,7 +133,7 @@ export default async function market(game) {
       const f = { species: 'tulip', color: '#f06d8a' };
       h.forcePose = 'hold'; h.hold = 'flower'; await wait(800);
       game.addFlower(f); flyToChip(scene, h.x + 8, scene.groundY - 20, f);
-      h.hold = null; h.forcePose = null; scene.partner.emote('heart');
+      h.hold = null; h.forcePose = null; scene.partner.emote('sparkle');
     } else scene.say(npcs.flowers, C.flowers.lines[0], 2600);
   } });
   scene.interact.add({ x: 520, range: 22, hold: 0.3, label: P.tryOn, onDone: async () => {
@@ -154,7 +154,7 @@ export default async function market(game) {
     if (pick === 2) { h.hat = false; h.sunglasses = false; }
     state.data.outfit = { hat: h.hat, glasses: h.sunglasses }; state.save();
     audio.sfx('pop'); scene.sparkles(h.x, scene.groundY - 26, 10);
-    if (pick < 2) { await wait(400); scene.say(scene.partner, pick === 0 ? C.hats.reactHat : C.hats.reactGlasses, 2600); scene.partner.emote(pick === 0 ? 'heart' : 'thumb'); }
+    if (pick < 2) { await wait(400); scene.say(scene.partner, pick === 0 ? C.hats.reactHat : C.hats.reactGlasses, 2600); scene.partner.emote(pick === 0 ? 'sparkle' : 'thumb'); }
   } });
   scene.interact.add({ x: 700, range: 22, hold: 0, label: P.talk, onDone: async () => {
     scene.say(npcs.fruit, C.fruit.lines[scene._fruitI = ((scene._fruitI ?? -1) + 1) % 2], 3000);
@@ -164,9 +164,9 @@ export default async function market(game) {
     const h = scene.hazei, p = scene.partner;
     scene.partnerAt(1048, 'idle', 1);
     h.locked = true;
-    await runBooth((poseIdx) => { const map = ['heart', 'peace', 'idle', 'cheer', 'cheer', 'jump']; p.emote(['heart', 'thumb', 'heart', 'laugh', 'sparkle', 'star'][poseIdx]); h.forcePose = map[poseIdx]; setTimeout(() => { h.forcePose = null; }, 600); });
+    await runBooth((poseIdx) => { const map = ['peace', 'idle', 'wave', 'idle', 'jump', 'idle']; p.emote(['thumb', 'laugh', 'star', 'sparkle', 'star', 'thumb'][poseIdx]); h.forcePose = map[poseIdx]; setTimeout(() => { h.forcePose = null; }, 600); });
     h.locked = false; scene.partnerAt(null);
-    scene.partner.emote('heart');
+    scene.partner.emote('laugh');
     scene.boothDone = true;
   } });
 

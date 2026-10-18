@@ -12,12 +12,12 @@ const C = content.train;
 
 // Sights in order, each lasting `dur` seconds of travel.
 const SIGHTS = [
-  { id: 'terraces', dur: 32 },
-  { id: 'lake', dur: 30 },
-  { id: 'tunnel', dur: 16 },
-  { id: 'town', dur: 30 },
-  { id: 'kids', dur: 26 },
-  { id: 'balloons', dur: 30 },
+  { id: 'terraces', dur: 12 },
+  { id: 'lake', dur: 11 },
+  { id: 'tunnel', dur: 7 },
+  { id: 'town', dur: 10 },
+  { id: 'kids', dur: 9 },
+  { id: 'balloons', dur: 11 },
 ];
 
 function terraceStrip(w, h) {
@@ -37,9 +37,10 @@ function terraceStrip(w, h) {
 }
 
 export default async function train(game) {
-  const totalDur = SIGHTS.reduce((a, s) => a + s.dur, 0);
+  let totalDur = SIGHTS.reduce((a, s) => a + s.dur, 0);
   let travel = 0; // seconds of travel
-  let speed = 1; let windowOpen = false; let waveT = 0; let snackT = 0;
+  let speed = 1;
+  let video = null;
   let sightIdx = -1;
   let skyKey = '', skyC;
   const seats = { hz: null, pt: null };
@@ -99,7 +100,7 @@ export default async function train(game) {
         x.fillStyle = '#6fae5a'; x.fillRect(win.x0, win.y1 - 10, W, 10);
         for (let i = 0; i < 30; i++) { const px = ((i * 23 - off * 1.4) % 690 + 690) % 690 - 30; x.fillStyle = '#5a9a4a'; x.fillRect(Math.round(px), win.y1 - 14, 2, 14); x.fillStyle = '#8fd36a'; x.fillRect(Math.round(px), win.y1 - 14, 2, 1); }
         if (sight.id === 'kids') {
-          const kx = Math.round(W * 0.85 - ((travel - sightStart(4)) / 26) * W * 1.2);
+          const kx = Math.round(W * 0.85 - ((travel - sightStart(4)) / SIGHTS[4].dur) * W * 1.2);
           const k1 = charSprite(LOOKS.kidA, { pose: Math.floor(s.t * 4) % 2 ? 'wave' : 'cheer', mood: 'happy', frame: Math.floor(s.t * 4) });
           const k2 = charSprite(LOOKS.kidB, { pose: Math.floor(s.t * 4 + 1) % 2 ? 'wave' : 'cheer', mood: 'happy', frame: Math.floor(s.t * 4) });
           x.drawImage(k1, kx, win.y1 - 34); x.drawImage(k2, kx + 18, win.y1 - 34);
@@ -138,54 +139,61 @@ export default async function train(game) {
   };
   const emote = (k) => { seats.pt.emote = k; seats.pt.emoteT = 1.6; };
 
-  let musicIdx = 0;
-  const actions = () => [
-    { label: windowOpen ? C.actions.windowClose : C.actions.window, onClick: () => { windowOpen = !windowOpen; audio.sfx('whoosh'); audio.setBeds([['train', 1], ['wind', windowOpen ? 0.9 : 0.15], ['birds', windowOpen ? 0.5 : 0]]); if (windowOpen) { say('hz', C.windowReact, 2200); emote('sparkle'); } ui.actions(actions()); } },
-    { label: C.actions.wave, onClick: () => { waveT = 2.2; audio.sfx('pop'); if (currentSight().id === 'kids') { setTimeout(() => say('pt', C.waveReact, 2400), 600); emote('heart'); } else emote('laugh'); } },
-    { label: C.actions.snack, onClick: () => { snackT = 3; audio.sfx('pop'); say('pt', C.snackLines[Math.floor(Math.random() * 2)], 2600); emote('heart'); } },
-    { label: '♪ ' + C.actions.music, onClick: () => pickMusic() },
-  ];
-  const pickMusic = () => ui.modal((s) => {
-    s.insertAdjacentHTML('beforeend', `<h2>${esc(C.musicTitle)}</h2>`);
-    const g = el('div', 'grid-opts');
-    C.songs.forEach((n, i) => { const b = el('button', 'opt' + (i === musicIdx ? ' sel' : ''), `<span class="n">♪ ${esc(n)}</span>`); b.onclick = () => { musicIdx = i; audio.playMusic('train' + (i + 1), 1.5); ui.closeModal(); emote('note'); }; g.appendChild(b); });
-    s.appendChild(g);
-  });
-
   scene.cfg.update = (s, dt) => {
     travel += dt * speed;
     const i = SIGHTS.indexOf(currentSight());
     if (i !== sightIdx) {
       sightIdx = i;
       const sid = SIGHTS[i].id;
-      if (travel > 1) ui.note(C.sights[sid], 3200);
+      if (travel > 1 && !video) ui.note(C.sights[sid], 3200);
       if (sid === 'tunnel') audio.setAmbienceLevel(0.6); else audio.setAmbienceLevel(1);
       if (sid === 'kids') setTimeout(() => emote('wow'), 1500);
     }
     const hz = seats.hz, pt = seats.pt;
     if (pt.emoteT > 0) pt.emoteT -= dt;
-    if (waveT > 0) { waveT -= dt; hz.pose = 'wave'; } else if (snackT > 0) { snackT -= dt; hz.pose = 'hold'; hz.hold = 'snack'; pt.pose = 'hold'; pt.hold = 'snack'; hz.mood = 'happy'; }
-    else { hz.pose = 'sit'; hz.hold = null; pt.pose = 'sit'; pt.hold = null; hz.mood = Math.sin(s.t * 0.7) > 0.97 ? 'blink' : (windowOpen ? 'happy' : 'normal'); }
+    hz.pose = 'sit'; hz.mood = Math.sin(s.t * 0.7) > 0.97 ? 'blink' : 'normal';
     pt.mood = Math.sin(s.t * 0.6 + 1) > 0.97 ? 'blink' : 'normal';
-    if (windowOpen && Math.random() < dt * 4 && s.win) s.spawn({ x: s.win.x0 + Math.random() * (s.win.x1 - s.win.x0), y: s.win.y0 + Math.random() * 30, vx: -30 - Math.random() * 20, vy: 10 + Math.random() * 10, life: 3, screen: true, color: ['#ffc2d4', '#fff0f5', '#f6c45f'][Math.floor(Math.random() * 3)], size: 1, wobble: 1, layer: 'front' });
+    if (video && s.win) placeVideo(s.win);
+    if (!s.earlyBtn && travel > 15) { s.earlyBtn = true; ui.actions([{ label: C.arriveButton + ' →', cls: 'soft', onClick: () => arriveResolve() }]); }
     if (travel >= totalDur && !s.arrived) { s.arrived = true; arrive(); }
   };
 
   let arriveResolve; const arrived = new Promise((r) => { arriveResolve = r; });
   const arrive = async () => {
-    speed = 0;
+    speed = 0; scene.earlyBtn = true;
     audio.setBeds([['birds', 0.6]], 3);
     say('pt', C.arrive, 4000);
     ui.actions([{ label: C.arriveButton + ' →', cls: '', onClick: () => arriveResolve() }]);
   };
 
-  audio.scene('train1', [['train', 1], ['wind', 0.15]]);
+  // real footage in the window, if provided
+  const placeVideo = (win) => {
+    const a = scene.view.toScreen(win.x0, win.y0), b = scene.view.toScreen(win.x1, win.y1);
+    Object.assign(video.style, { left: a.x + 'px', top: a.y + 'px', width: (b.x - a.x) + 'px', height: (b.y - a.y) + 'px' });
+    if (credit) Object.assign(credit.style, { left: a.x + 6 + 'px', top: b.y - 18 + 'px' });
+  };
+  let credit = null;
+  try {
+    const r = await fetch(C.video, { method: 'HEAD' });
+    if (r.ok && (r.headers.get('content-type') || '').startsWith('video')) {
+      video = document.createElement('video');
+      Object.assign(video, { src: C.video, muted: true, loop: true, playsInline: true, autoplay: true, preload: 'auto' });
+      video.setAttribute('playsinline', '');
+      video.style.cssText = 'position:absolute;object-fit:cover;pointer-events:none;z-index:2;filter:saturate(1.1) contrast(1.03)';
+      game.stage.appendChild(video);
+      if (C.videoCredit) { credit = document.createElement('div'); credit.textContent = C.videoCredit; credit.style.cssText = 'position:absolute;z-index:3;font:11px/1 Nunito,sans-serif;color:#fff;opacity:.7;text-shadow:0 1px 2px #000;pointer-events:none'; game.stage.appendChild(credit); }
+      video.play().catch(() => {});
+      totalDur = 60;
+    }
+  } catch { video = null; }
+  scene.cfg.cleanup = () => { video?.remove(); credit?.remove(); };
+
+  audio.scene('train1', [['train', 0.7]]);
   const done = scene.start();
   await game.enter();
   await wait(2400);
   await ui.dialog(C.intro);
-  ui.actions(actions());
-  if (game.debug && new URLSearchParams(location.search).has('fast')) speed = 12;
+  if (game.debug && new URLSearchParams(location.search).has('fast')) speed = 6;
   if (game.debug) game.trainJump = (t) => { travel = t; };
   await arrived;
   await game.leave(scene);

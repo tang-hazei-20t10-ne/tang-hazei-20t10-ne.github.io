@@ -21,10 +21,10 @@ const INST = {
   pad(ctx, dest, t, m, dur, vel = 1) {
     const g = ctx.createGain();
     const f = ctx.createBiquadFilter();
-    f.type = 'lowpass'; f.frequency.value = 900; f.Q.value = 0.3;
+    f.type = 'lowpass'; f.frequency.value = 1400; f.Q.value = 0.3;
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.05 * vel, t + Math.min(1.2, dur * 0.4));
-    g.gain.setValueAtTime(0.05 * vel, t + dur * 0.7);
+    g.gain.linearRampToValueAtTime(0.03 * vel, t + Math.min(1.2, dur * 0.4));
+    g.gain.setValueAtTime(0.03 * vel, t + dur * 0.7);
     g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.8);
     f.connect(g); g.connect(dest);
     for (const det of [-7, 6]) {
@@ -75,7 +75,7 @@ const INST = {
   },
   bass(ctx, dest, t, m, dur, vel = 1) {
     const g = ctx.createGain();
-    env(ctx, g, t, 0.01, 0.16 * vel, Math.max(0.3, dur * 0.9));
+    env(ctx, g, t, 0.01, 0.11 * vel, Math.max(0.3, dur * 0.9));
     const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = mtof(m);
     const o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = mtof(m);
     const g2 = ctx.createGain(); g2.gain.value = 0.3;
@@ -135,24 +135,24 @@ const MAJ = [0, 2, 4, 7, 9]; // major pentatonic
 const MAJ7 = [0, 2, 4, 5, 7, 9, 11];
 const HIRA = [0, 2, 3, 7, 8];
 const PRESETS = {
-  dawn: { root: 65, bpm: 68, beats: 4, prog: [[0, 4, 7, 11], [5, 9, 12, 16], [9, 12, 16, 19], [7, 11, 14, 17]], scale: MAJ, mel: 'pluck', mel2: 'bell', density: 0.35, pad: true, bass: false },
-  market: { root: 67, bpm: 100, beats: 4, prog: [[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7]], scale: MAJ, mel: 'pluck', density: 0.55, pad: false, bass: true, drums: 'shaker', keys: true },
-  train1: { root: 62, bpm: 84, beats: 4, prog: [[0, 4, 7, 11], [9, 12, 16], [5, 9, 12, 16], [7, 11, 14]], scale: MAJ, mel: 'flute', density: 0.4, pad: true, bass: true, drums: 'brush' },
-  train2: { root: 69, bpm: 72, beats: 4, prog: [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12]], scale: MAJ, mel: 'bell', density: 0.35, pad: true, bass: false },
-  train3: { root: 64, bpm: 108, beats: 4, prog: [[0, 4, 7], [5, 9, 12], [0, 4, 7], [7, 11, 14]], scale: MAJ, mel: 'pluck', density: 0.6, pad: false, bass: true, drums: 'shaker' },
-  train4: { root: 60, bpm: 60, beats: 4, prog: [[0, 4, 7, 11], [2, 5, 9, 12], [4, 7, 11, 14], [5, 9, 12, 16]], scale: MAJ7, mel: 'keys', density: 0.25, pad: true, bass: false },
-  jazz: { root: 62, bpm: 112, beats: 4, swing: 0.33, prog: [[2, 5, 9, 12], [7, 11, 14, 17], [0, 4, 7, 11], [9, 13, 16, 19]], scale: MAJ7, mel: 'keys', density: 0.5, pad: false, bass: 'walk', drums: 'brush', keys: true },
-  lofi: { root: 63, bpm: 76, beats: 4, swing: 0.2, prog: [[0, 3, 7, 10], [5, 8, 12, 15], [10, 14, 17, 21], [3, 7, 10, 14]], scale: [0, 3, 5, 7, 10], mel: 'keys', density: 0.35, pad: true, bass: true, drums: 'lofi', crackle: true },
-  waltz: { root: 65, bpm: 132, beats: 3, prog: [[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7]], scale: MAJ, mel: 'flute', density: 0.55, pad: false, bass: 'waltz', keys: true },
-  bossa: { root: 64, bpm: 120, beats: 4, prog: [[0, 4, 7, 11], [2, 5, 9, 12], [4, 7, 11, 14], [2, 5, 9, 12]], scale: MAJ7, mel: 'flute', density: 0.4, pad: false, bass: 'bossa', drums: 'bossa', keys: true },
-  bookshop: { root: 60, bpm: 64, beats: 4, prog: [[0, 4, 7, 11], [9, 12, 16, 19], [5, 9, 12, 16], [7, 11, 14, 17]], scale: MAJ7, mel: 'keys', density: 0.25, pad: true, bass: false },
-  omakase: { root: 62, bpm: 58, beats: 4, prog: [[0, 7], [3, 7], [0, 8], [-2, 7]], scale: HIRA, mel: 'koto', density: 0.35, pad: true, bass: false },
-  cafe: { root: 65, bpm: 116, beats: 4, prog: [[0, 4, 7, 11], [9, 12, 16, 19], [2, 5, 9, 12], [7, 11, 14, 17]], scale: MAJ7, mel: 'keys', density: 0.35, pad: false, bass: 'bossa', drums: 'bossa', keys: true },
-  seaside: { root: 62, bpm: 64, beats: 4, prog: [[0, 4, 7, 11], [7, 11, 14], [9, 12, 16], [5, 9, 12, 16]], scale: MAJ, mel: 'bell', mel2: 'pluck', density: 0.3, pad: true, bass: true },
-  island: { root: 63, bpm: 72, beats: 4, prog: [[0, 4, 7, 11], [5, 9, 12, 16], [2, 5, 9, 12], [7, 11, 14, 17]], scale: MAJ, mel: 'pluck', mel2: 'flute', density: 0.4, pad: true, bass: true },
-  balloon: { root: 60, bpm: 60, beats: 4, prog: [[0, 4, 7, 14], [5, 9, 12, 19], [9, 12, 16, 23], [7, 11, 14, 21]], scale: MAJ, mel: 'bell', density: 0.25, pad: true, bass: true },
-  hill: { root: 57, bpm: 56, beats: 4, prog: [[0, 3, 7, 10], [5, 8, 12, 15], [3, 7, 10, 14], [10, 14, 17, 21]], scale: [0, 3, 5, 7, 10], mel: 'bell', density: 0.2, pad: true, bass: false },
-  village: { root: 64, bpm: 96, beats: 4, prog: [[0, 4, 7], [-3, 0, 4], [5, 9, 12], [7, 11, 14]], scale: MAJ, mel: 'flute', mel2: 'koto', density: 0.5, pad: true, bass: true, drums: 'festival' },
+  dawn: { root: 67, bpm: 92, beats: 4, prog: [[0, 4, 7], [5, 9, 12], [9, 12, 16], [7, 11, 14]], scale: MAJ, mel: 'pluck', mel2: 'bell', density: 0.5, pad: true, bass: true, drums: 'shaker', keys: true },
+  market: { root: 67, bpm: 112, beats: 4, prog: [[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7]], scale: MAJ, mel: 'pluck', density: 0.6, pad: false, bass: 'bossa', drums: 'shaker', keys: true },
+  train1: { root: 65, bpm: 100, beats: 4, prog: [[0, 4, 7], [9, 12, 16], [5, 9, 12], [7, 11, 14]], scale: MAJ, mel: 'flute', density: 0.5, pad: true, bass: true, drums: 'shaker' },
+  train2: { root: 69, bpm: 96, beats: 4, prog: [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12]], scale: MAJ, mel: 'bell', density: 0.45, pad: true, bass: true, drums: 'brush' },
+  train3: { root: 64, bpm: 116, beats: 4, prog: [[0, 4, 7], [5, 9, 12], [0, 4, 7], [7, 11, 14]], scale: MAJ, mel: 'pluck', density: 0.6, pad: false, bass: true, drums: 'shaker' },
+  train4: { root: 62, bpm: 88, beats: 4, prog: [[0, 4, 7, 11], [5, 9, 12, 16], [2, 5, 9, 12], [7, 11, 14, 17]], scale: MAJ, mel: 'keys', density: 0.4, pad: true, bass: true, drums: 'brush' },
+  jazz: { root: 62, bpm: 120, beats: 4, swing: 0.33, prog: [[2, 5, 9, 12], [7, 11, 14, 17], [0, 4, 7, 11], [9, 13, 16, 19]], scale: MAJ7, mel: 'keys', density: 0.5, pad: false, bass: 'walk', drums: 'brush', keys: true },
+  lofi: { root: 65, bpm: 84, beats: 4, swing: 0.2, prog: [[0, 4, 7, 11], [9, 12, 16, 19], [5, 9, 12, 16], [7, 11, 14, 17]], scale: MAJ, mel: 'keys', density: 0.4, pad: true, bass: true, drums: 'lofi', crackle: true },
+  waltz: { root: 67, bpm: 138, beats: 3, prog: [[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7]], scale: MAJ, mel: 'flute', density: 0.55, pad: false, bass: 'waltz', keys: true },
+  bossa: { root: 64, bpm: 124, beats: 4, prog: [[0, 4, 7, 11], [2, 5, 9, 12], [4, 7, 11, 14], [2, 5, 9, 12]], scale: MAJ7, mel: 'flute', density: 0.45, pad: false, bass: 'bossa', drums: 'bossa', keys: true },
+  bookshop: { root: 65, bpm: 92, beats: 4, prog: [[0, 4, 7, 11], [5, 9, 12, 16], [9, 12, 16, 19], [7, 11, 14, 17]], scale: MAJ, mel: 'keys', density: 0.4, pad: true, bass: true, drums: 'brush' },
+  omakase: { root: 67, bpm: 84, beats: 4, prog: [[0, 4, 7], [5, 9, 12], [2, 7, 9], [7, 11, 14]], scale: [0, 2, 5, 7, 9], mel: 'koto', density: 0.45, pad: true, bass: true, drums: 'brush' },
+  cafe: { root: 67, bpm: 120, beats: 4, prog: [[0, 4, 7, 11], [9, 12, 16, 19], [2, 5, 9, 12], [7, 11, 14, 17]], scale: MAJ7, mel: 'keys', density: 0.4, pad: false, bass: 'bossa', drums: 'bossa', keys: true },
+  seaside: { root: 65, bpm: 96, beats: 4, prog: [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12]], scale: MAJ, mel: 'pluck', mel2: 'bell', density: 0.5, pad: true, bass: true, drums: 'shaker' },
+  island: { root: 67, bpm: 100, beats: 4, prog: [[0, 4, 7], [5, 9, 12], [9, 12, 16], [7, 11, 14]], scale: MAJ, mel: 'pluck', mel2: 'flute', density: 0.55, pad: true, bass: true, drums: 'shaker', keys: true },
+  balloon: { root: 65, bpm: 90, beats: 4, prog: [[0, 4, 7, 14], [5, 9, 12, 19], [9, 12, 16, 23], [7, 11, 14, 21]], scale: MAJ, mel: 'bell', mel2: 'flute', density: 0.45, pad: true, bass: true, drums: 'brush' },
+  hill: { root: 64, bpm: 80, beats: 4, prog: [[0, 4, 7, 11], [5, 9, 12, 16], [9, 12, 16, 19], [7, 11, 14, 17]], scale: MAJ, mel: 'bell', density: 0.35, pad: true, bass: true, drums: 'brush' },
+  village: { root: 67, bpm: 108, beats: 4, prog: [[0, 4, 7], [9, 12, 16], [5, 9, 12], [7, 11, 14]], scale: MAJ, mel: 'flute', mel2: 'koto', density: 0.55, pad: true, bass: true, drums: 'festival' },
 };
 
 class MusicPlayer {
@@ -161,7 +161,7 @@ class MusicPlayer {
     this.out = audio.ctx.createGain(); this.out.gain.value = 0.0001;
     this.out.connect(audio.musicBus);
     this.dry = audio.ctx.createGain(); this.dry.connect(this.out);
-    this.wet = audio.ctx.createGain(); this.wet.gain.value = 0.55; this.wet.connect(audio.reverb);
+    this.wet = audio.ctx.createGain(); this.wet.gain.value = 0.35; this.wet.connect(audio.reverb);
     this.reverbOut = this.out; // reverb returns through musicBus already
     this.beatDur = 60 / preset.bpm;
     this.bar = 0; this.next = audio.ctx.currentTime + 0.1;
@@ -191,7 +191,7 @@ class MusicPlayer {
     const root = p.root;
     const dest = this.dry; const wet = this.wet;
     const play = (inst, time, m, dur, vel, w = true) => { INST[inst](ctx, dest, time, m, dur, vel); if (w) INST[inst](ctx, wet, time, m, dur, vel * 0.5); };
-    if (p.pad) chord.forEach((n) => INST.pad(ctx, dest, t0, root - 12 + n, B * p.beats, 0.8));
+    if (p.pad) chord.forEach((n) => INST.pad(ctx, dest, t0, root + n, B * p.beats, 0.8));
     if (p.keys) {
       for (let b = 0; b < p.beats; b++) {
         if (p.beats === 3 && b === 0) continue;

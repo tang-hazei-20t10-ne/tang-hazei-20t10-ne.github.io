@@ -6,7 +6,8 @@ import { canvas, mix, shade } from '../core/sprites.js';
 import { ridgeStrip, cloudSprite, treeSprite, drawSway, bushSprite, fence, windmillBody, drawWindmillBlades, house } from '../two/props.js';
 import { groundStrip, flowerPatch, decoFlowers, addDog, addBench, Butterfly, butterflyLanding, Chicken, addExit, intro } from '../two/common.js';
 import { audio } from '../core/audio.js';
-import { ui } from '../core/ui.js';
+import { ui, wait } from '../core/ui.js';
+import { polaroid, savePhoto } from '../core/photo.js';
 import { state } from '../core/state.js';
 
 const C = content.meadow;
@@ -113,10 +114,39 @@ export default async function meadow(game) {
     scene.say(scene.partner, C.chickens[Math.floor(Math.random() * C.chickens.length)], 2400);
     audio.setBeds([['birds', 1], ['wind', 0.6], ['chickens', 1]]);
   } });
-  // windmill remark
-  let millSaid = false;
+  // Mino offers to take a photo of Hazei at the sunrise spot
+  const askPhoto = async () => {
+    const h = scene.hazei, p = scene.partner;
+    h.locked = true; h.target = null;
+    scene.partnerAt(h.x - 50, 'idle', 1);
+    await wait(900);
+    const pick = await ui.dialog([{ who: 'partner', text: C.photoAsk, choices: C.photoChoices }]);
+    if (pick === 0) {
+      h.dir = -1; h.forcePose = 'peace'; h.forceMood = 'happy';
+      scene.partnerAt(h.x - 50, 'hold', 1);
+      scene.say(p, C.photoReady, 2400);
+      for (let i = 0; i < 3; i++) { audio.sfx('tick'); await wait(600); }
+      // Mino is behind the camera, so he is not in the shot
+      p.visible = false; scene.draw();
+      const v = scene.view.canvas; const cw = Math.min(v.width, 176), ch = Math.min(v.height, 132);
+      const cx = Math.max(0, Math.min(v.width - cw, Math.round(h.x - scene.cam - cw / 2))), cy = Math.max(0, Math.min(v.height - ch, scene.groundY + 22 - ch));
+      const crop = document.createElement('canvas'); crop.width = cw; crop.height = ch;
+      crop.getContext('2d').drawImage(v, cx, cy, cw, ch, 0, 0, cw, ch);
+      p.visible = true;
+      audio.sfx('shutter'); ui.flash();
+      await wait(500);
+      await savePhoto(polaroid(crop, C.photoCaption), { title: content.ui.photo, filename: 'hazei-binh-minh.png' });
+      p.emote('thumb');
+    } else scene.say(p, C.photoNo, 1600);
+    h.forcePose = null; h.forceMood = null; h.locked = false; scene.partnerAt(null);
+  };
+  let millSaid = false, photoAsked = false;
   const ou = scene.cfg.update;
-  scene.cfg.update = (s, dt) => { ou(s, dt); if (!millSaid && Math.abs(s.hazei.x - 520) < 30) { millSaid = true; s.say(s.partner, C.windmill, 3000); } };
+  scene.cfg.update = (s, dt) => {
+    ou(s, dt);
+    if (!millSaid && Math.abs(s.hazei.x - 520) < 30) { millSaid = true; s.say(s.partner, C.windmill, 3000); }
+    if (!photoAsked && s.hazei.x > 470 && !s.hazei.locked && !s.interact.busy) { photoAsked = true; askPhoto(); }
+  };
 
   addExit(scene, W - 40, C.exitSign.replace(' →', ''), { hint: C.exitHint });
 

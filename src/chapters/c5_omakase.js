@@ -136,7 +136,7 @@ export default async function omakase(game) {
     hz.forcePose = 'hold'; hz.hold = 'snack'; await wait(700);
     hz.forcePose = 'sit'; hz.hold = null; hz.forceMood = 'happy'; audio.sfx('yay');
     scene.hearts(hz.x, scene.groundY - 36, 5);
-    pt.emote(['heart', 'thumb', 'sparkle', 'heart', 'laugh'][r]);
+    pt.emote(['thumb', 'sparkle', 'laugh', 'thumb', 'star'][r]);
     ui.note('✨ ' + C.fragmentNote, 2400);
     audio.sfx('sparkle');
     await wait(1800);

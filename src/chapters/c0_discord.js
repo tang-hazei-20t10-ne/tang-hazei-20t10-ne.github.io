@@ -194,7 +194,7 @@ export default async function discord(game) {
   list.appendChild(dmItem);
   main.innerHTML = `
     <div class="dc-head"><button class="back">${ICON.back}</button><span class="at">@</span><span class="hav"></span>${esc(D.partnerHandle)}</div>
-    <div class="dc-msgs"><div class="spacer"></div><div class="dc-intro"><div class="iav"></div><h3>${esc(D.partnerHandle)}</h3><p>Đây là khởi đầu cuộc trò chuyện của em với <b>@${esc(D.partnerHandle)}</b>.</p></div></div>
+    <div class="dc-msgs"><div class="spacer"></div><div class="dc-intro"><div class="iav"></div><h3>${esc(D.partnerHandle)}</h3><p>Đây là khởi đầu cuộc trò chuyện trực tiếp của bạn với <b>@${esc(D.partnerHandle)}</b>.</p></div></div>
     <div class="dc-typing"><span><i></i> <i></i> <i></i></span><span><b>${esc(D.partnerHandle)}</b> ${esc(D.typing)}</span></div>
     <div class="dc-replies"></div>
     <div class="dc-compose"><span class="plus">${ICON.plus}</span>${esc(D.messagePlaceholder)}${esc(D.partnerHandle)}</div>`;

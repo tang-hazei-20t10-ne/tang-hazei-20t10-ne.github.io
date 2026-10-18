@@ -165,8 +165,8 @@ export default async function bookshop(game) {
       });
     });
     scene.hazei.forcePose = null; scene.hazei.hold = null;
-    if (Math.random() < 0.6) { await wait(300); scene.say(scene.partner, C.partnerRecs[bookI % C.partnerRecs.length], 3000); }
-    scene.partner.emote('heart');
+    if (Math.random() < 0.25) { await wait(300); scene.say(scene.partner, C.partnerRecs[bookI % C.partnerRecs.length], 3000); }
+    scene.partner.emote('thumb');
   };
   [40, 120, 200, 330, 410].forEach((sx) => scene.interact.add({ x: sx, range: 18, hold: 0.3, label: P.read, onDone: readBook }));
   scene.interact.add({ x: 285, range: 16, hold: 0.3, label: P.play, priority: 1, onDone: async () => {
@@ -194,7 +194,7 @@ export default async function bookshop(game) {
     scene.sparkles(scene.hazei.x + 8, scene.groundY - 22, 10);
     ui.note('🔖 ' + C.bookmark.name, 3000);
     await wait(1400); scene.hazei.forcePose = null; scene.hazei.hold = null; scene.hazei.forceMood = null;
-    scene.partner.emote('heart');
+    scene.partner.emote('thumb');
   } });
 
   // partner browses on his own now and then
@@ -208,8 +208,8 @@ export default async function bookshop(game) {
       const shelfX = [40, 120, 200, 330, 410].reduce((a, b) => (Math.abs(b - s.hazei.x) < Math.abs(a - s.hazei.x) && Math.abs(b - s.hazei.x) > 20 ? b : a), 40);
       s.partnerAt(shelfX, 'hold');
       s.partner.hold = 'book';
-      setTimeout(() => { if (!s.dead) { s.partner.emote(['note', 'heart', 'sparkle'][Math.floor(Math.random() * 3)]); } }, 1800);
-      setTimeout(() => { if (!s.dead) { s.partnerAt(null); s.partner.hold = null; if (Math.random() < 0.5) s.say(s.partner, C.partnerRecs[Math.floor(Math.random() * C.partnerRecs.length)], 3000); } }, 4200);
+      setTimeout(() => { if (!s.dead) { s.partner.emote(['note', 'sparkle', 'laugh'][Math.floor(Math.random() * 3)]); } }, 1800);
+      setTimeout(() => { if (!s.dead) { s.partnerAt(null); s.partner.hold = null; if (Math.random() < 0.2) s.say(s.partner, C.partnerRecs[Math.floor(Math.random() * C.partnerRecs.length)], 3000); } }, 4200);
     }
     if (Math.abs(s.hazei.vx) > 1 && s.partner.override && s.partner.override.pose === 'hold') { s.partnerAt(null); s.partner.hold = null; }
   };

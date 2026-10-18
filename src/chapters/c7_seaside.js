@@ -143,7 +143,7 @@ export default async function seaside(game) {
     // add a heart
     letters.img = c; letters.alpha = 1; letters.reveal = 0;
     for (let k = 0; k <= 20; k++) { letters.reveal = k / 20; if (k % 4 === 0) audio.sfx('step'); await wait(90); }
-    h.forcePose = null; h.forceMood = 'happy'; scene.partner.emote('heart');
+    h.forcePose = null; h.forceMood = 'happy'; scene.partner.emote('thumb');
     await wait(2200);
     // a wave washes it away
     audio.sfx('wave'); letters.washing = 3;
@@ -174,7 +174,7 @@ export default async function seaside(game) {
     scene.partner.dir = 1;
     await ui.dialog([{ who: 'partner', text: C.boatLine }]);
     scene.partnerAt(scene.partner.x, 'wave', 1);
-    scene.partner.emote('heart');
+    scene.partner.emote('sparkle');
     await wait(1200);
     await game.leave(scene);
   } });

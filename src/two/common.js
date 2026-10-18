@@ -90,8 +90,8 @@ export function addFlower(scene, game, x, z = -5, flower = randomFlower()) {
       const n = state.data.flowers.length;
       if (scene.partner) {
         if (state.once('firstFlowerLine')) scene.say(scene.partner, content.meadow.firstFlower);
-        else if (Math.random() < 0.55) scene.say(scene.partner, pickOne(content.meadow.flowerReacts), 2000);
-        scene.partner.emote(n % 3 ? 'heart' : 'sparkle');
+        else if (Math.random() < 0.15) scene.say(scene.partner, pickOne(content.meadow.flowerReacts), 2000);
+        scene.partner.emote(n % 3 ? 'thumb' : 'sparkle');
       }
       scene.onFlowerPicked?.(n);
     },
@@ -169,7 +169,7 @@ export function addDog(scene, x, { name, line, followFor = 45 } = {}) {
       dog.petting = false; scene.hazei.forcePose = null; scene.hazei.forceMood = null;
       scene.partnerAt(null);
       if (line && state.once('dogLine' + scene.cfg.id)) scene.say(scene.partner, line, 3200);
-      scene.partner?.emote('heart');
+      scene.partner?.emote('laugh');
       dog.state = 'follow'; dog.followT = followFor;
     },
   });
@@ -198,7 +198,7 @@ export function addCat(scene, x, { z = 0, dy = 0, color = 'grey', line, standX }
       audio.sfx('meow'); cat.happy = 3; scene.hearts(x, scene.groundY + z + dy - 12, 5);
       scene.hazei.forceMood = 'happy'; await wait(800); scene.hazei.forceMood = null; scene.hazei.forcePose = null;
       if (line) scene.say(scene.partner || scene.hazei, line, 2600);
-      scene.partner?.emote('heart');
+      scene.partner?.emote('laugh');
     },
   });
   return cat;
@@ -219,7 +219,7 @@ export function addBench(scene, x, { z = -3, line, sitLine, onSit, onStand } = {
     if (line && state.once('bench' + scene.cfg.id + x)) scene.say(scene.partner, line, 2600);
     await wait(1200);
     if (sitLine) ui.note(sitLine, 3000);
-    scene.partner?.emote('heart');
+    scene.partner?.emote('note');
     onSit?.();
   };
   const stand = () => {

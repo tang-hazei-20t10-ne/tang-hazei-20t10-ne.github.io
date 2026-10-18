@@ -1,7 +1,7 @@
-// Chapter 8: first-person island exploration at golden hour.
+// Chapter 8: first-person walk on the mountain behind the school at golden hour.
 import content from '../content.js';
 import { World3D, THREE, makeSky, billboard } from '../three/engine3d.js';
-import { buildIsland, islandHeight, islandWalkable, SPOTS } from '../three/island.js';
+import { buildMountain, mountainHeight, mountainWalkable, pondLevel, SPOTS } from '../three/mountain.js';
 import { TIMES } from '../core/palette.js';
 import { flowerSprite, randomFlower, dogSprite, catSprite, butterflySprite, flowerBig } from '../core/sprites.js';
 import { ui, wait } from '../core/ui.js';
@@ -28,17 +28,19 @@ export default async function island(game) {
   const pal = TIMES.golden;
   const sunDir = new THREE.Vector3(-0.75, 0.16, -0.62);
   const world = new World3D(game, {
-    start: [SPOTS.spawn.x, islandHeight(SPOTS.spawn.x, SPOTS.spawn.z), SPOTS.spawn.z], yaw: 0, pitch: -0.05,
-    heightAt: (x, z) => Math.max(islandHeight(x, z), x > -1.3 && x < 1.3 && z > 53 ? 0.62 : -9),
-    walkable: (x, z) => islandWalkable(x, z) || (x > -1.1 && x < 1.1 && z > 50 && z < 59),
+    start: [SPOTS.spawn.x, mountainHeight(SPOTS.spawn.x, SPOTS.spawn.z), SPOTS.spawn.z], yaw: 0, pitch: 0.05,
+    heightAt: mountainHeight,
+    walkable: mountainWalkable,
     bloom: 0.5, bloomThreshold: 0.78,
   });
   world.add(makeSky(['#4b5aa0', '#b77aa0', '#f5a46a', '#ffd796'], sunDir, { sun: '#fff1c0', glow: 0.8, sunSize: 0.9982 }));
-  world.setTime({ fog: '#f3b27e', fogNear: 35, fogFar: 260, ambient: '#ffd9b8', ambientI: 0.5, sun: '#ffcf8a', sunI: 1.6, sunPos: [sunDir.x * 100, sunDir.y * 100 + 20, sunDir.z * 100], hemiSky: '#ffc890', hemiGround: '#6a5a7a', hemiI: 0.55 });
+  world.setTime({ fog: '#f3b27e', fogNear: 70, fogFar: 560, ambient: '#ffd9b8', ambientI: 0.5, sun: '#ffcf8a', sunI: 1.6, sunPos: [sunDir.x * 100, sunDir.y * 100 + 20, sunDir.z * 100], hemiSky: '#ffc890', hemiGround: '#6a5a7a', hemiI: 0.55 });
   world.grade.uniforms.tint.value.set('#fff2e4');
-  const I = buildIsland(world);
+  const I = buildMountain(world);
+  I.city.userData.setNight(0.15);
+  world.every((dt, t) => I.city.userData.setNight(0.15 + Math.min(0.25, t / 900), t));
   const S = world.scene;
-  const H = islandHeight;
+  const H = mountainHeight;
   const at = I.at;
   const done = { meadow: false, grove: false, lake: false, hill: false, lighthouse: false };
   let interactions = 0;
@@ -50,7 +52,7 @@ export default async function island(game) {
     const inGrove = i >= 12;
     const x = inGrove ? -25 + (I.rnd() - 0.5) * 14 : 2 + (I.rnd() - 0.5) * 22;
     const z = inGrove ? 6 + (I.rnd() - 0.5) * 14 : 26 + (I.rnd() - 0.5) * 18;
-    if (H(x, z) < 1.3) continue;
+    if (!mountainWalkable(x, z)) continue;
     pickSpots.push([x, z]);
   }
   pickSpots.forEach(([x, z]) => {
@@ -158,7 +160,7 @@ export default async function island(game) {
       const P0 = world.player.pos.clone(); const yaw0 = world.player.yaw;
       world.locked = true; world.handPose = 'lantern';
       world.player.pos.copy(I.swing.position); world.player.eye = 1.0;
-      world.player.yaw = Math.atan2(-(SPOTS.spawn.x - I.swing.position.x), -(SPOTS.spawn.z - I.swing.position.z));
+      world.player.yaw = Math.atan2(-(SPOTS.city.x - I.swing.position.x), -(SPOTS.city.z - I.swing.position.z));
       world.toastOnce('island_swing'); ui.note(C.swing, 3000); did();
       const f = new THREE.Vector3(-Math.sin(world.player.yaw), 0, -Math.cos(world.player.yaw));
       const stop = world.every((dt, t) => {
@@ -178,8 +180,8 @@ export default async function island(game) {
       const save = { pos: world.player.pos.clone(), yaw: world.player.yaw, pitch: world.player.pitch, fov: world.camera.fov };
       world.locked = true; world.hideHands = true;
       world.player.pos.copy(I.telescope.position);
-      const v = SPOTS.village.clone().sub(I.telescope.position);
-      world.player.yaw = Math.atan2(-v.x, -v.z); world.player.pitch = 0.0;
+      const v = SPOTS.city.clone().sub(I.telescope.position).sub(new THREE.Vector3(0, 1.5, 0));
+      world.player.yaw = Math.atan2(-v.x, -v.z); world.player.pitch = Math.atan2(v.y, Math.hypot(v.x, v.z));
       let fov = save.fov;
       const stop = world.every((dt) => {
         fov += (14 - fov) * Math.min(1, dt * 2); world.camera.fov = fov; world.camera.updateProjectionMatrix();
@@ -200,14 +202,14 @@ export default async function island(game) {
       const save = world.player.pos.clone();
       world.locked = true; world.handPose = 'rim';
       world.toastOnce('island_boat'); ui.note(C.boat, 3000); audio.sfx('splash'); did();
-      const c = new THREE.Vector3(20, 0, 4); const r = 4.6;
+      const c = new THREE.Vector3(20, 0, 4); const r = 4.6; const wl = pondLevel();
       const a0 = Math.atan2(I.boat.position.z - c.z, I.boat.position.x - c.x);
       const dur = 16; let k = 0;
       const stop = world.every((dt, t) => {
         k += dt / dur; const a = a0 + k * Math.PI * 2;
-        I.boat.position.set(c.x + Math.cos(a) * r, Math.sin(t * 2) * 0.04, c.z + Math.sin(a) * r);
+        I.boat.position.set(c.x + Math.cos(a) * r, wl + Math.sin(t * 2) * 0.04, c.z + Math.sin(a) * r);
         I.boat.rotation.y = -a;
-        world.player.pos.set(I.boat.position.x, 0.1, I.boat.position.z);
+        world.player.pos.set(I.boat.position.x, wl + 0.1, I.boat.position.z);
         if (Math.random() < dt * 3) world.fx.emit(I.boat.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 1.5, 0.1, (Math.random() - 0.5) * 1.5)), new THREE.Vector3(0, 0.2, 0), '#ffffff', 0.8);
       });
       await wait(dur * 1000);
@@ -215,7 +217,8 @@ export default async function island(game) {
     } });
 
   // ------------------------------------------------ lighthouse
-  const door = I.lighthouse.position.clone().add(new THREE.Vector3(0, 0, 2.8));
+  I.tower.updateMatrixWorld();
+  const door = I.tower.localToWorld(new THREE.Vector3(0, 0, 3.2));
   door.y = H(door.x, door.z);
   let onTop = false;
   const climbDown = async () => {
@@ -228,8 +231,8 @@ export default async function island(game) {
     onDone: async () => {
       await ui.fade(true, { ms: 600 });
       onTop = true; world.mode = 'look';
-      world.player.pos.copy(I.lighthouse.position).add(new THREE.Vector3(0, 13.4, 1.5));
-      world.player.yaw = 0; world.player.pitch = -0.15;
+      world.player.pos.copy(I.tower.localToWorld(new THREE.Vector3(0, 9.15, 0)));
+      { const v = SPOTS.city.clone().sub(world.player.pos); world.player.yaw = Math.atan2(-v.x, -v.z); world.player.pitch = -0.1; }
       ui.actions([{ label: '📷 ' + content.ui.photo, onClick: () => world.photo(C.lighthouseTop, content.ui.photo) }, { label: P.descend, onClick: climbDown }]);
       await ui.fade(false, { ms: 600 });
       ui.note(C.lighthouseTop, 3500); audio.sfx('chime'); did();
@@ -266,13 +269,13 @@ export default async function island(game) {
     if (petalT < 0) { petalT = 0.08; const tr = I.trees[Math.floor(Math.random() * 8)]; world.fx.emit(tr.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 3, 3 + Math.random() * 1.5, (Math.random() - 0.5) * 3)), new THREE.Vector3(0.3, -0.5, 0.1), ['#ffc2d4', '#ffd9e4', '#fff0f5'][Math.floor(Math.random() * 3)], 6, { kind: 1 }); }
     // fireflies by the lake + motes
     fireT -= dt;
-    if (fireT < 0) { fireT = 0.25; world.glow.emit(new THREE.Vector3(20 + (Math.random() - 0.5) * 18, 0.6 + Math.random() * 1.5, 4 + (Math.random() - 0.5) * 18), new THREE.Vector3(), '#e9ff9a', 6, { kind: 3 }); world.glow.emit(p.clone().add(new THREE.Vector3((Math.random() - 0.5) * 8, 0.5 + Math.random() * 2.5, (Math.random() - 0.5) * 8)), new THREE.Vector3(0, 0.05, 0), '#fff4c8', 5, { kind: 3 }); }
+    if (fireT < 0) { fireT = 0.25; world.glow.emit(new THREE.Vector3(20 + (Math.random() - 0.5) * 14, pondLevel() + 0.6 + Math.random() * 1.5, 4 + (Math.random() - 0.5) * 14), new THREE.Vector3(), '#e9ff9a', 6, { kind: 3 }); world.glow.emit(p.clone().add(new THREE.Vector3((Math.random() - 0.5) * 8, 0.5 + Math.random() * 2.5, (Math.random() - 0.5) * 8)), new THREE.Vector3(0, 0.05, 0), '#fff4c8', 5, { kind: 3 }); }
   });
 
   const baseActions = () => [{ label: '📷 ' + content.ui.photo, onClick: () => world.photo(C.title, content.ui.photo) }];
   ui.actions(baseActions());
 
-  audio.scene('island', [['waves', 0.7], ['wind', 0.5], ['birds', 0.6]]);
+  audio.scene('island', [['wind', 0.5], ['birds', 0.8]]);
   const fin = world.start();
   await game.enter();
   ui.controlsHint(input.touch ? content.ui.controls3DTouch : content.ui.controls3D, 9000);

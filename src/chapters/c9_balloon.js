@@ -1,7 +1,7 @@
 // Chapter 9: hot-air balloon flight at sunset over the island.
 import content from '../content.js';
 import { World3D, THREE, makeSky, billboard } from '../three/engine3d.js';
-import { buildIsland, islandHeight, SPOTS } from '../three/island.js';
+import { buildMountain, mountainHeight, SPOTS } from '../three/mountain.js';
 import { birdSprite, mix } from '../core/sprites.js';
 import { ui, wait } from '../core/ui.js';
 import { audio } from '../core/audio.js';
@@ -12,7 +12,7 @@ const easeIO = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
 export default async function balloon(game) {
   const sunDir = new THREE.Vector3(-0.75, 0.12, -0.62);
-  const H = islandHeight;
+  const H = mountainHeight;
   const world = new World3D(game, { mode: 'look', start: [SPOTS.balloon.x, H(SPOTS.balloon.x, SPOTS.balloon.z), SPOTS.balloon.z], yaw: Math.PI, pitch: 0, bloom: 0.55, bloomThreshold: 0.75, inputMode: '3d', minPitch: -1.3, maxPitch: 1.35 });
   input.setMode('3d');
   const sky = makeSky(['#4b5aa0', '#b77aa0', '#f5a46a', '#ffd796'], sunDir, { sun: '#fff1c0', glow: 0.8, sunSize: 0.9982 });
@@ -20,25 +20,25 @@ export default async function balloon(game) {
   const lightAt = (k) => {
     const a = { fog: '#f3b27e', amb: '#ffd9b8', sun: '#ffcf8a', hs: '#ffc890' };
     const b = { fog: '#b07090', amb: '#c8a0c8', sun: '#ff9a7a', hs: '#d890a8' };
-    world.setTime({ fog: mix(a.fog, b.fog, k), fogNear: 60, fogFar: 340, ambient: mix(a.amb, b.amb, k), ambientI: 0.5 - k * 0.1, sun: mix(a.sun, b.sun, k), sunI: 1.5 - k * 0.6, sunPos: [sunDir.x * 100, sunDir.y * 100 + 20 - k * 20, sunDir.z * 100], hemiSky: mix(a.hs, b.hs, k), hemiGround: '#5a4a6a', hemiI: 0.5 });
+    world.setTime({ fog: mix(a.fog, b.fog, k), fogNear: 90, fogFar: 620, ambient: mix(a.amb, b.amb, k), ambientI: 0.5 - k * 0.1, sun: mix(a.sun, b.sun, k), sunI: 1.5 - k * 0.6, sunPos: [sunDir.x * 100, sunDir.y * 100 + 20 - k * 20, sunDir.z * 100], hemiSky: mix(a.hs, b.hs, k), hemiGround: '#5a4a6a', hemiI: 0.5 });
     sky.setStops([mix('#4b5aa0', '#2a2c6a', k), mix('#b77aa0', '#7a4a8a', k), mix('#f5a46a', '#e0707a', k), mix('#ffd796', '#ffb07a', k)]);
   };
   lightAt(0);
   world.grade.uniforms.tint.value.set('#fff2e4');
-  const I = buildIsland(world, { pickable: false });
+  const I = buildMountain(world);
   const S = world.scene;
   world.handPose = 'rim';
 
   // flight path
-  const hillY = H(-23, -22);
+  const b0 = H(SPOTS.balloon.x, SPOTS.balloon.z), hs = H(-6, -24);
   const pts = [
-    [SPOTS.balloon.x, H(SPOTS.balloon.x, SPOTS.balloon.z), SPOTS.balloon.z], [2, 9, 0], [4, 19, 18], [-14, 23, 24], [-28, 24, 8], [-12, 26, -6], [16, 24, 4], [30, 27, -18],
-    [52, 31, -58], [44, 30, -84], [10, 27, -64], [-14, 24, -40], [-23, hillY + 6, -26], [-23, hillY, -22],
+    [SPOTS.balloon.x, b0, SPOTS.balloon.z], [2, b0 + 8, 0], [4, 24, 22], [-24, 30, 10], [12, 32, 0], [30, 36, -16],
+    [12, 38, 46], [0, 34, 84], [40, 40, 140], [88, 44, 186], [70, 46, 120], [14, 44, 40], [-6, hs + 10, -20], [-6, hs, -24],
   ].map((p) => new THREE.Vector3(...p));
   const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
   const fast = game.debug && new URLSearchParams(location.search).has('fast');
   const DUR = fast ? 14 : 150;
-  const marks = [[0.02, 'start', 'balloon_start'], [0.13, 'meadow'], [0.28, 'grove'], [0.42, 'lake'], [0.53, 'lighthouse'], [0.64, 'village', 'balloon_village'], [0.97, 'land', 'balloon_land']];
+  const marks = [[0.02, 'start', 'balloon_start'], [0.1, 'meadow'], [0.2, 'grove'], [0.28, 'lake'], [0.44, 'lighthouse'], [0.58, 'village', 'balloon_village'], [0.97, 'land', 'balloon_land']];
   let markI = 0;
   let flyT = 0, flying = false, bump = 0, flame = 0;
   const B = I.balloon;
@@ -57,6 +57,7 @@ export default async function balloon(game) {
       bump = Math.max(0, bump - dt * 0.4);
       B.position.set(p.x, p.y + Math.sin(t * 0.7) * 0.15 + bump, p.z);
       lightAt(Math.min(1, flyT * 1.1));
+      I.city.userData.setNight(0.15 + flyT * 0.75, t);
       while (markI < marks.length && flyT >= marks[markI][0]) { const [, id, toast] = marks[markI]; ui.note(C.lines[id], 3800); if (toast) world.toastOnce(toast); markI++; }
       if (flyT >= 1) { flying = false; finishFlight(); }
     }
@@ -72,8 +73,6 @@ export default async function balloon(game) {
       o.b.position.set(B.position.x + Math.cos(t * o.sp + o.ph) * r, B.position.y + 2 + o.h + Math.sin(t * 1.3 + i) * 0.6, B.position.z + Math.sin(t * o.sp + o.ph) * r);
       o.b.setCanvas(birdSprite(Math.floor(t * 6 + i) % 2, flock > 0.3 ? '#5a4060' : '#3b2b40'));
     });
-    // lighthouse lights up later in the flight
-    I.lighthouse.userData.pivot.visible = flyT > 0.45;
   });
 
   let finishResolve; const finished = new Promise((r) => { finishResolve = r; });
@@ -86,7 +85,8 @@ export default async function balloon(game) {
     { label: '📷 ' + C.actions.photo, onClick: () => world.photo(C.lines.start.replace('…', ''), content.ui.photo) },
   ];
 
-  audio.scene('balloon', [['windHigh', 0.6]]);
+  audio.scene('balloon', [['windHigh', 0.5]]);
+  I.city.userData.setNight(0.15);
   const fin = world.start();
   await game.enter();
   ui.controlsHint(input.touch ? content.ui.controls3DTouch.split('·')[1] : content.ui.controls3D.split('·')[1], 6000);

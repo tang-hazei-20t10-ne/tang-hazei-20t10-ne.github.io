@@ -152,8 +152,8 @@ export default async function cafe(game) {
   barista.dir = 1;
   for (let k = 0; k <= 1; k += 0.02) { baristaX = to + (from - to) * k; barista.forcePose = 'walk'; barista.dir = 1; await wait(28); }
   barista.forcePose = null; barista.dir = -1;
-  hz.emote('heart'); pt.emote('heart');
-  scene.hearts(tx(), scene.groundY - 40, 6);
+  hz.emote('sparkle'); pt.emote('thumb');
+  scene.sparkles(tx(), scene.groundY - 36, 10);
   await wait(800);
   await ui.dialog(C.moments);
 
@@ -162,8 +162,8 @@ export default async function cafe(game) {
   const left = new Promise((r) => { leave = r; });
   let sipI = 0;
   ui.actions([
-    { label: '☕ ' + C.sip, onClick: async () => { audio.sfx('sip'); hz.forcePose = 'sip'; await wait(900); hz.forcePose = 'sit'; hz.forceMood = 'happy'; scene.say(hz, C.sipReact[sipI++ % C.sipReact.length], 2200); pt.emote(['heart', 'laugh', 'sparkle'][sipI % 3]); setTimeout(() => { hz.forceMood = null; }, 1500); } },
-    { label: '🪟 ' + C.lookOut, onClick: () => { hz.dir = -1; ui.note(C.lookOutReact, 3000); pt.emote('heart'); setTimeout(() => { hz.dir = 1; }, 3000); } },
+    { label: '☕ ' + C.sip, onClick: async () => { audio.sfx('sip'); hz.forcePose = 'sip'; await wait(900); hz.forcePose = 'sit'; hz.forceMood = 'happy'; scene.say(hz, C.sipReact[sipI++ % C.sipReact.length], 2200); pt.emote(['thumb', 'laugh', 'sparkle'][sipI % 3]); setTimeout(() => { hz.forceMood = null; }, 1500); } },
+    { label: '🪟 ' + C.lookOut, onClick: () => { hz.dir = -1; ui.note(C.lookOutReact, 3000); pt.emote('note'); setTimeout(() => { hz.dir = 1; }, 3000); } },
     { label: C.leave + ' →', cls: '', onClick: () => leave() },
   ]);
   await left;

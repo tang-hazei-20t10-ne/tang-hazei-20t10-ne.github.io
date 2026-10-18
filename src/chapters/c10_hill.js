@@ -1,7 +1,7 @@
 // Chapter 10: stargazing hill. Dusk to night, constellations, shooting star.
 import content from '../content.js';
 import { World3D, THREE, makeSky, pixelTex } from '../three/engine3d.js';
-import { buildIsland, islandHeight, SPOTS } from '../three/island.js';
+import { buildMountain, mountainHeight, mountainWalkable, SPOTS } from '../three/mountain.js';
 import { canvas, mix } from '../core/sprites.js';
 import { ui, wait } from '../core/ui.js';
 import { audio } from '../core/audio.js';
@@ -20,16 +20,17 @@ const SHAPES = [
 const dirFrom = (az, el) => { const a = THREE.MathUtils.degToRad(az), e = THREE.MathUtils.degToRad(el); return new THREE.Vector3(Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)); };
 
 export default async function hill(game) {
-  const H = islandHeight;
-  const top = new THREE.Vector3(-23, H(-23, -22), -22);
-  const near = (x, z) => Math.hypot(x - top.x, z - top.z) < 13 && H(x, z) > 2;
-  const world = new World3D(game, { start: [top.x, top.y, top.z + 1], yaw: 0.6, pitch: 0.05, heightAt: H, walkable: near, bloom: 0.6, bloomThreshold: 0.7, maxPitch: 1.5 });
+  const H = mountainHeight;
+  const top = new THREE.Vector3(-7, H(-7, -26), -26);
+  const near = (x, z) => Math.hypot(x - top.x, z - top.z) < 13 && mountainWalkable(x, z);
+  const cityDir = SPOTS.city.clone().sub(top);
+  const world = new World3D(game, { start: [top.x, top.y, top.z + 1], yaw: Math.atan2(-cityDir.x, -cityDir.z), pitch: -0.05, heightAt: H, walkable: near, bloom: 0.6, bloomThreshold: 0.7, maxPitch: 1.5 });
   const sunDir = new THREE.Vector3(-0.8, 0.02, -0.55);
   const sky = makeSky(['#252a5c', '#5a3f7c', '#c45a7a', '#f39a6a'], sunDir, { sun: '#ffc68a', glow: 0.6 });
   world.add(sky);
-  const I = buildIsland(world, { pickable: false });
+  const I = buildMountain(world);
   const S = world.scene;
-  I.balloon.position.set(top.x + 5, H(top.x + 5, top.z + 4), top.z + 4);
+  I.balloon.position.set(top.x - 6, H(top.x - 6, top.z - 7), top.z - 7);
   I.balloon.userData.env.scale.setScalar(1);
 
   // stars
@@ -59,7 +60,7 @@ export default async function hill(game) {
   // blanket on the hill + telescope reuse + swing reuse
   const [bc, bx] = canvas(16, 16);
   for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) { bx.fillStyle = ((i >> 2) + (j >> 2)) % 2 ? '#e8e2f6' : '#7f6fb0'; bx.fillRect(i, j, 1, 1); }
-  const blanketPos = new THREE.Vector3(top.x + 2.5, 0, top.z + 3); blanketPos.y = H(blanketPos.x, blanketPos.z) + 0.05;
+  const blanketPos = new THREE.Vector3(top.x + 3, 0, top.z + 2.5); blanketPos.y = H(blanketPos.x, blanketPos.z) + 0.05;
   const blanket = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.8).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: pixelTex(bc) }));
   blanket.position.copy(blanketPos); S.add(blanket);
 
@@ -71,7 +72,8 @@ export default async function hill(game) {
     const k = night;
     sky.setStops([mix('#252a5c', '#05061a', k), mix('#5a3f7c', '#0e1236', k), mix('#c45a7a', '#1d2350', k), mix('#f39a6a', '#2a2c60', k)]);
     sky.material.uniforms.glow.value = 0.6 * (1 - k);
-    world.setTime({ fog: mix(fogA, fogB, k), fogNear: 40, fogFar: 300, ambient: mix('#c8a0c8', '#5060a0', k), ambientI: 0.55 - k * 0.15, sun: mix('#ff9a7a', '#9fb0ff', k), sunI: 0.9 - k * 0.5, sunPos: [-60, 20 + k * 40, -40], hemiSky: mix('#d890a8', '#3a4a8a', k), hemiGround: '#1a1428', hemiI: 0.45 });
+    I.city.userData.setNight(0.6 + k * 0.4, t);
+    world.setTime({ fog: mix(fogA, fogB, k), fogNear: 90, fogFar: 600, ambient: mix('#c8a0c8', '#5060a0', k), ambientI: 0.55 - k * 0.15, sun: mix('#ff9a7a', '#9fb0ff', k), sunI: 0.9 - k * 0.5, sunPos: [-60, 20 + k * 40, -40], hemiSky: mix('#d890a8', '#3a4a8a', k), hemiGround: '#1a1428', hemiI: 0.45 });
     starMat.opacity = Math.min(1, Math.max(0, (k - 0.25) * 1.6)) * (0.8 + Math.sin(t * 2) * 0.05);
     bandMat.opacity = Math.max(0, (k - 0.5) * 0.9);
     // constellation stars become visible with the night
@@ -82,8 +84,7 @@ export default async function hill(game) {
       c.dirs.forEach((d, i) => { if (!c.lit.has(i) && fwd.angleTo(d.clone().multiplyScalar(780).sub(world.camera.position)) < THREE.MathUtils.degToRad(lying ? 5 : 3.5)) { c.lit.add(i); audio.sfx('pop', { pitch: c.lit.size * 2 }); updateLines(c); } });
     });
     // fireflies
-    if (Math.random() < dt * 4) world.glow.emit(top.clone().add(new THREE.Vector3((Math.random() - 0.5) * 22, 0.5 + Math.random() * 2, (Math.random() - 0.5) * 22)), new THREE.Vector3(), '#e9ff9a', 6, { kind: 3 });
-    I.lighthouse.userData.pivot.visible = k > 0.2;
+    if (Math.random() < dt * 4) { const fx = top.x + (Math.random() - 0.5) * 22, fz = top.z + (Math.random() - 0.5) * 22; world.glow.emit(new THREE.Vector3(fx, H(fx, fz) + 0.5 + Math.random() * 2, fz), new THREE.Vector3(), '#e9ff9a', 6, { kind: 3 }); }
     if (!wished && cons.filter((c) => c.done).length >= 2 && !shooting) shootingStar();
     if (!wished && night >= 1 && !shooting && world.clock > 200) shootingStar();
   });
@@ -129,7 +130,7 @@ export default async function hill(game) {
   } });
   world.interact.add({ pos: I.telescope.position, range: 2.2, hold: 0.3, label: P.telescope, onDone: async () => {
     const save = { pos: world.player.pos.clone(), yaw: world.player.yaw, pitch: world.player.pitch, fov: world.camera.fov };
-    world.locked = true; world.hideHands = true; world.player.pos.copy(I.telescope.position); world.player.pitch = 0.9;
+    world.locked = true; world.hideHands = true; world.player.pos.copy(I.telescope.position); { const v = SPOTS.city.clone().sub(I.telescope.position).sub(new THREE.Vector3(0, 1.5, 0)); world.player.yaw = Math.atan2(-v.x, -v.z); world.player.pitch = Math.atan2(v.y, Math.hypot(v.x, v.z)); }
     let fov = save.fov;
     const stop = world.every((dt) => {
       fov += (12 - fov) * Math.min(1, dt * 2); world.camera.fov = fov; world.camera.updateProjectionMatrix();

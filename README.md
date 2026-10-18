@@ -2,8 +2,8 @@
 
 A small, cozy pixel-art browser game made as a gift for Hazei on Vietnamese Women's Day (20/10).
 One whole day out together: a Discord chat at the start, dawn in a meadow, a morning market with a photo
-booth, a train ride, a bookshop, an omakase lunch, a café, the seaside, a golden-hour island, a balloon
-flight at sunset, a stargazing hill, a lantern festival, and finally her own song on a stage, a bouquet
+booth, a train ride, a bookshop, an omakase lunch, a café, the seaside, the mountain behind the school at
+golden hour (with the city glittering below), a balloon flight at sunset, stargazing on the summit, a lantern festival, and finally her own song on a stage, a bouquet
 made of the flowers she picked, and a wish built from her lunch choices.
 
 No fail states, no timers, no scores. Everything the player sees is in Vietnamese.
@@ -33,7 +33,7 @@ bookmark, outfit, settings). Photos go to IndexedDB. Refreshing the page offers 
 Everything player-facing lives in **one file: `src/content.js`** (UTF-8). Things you should fill in are
 marked `TODO`:
 
-- `partnerName` – your name as shown in dialogue (default `Anh`).
+- `partnerName` – your name as shown in dialogue (`Mino`). Dialogue uses cậu–tớ, as friends.
 - `partnerLook` – hair colour/style, glasses, hoodie and trouser colours of your pixel character.
 - `avatars` – optional square images (e.g. `assets/me.png`) for the Discord screens. Leave `null` to use the
   generated pixel avatars. Put the files in `public/assets/`.
@@ -47,6 +47,14 @@ marked `TODO`:
 - `song.title` – optional title of the song.
 
 You do not need to touch any other file to change text.
+
+## Train window video
+
+The train window plays `public/assets/train-window.mp4` (muted, looping). The default clip is
+"The view of Mount Cang and Erhai Lake outside the train K9613" by Nikita Yang, CC BY-SA 4.0, via
+Wikimedia Commons (colour-graded and re-encoded); the credit shows in the window. To use another clip,
+replace the file (mp4/H.264 plays everywhere, keep it a few MB) and update `train.videoCredit` in
+`content.js`. If the file is missing, a pixel-art landscape is shown instead.
 
 ## Replace the song
 
@@ -137,30 +145,32 @@ an `AnalyserNode` on the song.
   and fully controllable.
 - **Fonts:** VT323 (pixel font with full Vietnamese support) for titles and prompts, Nunito for longer text
   so it stays readable on phones. Both are bundled (no external font requests).
-- **Partner placeholders:** named "Anh", short dark hair, round glasses, soft-blue hoodie. Edit in `content.js`.
+- **Mino's look:** short dark hair, round glasses, soft-blue hoodie. Edit in `content.js`.
 - **The partner** follows a step behind in all 2D chapters, sits beside Hazei on benches, at the omakase
   counter, the café table and on the train, crouches with her by the dog, reacts to every flower, and joins
   every photo-booth pose. In the 3D chapters he is present only as Discord toasts until the stage.
 - **Story order:** Discord → meadow (dawn) → market + photo booth → train → bookshop → omakase → café →
-  seaside (he sees her off on a little boat) → island (golden hour) → balloon (sunset) → stargazing hill
-  (the balloon lands on the island's hill; dusk to night) → lantern village → stage → Discord epilogue.
+  seaside → the mountain behind the school (golden hour; the telescope looks down on the city) → balloon
+  (sunset, over the school and the city) → the summit at night (stars above, city lights below) →
+  lantern village → stage → Discord epilogue.
 - **Cut:** the optional rainy street (7b), because the day already felt full. Puddles/umbrella are therefore
   not included; feeding is done with the meadow chickens.
-- **The hill** reuses the island's hilltop (telescope, swing, plus a blanket) so the balloon can land there.
+- **The summit** of the same mountain is the stargazing spot, so the balloon can land there.
 - **Bouquet:** uses the flowers she actually picked (meadow, market gift, seaside, island), up to 21;
-  if fewer than 11, gift flowers are added quietly and the partner simply says he added a few.
-- **Wish:** "Hazei à, anh chúc em…" + five fragments from the omakase + closing line + the 20/10 greeting.
+  if fewer than 11, gift flowers are added quietly and Mino simply says he added a few.
+- **Wish:** "Hazei à, anh chúc em…" + five fragments from the omakase + closing line + the 20/10 greeting ("Hazei ơi, tớ chúc cậu…").
   It appears on the stage, in the Discord epilogue, and as a downloadable card.
 - **Album:** every polaroid and the photo strip are kept in IndexedDB and shown as attachments in the epilogue,
   along with the bouquet image, the wish card and the bookmark keepsake (if she took it in the bookshop).
-- **Gentle guidance:** in the island, golden wisps drift toward the next unexplored area; the balloon appears
-  after a few interactions or a few minutes. Boundaries are the shoreline, never a message.
+- **Gentle guidance:** on the mountain, golden wisps drift toward the next unexplored area; the balloon appears
+  after a few interactions or a few minutes. Boundaries are a ring of trees and the school fence, never a message.
 - **Accessibility/robustness:** respects `prefers-reduced-motion`, pauses (and suspends audio) when the tab is
   hidden, handles resize/orientation, shows Vietnamese error text, and keeps all text in the DOM so
   Vietnamese diacritics always render correctly.
 
 ## Licensing
 
-All code, art and sound in this project are original and generated in code. Fonts: VT323 and Nunito
+All code, art and sound in this project are original and generated in code, except the train-window
+video (CC BY-SA 4.0, credited above). Fonts: VT323 and Nunito
 (SIL Open Font License) via `@fontsource`. Three.js is MIT. The Discord look and logo are used privately
 for a personal, non-commercial gift. The song belongs to its owner and is not included.

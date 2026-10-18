@@ -258,7 +258,7 @@ export class Scene2D {
     if (!p.vx) p.dir = Math.sign(h.x - p.x) || p.dir;
     p.x = Math.max(this.minX - 10, Math.min(this.maxX + 10, p.x));
     // idle chatter: tiny random emote when standing still a while
-    if (!hMoving && this.idleT > 6 && Math.random() < dt * 0.15 && p.emoteT <= 0) p.emote(['heart', 'note', 'laugh', 'sparkle'][Math.floor(Math.random() * 4)]);
+    if (!hMoving && this.idleT > 6 && Math.random() < dt * 0.08 && p.emoteT <= 0) p.emote(['thumb', 'note', 'laugh', 'sparkle'][Math.floor(Math.random() * 4)]);
   }
 
   ambient(dt) {
