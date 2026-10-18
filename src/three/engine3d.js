@@ -536,7 +536,9 @@ export class World3D {
     await takePhoto(c, caption, title);
   }
 
-  toastOnce(key) { if (state.once('toast_' + key)) ui.toast(content.toasts[key]); }
+  // Mino's Discord messages: once per visit of a map (not once per save), so
+  // they show again when Hazei resumes or replays.
+  toastOnce(key) { this.toasted = this.toasted || new Set(); if (this.toasted.has(key) || !content.toasts[key]) return; this.toasted.add(key); ui.toast(content.toasts[key]); }
 }
 
 // Simple low-poly helpers
