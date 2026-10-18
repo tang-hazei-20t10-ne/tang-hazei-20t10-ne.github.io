@@ -13,7 +13,7 @@ const easeIO = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 export default async function balloon(game) {
   const sunDir = new THREE.Vector3(-0.75, 0.12, -0.62);
   const H = mountainHeight;
-  const world = new World3D(game, { hires: true, mode: 'look', start: [SPOTS.balloon.x, H(SPOTS.balloon.x, SPOTS.balloon.z), SPOTS.balloon.z], yaw: Math.PI, pitch: 0, bloom: 0.55, bloomThreshold: 0.75, inputMode: '3d', minPitch: -1.3, maxPitch: 1.35 });
+  const world = new World3D(game, { hires: 'ultra', mode: 'look', start: [SPOTS.balloon.x, H(SPOTS.balloon.x, SPOTS.balloon.z), SPOTS.balloon.z], yaw: Math.PI, pitch: 0, bloom: 0.55, bloomThreshold: 0.75, inputMode: '3d', minPitch: -1.3, maxPitch: 1.35 });
   input.setMode('3d');
   const sky = makeSky(['#4b5aa0', '#b77aa0', '#f5a46a', '#ffd796'], sunDir, { sun: '#fff1c0', glow: 0.8, sunSize: 0.9982 });
   world.add(sky);

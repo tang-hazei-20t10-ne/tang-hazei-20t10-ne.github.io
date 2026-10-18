@@ -367,9 +367,11 @@ export class World3D {
     const dpr = Math.min(2, devicePixelRatio || 1);
     const cw = innerWidth, ch = innerHeight;
     const portrait = ch > cw * 1.1;
-    const target = this.opts.res || (this.opts.hires ? (portrait ? 540 : 400) : (portrait ? 300 : 216));
+    let target = this.opts.res || (this.opts.hires === 'ultra' ? (portrait ? 1000 : 760) : this.opts.hires ? (portrait ? 540 : 400) : (portrait ? 300 : 216));
+    if (this.qualityCap) target = Math.min(target, this.qualityCap);
     const physH = ch * dpr, physW = cw * dpr;
-    const scale = Math.max(1, Math.round(physH / target));
+    let scale = Math.max(1, Math.round(physH / target));
+    if (this.qualityCap && physH / scale > this.qualityCap) scale = Math.ceil(physH / this.qualityCap);
     const H = Math.ceil(physH / scale), W = Math.ceil(physW / scale);
     this.W = W; this.H = H; this.cssScale = scale / dpr;
     this.renderer.setSize(W, H, false);
@@ -417,9 +419,10 @@ export class World3D {
     const loop = () => {
       if (this.dead) return;
       this.raf = requestAnimationFrame(loop);
-      const now = performance.now(); const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now;
+      const now = performance.now(); const raw = (now - this.last) / 1000; const dt = Math.min(0.05, raw); this.last = now;
       if (this.game.paused) return;
       this.update(dt); this.render();
+      this.adapt(raw);
     };
     this.raf = requestAnimationFrame(loop);
     return this.done;
@@ -503,6 +506,18 @@ export class World3D {
   }
 
   render() { this.composer.render(); }
+
+  // Drop the internal resolution step by step if the device can't keep up.
+  adapt(raw) {
+    if (raw > 1) return; // tab switch
+    this.realT = (this.realT || 0) + raw;
+    this.fpsT = (this.fpsT || 0) + raw; this.fpsN = (this.fpsN || 0) + 1;
+    if (this.fpsT < 2.5) return;
+    const fps = this.fpsN / this.fpsT; this.fpsT = 0; this.fpsN = 0;
+    if (this.realT < 3 || fps >= 38 || this.H <= 240) return;
+    this.qualityCap = Math.max(240, Math.round(this.H * 0.72));
+    this.resize();
+  }
 
   async photo(caption, title) {
     const prev = this.hideHands; this.hideHands = true;

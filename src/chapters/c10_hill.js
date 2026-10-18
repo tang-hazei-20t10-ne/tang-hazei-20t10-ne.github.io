@@ -26,9 +26,8 @@ export default async function hill(game) {
     { name: 2, center: [cityAz + 38, 52], pts: [[-5, 0], [-4, 6], [-1, 3], [1, 3], [4, 6], [5, 0], [0, -4], [-5, 0]] }, // cat
     { name: 3, center: [cityAz, 44], pts: [[-7, 0], [-6, 6], [-3, 2], [0, 7], [3, 2], [6, 6], [7, 0], [-7, 0]] }, // crown
   ];
-  const near = (x, z) => Math.hypot(x - deck.x, z - deck.z) < 16 && mountainWalkable(x, z);
   const start = new THREE.Vector3(deck.x + 6.5, 0, deck.z + 0.5);
-  const world = new World3D(game, { hires: true, start: [start.x, surfaceHeight(start.x, start.z), start.z], yaw: Math.PI / 2, pitch: -0.05, heightAt: surfaceHeight, walkable: near, bloom: 0.6, bloomThreshold: 0.7, maxPitch: 1.5 });
+  const world = new World3D(game, { hires: 'ultra', start: [start.x, surfaceHeight(start.x, start.z), start.z], yaw: Math.PI / 2, pitch: -0.05, heightAt: surfaceHeight, walkable: mountainWalkable, bloom: 0.6, bloomThreshold: 0.7, maxPitch: 1.5 });
   const sunDir = new THREE.Vector3(-0.8, 0.02, -0.55);
   const sky = makeSky(['#252a5c', '#5a3f7c', '#c45a7a', '#f39a6a'], sunDir, { sun: '#ffc68a', glow: 0.6 });
   world.add(sky);
@@ -101,6 +100,7 @@ export default async function hill(game) {
     starMat.opacity = Math.min(1, Math.max(0, (k - 0.25) * 1.6)) * (0.8 + Math.sin(t * 2) * 0.05);
     bandMat.opacity = Math.max(0, (k - 0.5) * 0.9);
     lanternLights.forEach((l, i) => { l.intensity = 3 + k * 3 + Math.sin(t * 6 + i) * 0.4; });
+    I.setLamps(k);
     // constellation stars
     const fwd = new THREE.Vector3(); world.camera.getWorldDirection(fwd);
     const ready = k >= 0.4;
