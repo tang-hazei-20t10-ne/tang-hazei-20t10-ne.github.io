@@ -73,7 +73,7 @@ export default {
   caPhe: {
     moDau: 'Cậu chọn nước đi.',
     // {nuoc} sẽ được thay bằng tên nước Hazei đã chọn
-    goiNuoc: 'Cho tớ một cà phê muối, với một {nuoc} cho bạn này nha!',
+    goiNuoc: 'Cho mình một cà phê muối, với một {nuoc} nha!',
     ngoiChill: 'Ngồi đây nhìn ra cửa sổ thấy chill ghê. Uống nước xong mình sẽ ra biển á.',
   },
 
