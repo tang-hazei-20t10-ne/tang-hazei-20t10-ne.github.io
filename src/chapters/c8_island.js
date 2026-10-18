@@ -105,8 +105,13 @@ export default async function island(game) {
     const p = world.player.pos; const d = new THREE.Vector3(p.x - dog.position.x, 0, p.z - dog.position.z); const dist = d.length();
     let moving = false;
     if (!dogS.pet) {
-      const want = dogS.follow > 0 ? 2.2 : (dist < 9 ? 2.5 : 999);
-      if (dist > want && dist < (dogS.follow > 0 ? 60 : 9)) { d.normalize(); dog.position.x += d.x * dt * 3.2; dog.position.z += d.z * dt * 3.2; moving = true; }
+      const want = dogS.follow > 0 ? 5 : (dist < 9 ? 4.5 : 999);
+      if (dogS.follow > 0) {
+        // aim for a spot ~5 m behind Hazei
+        const back = new THREE.Vector3(Math.sin(world.player.yaw), 0, Math.cos(world.player.yaw)).multiplyScalar(5);
+        const tgt = new THREE.Vector3(p.x + back.x, 0, p.z + back.z); const dd = tgt.sub(dog.position).setY(0);
+        if (dd.length() > 0.8) { const sp = Math.min(4.2, dd.length() * 1.5); dd.normalize(); dog.position.x += dd.x * dt * sp; dog.position.z += dd.z * dt * sp; moving = true; }
+      } else if (dist > want && dist < 9) { d.normalize(); dog.position.x += d.x * dt * 3.2; dog.position.z += d.z * dt * 3.2; moving = true; }
       else if (dogS.follow <= 0 && dist > 9) { dog.position.x += Math.sin(t * 0.3) * dt * 0.8; dog.position.z += Math.cos(t * 0.23) * dt * 0.8; moving = true; }
       if (dogS.follow > 0) dogS.follow -= dt;
     }
@@ -116,7 +121,7 @@ export default async function island(game) {
     if (moving) dogS.dir = Math.sign(d.dot(right)) || dogS.dir;
     dog.setCanvas(dogSprite(moving ? Math.floor(dogS.t * 9) % 4 : (dist < 4 ? Math.floor(dogS.t * 6) % 2 : 0), dogS.pet || dist < 4 ? 'happy' : 'normal', moving ? 'stand' : 'sit'), dogS.dir < 0);
   });
-  world.interact.add({ pos: dog.position, range: 2.4, hold: 1.0, label: P.pet, priority: 1,
+  world.interact.add({ pos: dog.position, range: 2.2, hold: 1.0, label: P.pet,
     onHold: () => { dogS.pet = true; world.handPose = 'pet'; if (Math.random() < 0.06) world.glow.emit(dog.position.clone().add(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(0, 0.8, 0), '#ff8fb0', 1.2); },
     onRelease: () => { dogS.pet = false; world.handPose = 'idle'; },
     onDone: async () => {

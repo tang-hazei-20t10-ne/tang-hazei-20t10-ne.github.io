@@ -79,8 +79,33 @@ export default async function balloon(game) {
   let finishResolve; const finished = new Promise((r) => { finishResolve = r; });
   const finishFlight = async () => { ui.actions(null); await wait(2500); finishResolve(); };
 
+  // Hazei lifts both hands and lets a handful of petals go: they fly out in
+  // front of the basket, rise on the warm air, then drift slowly down.
+  let releasing = false;
+  const bVel = new THREE.Vector3(), bLast = new THREE.Vector3(); let bInit = false;
+  world.every((dt) => { if (dt <= 0) return; if (bInit) bVel.copy(B.position).sub(bLast).divideScalar(dt); bLast.copy(B.position); bInit = true; });
+  const releasePetals = async () => {
+    if (releasing) return; releasing = true;
+    world.handPose = 'lantern'; audio.sfx('sparkle');
+    const cols = ['#ffc2d4', '#ffd9e4', '#fff0f5', '#f6c45f', '#b49ae0', '#ff9ab8'];
+    for (let burst = 0; burst < 3; burst++) {
+      const fwd = new THREE.Vector3(); world.camera.getWorldDirection(fwd);
+      fwd.y = Math.max(fwd.y, -0.1); fwd.normalize();
+      const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize();
+      const origin = world.camera.position.clone().addScaledVector(fwd, 1.2).add(new THREE.Vector3(0, -0.15, 0));
+      for (let i = 0; i < 26; i++) {
+        const v = bVel.clone().multiplyScalar(0.9).addScaledVector(fwd, 3 + Math.random() * 3).addScaledVector(right, (Math.random() - 0.5) * 3).add(new THREE.Vector3(0, 2.2 + Math.random() * 2, 0));
+        world.fx.emit(origin.clone().addScaledVector(right, (Math.random() - 0.5) * 0.6), v, cols[(i + burst) % cols.length], 7 + Math.random() * 3, { kind: 1, size: 4 });
+      }
+      for (let i = 0; i < 6; i++) world.glow.emit(origin.clone().addScaledVector(right, (Math.random() - 0.5)), bVel.clone().addScaledVector(fwd, 2).add(new THREE.Vector3(0, 1.5, 0)), '#fff6d8', 1.4, { size: 3 });
+      await wait(260);
+    }
+    await wait(500);
+    world.handPose = 'rim'; releasing = false;
+  };
+
   const actions = [
-    { label: '🌸 ' + C.actions.petals, onClick: () => { audio.sfx('sparkle'); for (let i = 0; i < 60; i++) world.fx.emit(B.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 1.4, 0.8, (Math.random() - 0.5) * 1.4)), new THREE.Vector3((Math.random() - 0.5) * 1.2, -0.6 - Math.random() * 0.6, (Math.random() - 0.5) * 1.2), ['#ffc2d4', '#ffd9e4', '#fff0f5', '#f6c45f', '#b49ae0'][i % 5], 9, { kind: 1 }); } },
+    { label: '🌸 ' + C.actions.petals, onClick: () => releasePetals() },
     { label: '🔥 ' + C.actions.burner, onClick: () => { flame = 1.6; bump = Math.min(2.5, bump + 1.2); audio.sfx('flame'); } },
     { label: '👋 ' + C.actions.wave, onClick: async () => { flock = 1; world.handPose = 'wave'; audio.sfx('chime'); await wait(1600); world.handPose = 'rim'; } },
     { label: '📷 ' + C.actions.photo, onClick: () => world.photo(C.lines.start.replace('…', ''), content.ui.photo) },

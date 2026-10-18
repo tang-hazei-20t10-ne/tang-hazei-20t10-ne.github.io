@@ -406,14 +406,14 @@ export function city(rnd) {
   rx.fillStyle = '#b8b4c0'; rx.fillRect(7, 7, 20, 20);
   const rt = pixelTex(rc); rt.wrapS = rt.wrapT = THREE.RepeatWrapping; rt.repeat.set(392 / 14, 238 / 14);
   const streets = new THREE.Mesh(new THREE.PlaneGeometry(392, 238).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: rt }));
-  streets.position.set(-137 + 196, PLAIN + 0.09, 105 + 119); g.add(streets);
+  streets.position.set(-137 + 196, PLAIN + 0.15, 105 + 119); g.add(streets);
   // street trees + park trees
   const treeGeo = new THREE.IcosahedronGeometry(1.4, 0);
   const trees = new THREE.InstancedMesh(treeGeo, toon('#5fae5a'), 500); let ntr = 0;
   blocks.forEach(([bx, bz]) => { if (rnd() < 0.5 && ntr < 500) { m4.makeTranslation(bx + 6.5, PLAIN + 1.6, bz + (rnd() - 0.5) * 10); trees.setMatrixAt(ntr++, m4); } });
   for (let i = 0; i < 90 && ntr < 500; i++) { const a = rnd() * Math.PI * 2, r = 8 + rnd() * 17; m4.makeTranslation(SPOTS.wheel.x + Math.cos(a) * r, PLAIN + 1.6, SPOTS.wheel.z + Math.sin(a) * r); trees.setMatrixAt(ntr++, m4); }
   trees.count = ntr; g.add(trees);
-  const parkGrass = new THREE.Mesh(new THREE.CircleGeometry(26, 24).rotateX(-Math.PI / 2), toon('#7fc464')); parkGrass.position.set(SPOTS.wheel.x, PLAIN + 0.06, SPOTS.wheel.z); g.add(parkGrass);
+  const parkGrass = new THREE.Mesh(new THREE.CircleGeometry(26, 24).rotateX(-Math.PI / 2), toon('#7fc464')); parkGrass.position.set(SPOTS.wheel.x, PLAIN + 0.25, SPOTS.wheel.z); g.add(parkGrass);
   // street lights
   const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(lightPts, 3));
   const lights = new THREE.Points(lg, new THREE.PointsMaterial({ color: '#ffcf7a', size: 2, sizeAttenuation: false, transparent: true, opacity: 0.6 }));
@@ -435,7 +435,8 @@ export function city(rnd) {
   // river with sparkles + bridge with lights
   const riverGeo = new THREE.PlaneGeometry(520, 18).rotateX(-Math.PI / 2);
   const riverMesh = waterMesh({ deep: '#3f6fa8', shallow: '#6aa8d8', sparkle: '#fff2c8', fog: '#f3b27e', fogFar: 700 }, 0, riverGeo);
-  riverMesh.rotation.y = -Math.atan(0.35); riverMesh.position.set(60, PLAIN + 0.08, 175 + 60 * 0.35); g.add(riverMesh);
+  riverMesh.rotation.y = -Math.atan(0.35); riverMesh.position.set(60, PLAIN + 0.35, 175 + 60 * 0.35);
+  riverMesh.material.polygonOffset = true; riverMesh.material.polygonOffsetFactor = -2; riverMesh.material.polygonOffsetUnits = -2; riverMesh.renderOrder = 1; g.add(riverMesh);
   const bridgePts = [];
   for (const bxp of [10, 90]) {
     const bz = 175 + bxp * 0.35;

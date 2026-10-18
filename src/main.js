@@ -177,7 +177,7 @@ if (DEBUG) {
     if (b.dataset.act === 'reset') { state.reset(); location.reload(); }
   });
   document.body.appendChild(d);
-  window.__game = game; window.__state = state;
+  window.__game = game; window.__state = state; window.__audio = audio;
 }
 
 boot().catch((e) => { console.error(e); ui.error(); });

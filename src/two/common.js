@@ -127,13 +127,13 @@ export class Dog {
     if (this.petting) { this.vx = 0; this.mood = 'happy'; this.sit = true; }
     else if (this.state === 'follow' && this.followT > 0) {
       this.followT -= dt;
-      const tgt = h.x + h.dir * 18;
+      const tgt = h.x - h.dir * 34; // trot along behind Mino, out of the way
       const dd = tgt - this.x;
       this.vx = Math.abs(dd) > 4 ? Math.sign(dd) * Math.min(60, Math.abs(dd) * 2.5) : 0;
       this.mood = Math.abs(h.vx) > 1 ? 'happy' : 'normal';
       this.sit = !this.vx;
       if (this.followT <= 0) this.state = 'idle';
-    } else if (Math.abs(d) < 70 && Math.abs(d) > 16) { this.vx = Math.sign(d) * 28; this.sit = false; this.mood = 'happy'; }
+    } else if (Math.abs(d) < 70 && Math.abs(d) > 28) { this.vx = Math.sign(d) * 28; this.sit = false; this.mood = 'happy'; }
     else { this.vx = 0; this.sit = Math.abs(d) < 70; this.mood = Math.abs(d) < 30 ? 'happy' : 'normal'; }
     this.x += this.vx * dt;
     if (this.vx) this.dir = Math.sign(this.vx); else if (Math.abs(d) < 80) this.dir = Math.sign(d) || this.dir;
@@ -152,7 +152,7 @@ export function addDog(scene, x, { name, line, followFor = 45 } = {}) {
   const dog = scene.addEntity(new Dog(x));
   scene.dog = dog;
   scene.interact.add({
-    x, range: 18, hold: 1.1, label: P.pet, priority: 2,
+    x, range: 15, hold: 1.1, label: P.pet,
     cond: () => { scene.interact.items.forEach((i) => { if (i.dogItem) i.x = dog.x; }); return true; },
     dogItem: true,
     onHold: (p) => {

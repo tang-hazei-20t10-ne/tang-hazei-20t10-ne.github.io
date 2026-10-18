@@ -182,7 +182,10 @@ export class Particles {
       if (life[i] <= 0) { alpha[i] = 0; continue; }
       life[i] -= dt;
       const k = kind[i];
-      if (k === 1) { vel[i * 3] += Math.sin(t * 2 + seed[i]) * dt * 0.6 + wind * dt; vel[i * 3 + 2] += Math.cos(t * 1.7 + seed[i]) * dt * 0.4; } // petal flutter
+      if (k === 1) { // petal flutter: air drag + a gentle fall toward a slow drift
+        const drag = 1 - Math.min(1, dt * 0.25); vel[i * 3] *= drag; vel[i * 3 + 2] *= drag; vel[i * 3 + 1] = vel[i * 3 + 1] * drag - 0.55 * dt;
+        vel[i * 3] += Math.sin(t * 2 + seed[i]) * dt * 0.8 + wind * dt; vel[i * 3 + 2] += Math.cos(t * 1.7 + seed[i]) * dt * 0.6;
+      }
       if (k === 2) { vel[i * 3 + 1] -= 4 * dt; } // gravity
       if (k === 3) { vel[i * 3] = Math.sin(t * 0.7 + seed[i]) * 0.3; vel[i * 3 + 1] = Math.cos(t * 0.9 + seed[i] * 2) * 0.15; vel[i * 3 + 2] = Math.cos(t * 0.6 + seed[i]) * 0.3; } // firefly
       pos[i * 3] += vel[i * 3] * dt; pos[i * 3 + 1] += vel[i * 3 + 1] * dt; pos[i * 3 + 2] += vel[i * 3 + 2] * dt;
@@ -337,7 +340,7 @@ export class World3D {
     const sh = getShared(game.stage);
     this.renderer = sh.renderer; this.canvas = sh.canvas; this.handsCanvas = sh.hands; this.hx = sh.handsCtx;
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(opts.fov || 68, 16 / 9, 0.08, 1400);
+    this.camera = new THREE.PerspectiveCamera(opts.fov || 68, 16 / 9, 0.2, 1400);
     this.clock = 0; this.dead = false;
     this.interact = new Interactor();
     this.player = { pos: new THREE.Vector3(...(opts.start || [0, 0, 0])), yaw: opts.yaw || 0, pitch: opts.pitch || 0, vel: new THREE.Vector3(), eye: 1.5, speed: opts.speed || 3.4, walkT: 0 };
