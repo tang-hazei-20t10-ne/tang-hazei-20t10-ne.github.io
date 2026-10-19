@@ -22,7 +22,7 @@ export default {
     shoes: '#f1ece3',
   },
   hazeiLook: {
-    hair: '#251822',
+    hair: '#8a5a2e', // vàng nâu
     skin: '#ffdcc4',
     top: '#fff4e6',
     dress: '#f2a7ba',
