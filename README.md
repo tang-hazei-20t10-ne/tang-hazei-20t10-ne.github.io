@@ -178,7 +178,7 @@ an `AnalyserNode` on the song.
 ## Licensing
 
 All code, art and sound in this project are original and generated in code, except the car-ride song
-(belongs to its owner) and the record-corner piano recordings (credited below). Fonts: VT323 and Nunito
+(belongs to its owner) the record-corner piano recordings and the balloon-ride music (credited below). Fonts: VT323 and Nunito
 (SIL Open Font License) via `@fontsource`. Three.js is MIT. The Discord look and logo are used privately
 for a personal, non-commercial gift. The song belongs to its owner and is not included.
 
@@ -195,3 +195,8 @@ Files in `public/assets/records/` were trimmed and loudness-matched; the origina
 
 To use other music, replace `1.mp3`–`4.mp3` and edit `bookshop.records` in `src/content.js`. If a file is
 missing, the record falls back to a generated loop.
+
+### Balloon ride music
+
+`public/assets/balloon.mp3`: Claude Debussy – Clair de lune (Suite bergamasque), piano recording by Laurens
+Goedhart, public domain, via Wikimedia Commons (trimmed, loudness-matched).
