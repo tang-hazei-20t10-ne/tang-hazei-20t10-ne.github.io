@@ -255,3 +255,6 @@ body.has-dialog #actions { opacity: 0; pointer-events: none; }
 
 /* a choice that is still counting down */
 .btn:disabled { opacity: .6; cursor: default; transform: none; filter: saturate(.6); }
+
+/* overheard chatter between villagers: smaller and softer than real dialogue */
+.bubble.chatter { font-size: clamp(12px, 1.4vw, 14px); font-weight: 600; padding: 4px 8px 5px; border-width: 2px; opacity: .92; }

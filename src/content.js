@@ -615,6 +615,14 @@ export default {
       'Lễ hội năm nay đông vui ghê!',
     ],
     gather: 'Mọi người đang kéo về phía sân khấu…',
+    // Những đoạn tán gẫu giữa người đi hội (tự hiện khi Hazei đi ngang qua)
+    chatter: [
+      ['Ê, cái đèn lồng hình con cá kia đẹp ghê!', 'Về nhà tớ vẽ một cái y chang luôn.', 'Cậu vẽ con cá ra con mèo á hả :))'],
+      ['Ăn xiên nướng hông?', 'Ăn rồi, ba xiên lận.', 'Vậy ăn thêm ba xiên nữa cho chẵn.'],
+      ['Nãy tớ ném vòng trúng ngay lần đầu luôn!', 'Trúng chai nào?', '…Trúng dép chú bán hàng.'],
+      ['Năm nay đông hơn năm ngoái ha.', 'Xếp hàng mua chè mất mười phút luôn.', 'Mà chè ngon nên đáng!'],
+      ['Tối nay có pháo hoa hông ta?', 'Nghe nói có, ở cuối phố á.', 'Vậy đi giành chỗ đẹp liền!'],
+    ],
     guide: {
       title: 'Lễ hội',
       optional: 'Trò chơi',

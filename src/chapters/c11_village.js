@@ -447,6 +447,8 @@ export default async function village(game) {
     }
     groups.push({ members, emo: null, next: 1 + Math.random() * 4 });
   });
+  // a few of the groups chat out loud when Hazei walks past (no button needed)
+  const chatGroups = [0, 2, 4, 6, 8].map((gi, k) => ({ g: groups[gi], lines: (C.chatter || [])[k], i: 0, wait: 0.5 + k * 0.7 })).filter((c) => c.g && c.lines);
   // a few people facing the street who turn to talk with Hazei
   const talkers = [];
   [[-3.4, 3.5], [3.5, -4], [-3.5, -28.5], [3.4, -49], [-3.3, -58]].forEach(([x, z], i) => {
@@ -518,6 +520,19 @@ export default async function village(game) {
         g.emo = billboard(emoteSprite(['laugh', 'note', 'heart', 'wow', 'sparkle', 'q', 'thumb'][Math.floor(Math.random() * 7)]), 0.045);
         g.emo.position.copy(m.b.position).add(new THREE.Vector3(0, kid(m.lk) ? 1.75 : 2.15, 0)); S.add(g.emo); g.next = 1.6;
       }
+    }
+    // overheard chatter: one line at a time, alternating speakers, then a pause before it starts over
+    for (const c of chatGroups) {
+      const m0 = c.g.members[0].b.position;
+      const near = pp.distanceTo(m0) < 10;
+      if (!near) { c.i = 0; c.wait = Math.min(c.wait, 1); continue; }
+      c.wait -= dt;
+      if (c.wait > 0) continue;
+      const who = c.g.members[c.i % c.g.members.length];
+      const bub = world.say(c.lines[c.i], who.b.position.clone().add(new THREE.Vector3(0, kid(who.lk) ? 1.8 : 2.2, 0)), 2600);
+      bub.b.classList.add('chatter');
+      c.i++;
+      if (c.i >= c.lines.length) { c.i = 0; c.wait = 9 + Math.random() * 6; } else c.wait = 2.9;
     }
     // stall life: goldfish circling, steam from the grills
     stalls.forEach((st) => {
