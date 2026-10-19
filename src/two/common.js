@@ -379,7 +379,9 @@ export function addExit(scene, x, text, { hint, onExit } = {}) {
     orig?.(s, dt);
     if (!hinted && hint && s.hazei.x > x - 70) { hinted = true; s.partner ? s.say(s.partner, hint, 3400) : ui.note(hint); }
   };
-  scene.interact.add({ x: x + 8, range: 18, hold: 0.35, label: `${content.prompts.next}: ${text}`, onDone: onExit || (() => scene.game.leave(scene)) });
+  // the prompt covers everything from the sign to the end of the map, so walking past it doesn't lose it
+  const lo = x + 8 - 18, hi = Math.max(x + 8 + 18, scene.maxX ?? 0);
+  scene.interact.add({ x: (lo + hi) / 2, range: (hi - lo) / 2, hold: 0.35, label: `${content.prompts.next}: ${text}`, onDone: onExit || (() => scene.game.leave(scene)) });
 }
 
 // Shared intro: fade in, title card, partner lines.
