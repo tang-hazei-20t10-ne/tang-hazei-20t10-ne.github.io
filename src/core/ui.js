@@ -126,8 +126,17 @@ class UI {
         if (choices) {
           choices.forEach((c, idx) => {
             const b = el('button', 'btn soft', esc(c));
-            b.addEventListener('click', (e) => { e.stopPropagation(); audio.sfx('select'); this.closeDialog(); resolve(idx); });
+            b.addEventListener('click', (e) => { e.stopPropagation(); if (b.disabled) return; audio.sfx('select'); this.closeDialog(); resolve(idx); });
             ch.appendChild(b);
+            // opts.choiceDelay: the choices count down before they can be picked
+            if (opts.choiceDelay) {
+              let n = opts.choiceDelay; b.disabled = true; b.textContent = `${c} · ${n}`;
+              const tick = setInterval(() => {
+                n--;
+                if (n > 0) { b.textContent = `${c} · ${n}`; return; }
+                clearInterval(tick); b.disabled = false; b.textContent = c; b.focus({ preventScroll: true });
+              }, 1000);
+            }
           });
           ch.querySelector('button')?.focus({ preventScroll: true });
         } else more.style.display = '';

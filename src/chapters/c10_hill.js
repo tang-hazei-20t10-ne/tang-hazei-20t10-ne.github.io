@@ -146,7 +146,8 @@ export default async function hill(game) {
     // fireflies
     if (Math.random() < dt * 4) { const fx = deck.x + (Math.random() - 0.5) * 24, fz = deck.z + (Math.random() - 0.5) * 24; world.glow.emit(new THREE.Vector3(fx, H(fx, fz) + 0.5 + Math.random() * 2, fz), new THREE.Vector3(), '#e9ff9a', 6, { kind: 3 }); }
     const nDone = cons.filter((c) => c.done).length;
-    if (!wished && !shooting && ((nDone >= 2 && lying) || (night >= 1 && world.clock > 260))) shootingStar();
+    // the shooting star only comes once every constellation is joined up
+    if (!wished && !shooting && nDone === cons.length) shootingStar();
   });
 
   // draw the part of the outline between two neighbouring lit anchors
@@ -165,7 +166,7 @@ export default async function hill(game) {
       audio.sfx('chime'); ui.note(`✦ ${C.constellationDone} ${C.constellations[c.sh.name]} ✦`, 3000);
       const done = cons.filter((cc) => cc.done).length;
       guide.progress('stars', done);
-      if (done >= 2) guide.show('wish');
+      if (done === cons.length) guide.show('wish');
     }
   };
 
@@ -186,7 +187,8 @@ export default async function hill(game) {
       await wait(16);
     }
     world.toastOnce('hill_star');
-    await ui.dialog([{ text: C.shootingStar, choices: ['✨'] }]);
+    // ten seconds to actually make a wish before the button can be pressed
+    await ui.dialog([{ text: C.shootingStar, choices: ['✨'] }], { choiceDelay: 10 });
     audio.sting([72, 76, 79, 84, 88], 'bell', 0.18);
     ui.note(C.wishMade, 3500);
     wished = true;
