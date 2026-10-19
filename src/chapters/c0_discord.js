@@ -25,7 +25,7 @@ export const ICON = {
 };
 
 export const CSS = `
-.dc { position:absolute; inset:0; z-index:20; display:grid; grid-template-columns:72px 240px 1fr; background:#1e1f22; color:#dbdee1; font-family:'gg sans','Nunito',system-ui,sans-serif; font-weight:600; overflow:hidden; }
+.dc { position:absolute; inset:0; z-index:20; display:grid; grid-template-columns:72px 240px 1fr; background:#1e1f22; color:#dbdee1; font-family:'gg sans','Nunito',system-ui,sans-serif; font-weight:600; overflow:hidden; grid-template-rows:minmax(0, 1fr); }
 .dc svg { width:20px; height:20px; display:block; }
 .dc button { font-family:inherit; }
 .dc-rail { background:#1e1f22; display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px 0; }
@@ -55,13 +55,14 @@ export const CSS = `
 .dc-user .ic { color:#b5bac1; display:flex; gap:10px; }
 .dc-vc { background:#232428; border-bottom:1px solid #2e2f34; padding:8px 10px; display:none; }
 .dc-vc.on { display:block; } .dc-vc b { color:#23a55a; font-size:14px; display:flex; gap:6px; align-items:center; } .dc-vc small { color:#949ba4; font-size:12px; }
-.dc-main { background:#313338; display:flex; flex-direction:column; min-width:0; position:relative; }
+.dc-main { background:#313338; display:flex; flex-direction:column; min-width:0; min-height:0; position:relative; }
 .dc-head { height:48px; flex:none; display:flex; align-items:center; gap:8px; padding:0 16px; border-bottom:1px solid #26272b; box-shadow:0 1px 0 rgba(0,0,0,.12); color:#f2f3f5; font-weight:800; }
 .dc-head .at { color:#80848e; font-size:22px; font-weight:600; }
 .dc-head canvas, .dc-head img { width:24px; height:24px; border-radius:50%; image-rendering:pixelated; }
 .dc-head .back { display:none; color:#b5bac1; background:none; border:0; padding:0 6px 0 0; }
-.dc-msgs { flex:1; overflow-y:auto; padding:16px 0 8px; display:flex; flex-direction:column; touch-action:pan-y; }
+.dc-msgs { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:16px 0 8px; display:flex; flex-direction:column; touch-action:pan-y; }
 .dc-msgs .spacer { flex:1; }
+.dc-msgs > :not(.spacer) { flex-shrink:0; } /* messages keep their size and the list scrolls */
 .dc-intro { padding:0 16px 16px; border-bottom:1px solid #3f4147; margin:0 16px 12px; padding-left:0; }
 .dc-intro canvas, .dc-intro img { width:80px; height:80px; border-radius:50%; image-rendering:pixelated; }
 .dc-intro h3 { margin:8px 0 2px; color:#f2f3f5; font-size:26px; font-weight:800; } .dc-intro p { margin:0; color:#b5bac1; font-size:14px; }
