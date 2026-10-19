@@ -115,46 +115,54 @@ export function bouquetFlowers(picked, min = 11) {
   return list;
 }
 
-export function drawBouquet(picked, size = 256) {
+// A round, full bouquet: flower heads packed in a dome over leaves and baby's
+// breath, a fan of paper behind, a folded paper cone in front and a bow.
+// opts.paper sets the wrapping colour. Returns the canvas, the flowers and
+// where the cone gathers (in the 96px drawing), for hands to hold it.
+export function drawBouquet(picked, size = 256, { paper = '#f6dfe6' } = {}) {
   const flowers = bouquetFlowers(picked);
-  const S = 96; // pixel canvas
+  const S = 96;
   const [c, x] = canvas(S, S);
-  const P = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
-  const cx = 48, base = 78;
-  // stems
-  const n = flowers.length;
-  const heads = flowers.map((f, i) => {
-    const ring = i < 1 ? 0 : i < 7 ? 1 : 2;
-    const k = ring === 0 ? 0 : ring === 1 ? (i - 1) / 6 : (i - 7) / Math.max(1, n - 7);
-    const ang = ring === 0 ? -Math.PI / 2 : -Math.PI / 2 + (k - 0.5) * (ring === 1 ? 2.2 : 2.9) + (ring === 2 ? 0.12 : 0);
-    const rad = ring === 0 ? 4 : ring === 1 ? 16 : 27;
-    return { f, x: Math.round(cx + Math.cos(ang) * rad * 1.1), y: Math.round(40 + Math.sin(ang) * rad * 0.8 + (ring === 2 ? 6 : 0)), ring };
-  });
-  x.strokeStyle = '#4f9a4a'; x.lineWidth = 1;
-  heads.forEach((h) => {
-    const steps = 40;
-    for (let s = 0; s <= steps; s++) { const t = s / steps; P(Math.round(h.x + (cx - h.x) * t), Math.round(h.y + (base - h.y) * t), 1, 1, s % 7 === 0 ? '#6dbb5a' : '#4f9a4a'); }
-  });
-  // leaves / greenery
-  for (let i = 0; i < 9; i++) { const a = -Math.PI / 2 + (i / 8 - 0.5) * 3.0; const lx = Math.round(cx + Math.cos(a) * 30), ly = Math.round(46 + Math.sin(a) * 22); P(lx - 2, ly, 5, 2, '#6dbb5a'); P(lx - 1, ly - 1, 3, 1, '#8fd36a'); }
-  // baby's breath
-  for (let i = 0; i < 26; i++) { const a = Math.random() * Math.PI * 2, r = 12 + Math.random() * 22; P(Math.round(cx + Math.cos(a) * r), Math.round(40 + Math.sin(a) * r * 0.7), 1, 1, '#fffaf2'); }
-  // heads: back ring first
-  [...heads].sort((a, b) => b.ring - a.ring).forEach((h) => { const img = flowerBig(h.f.species, h.f.color); x.drawImage(img, h.x - 10, h.y - 10); });
-  // wrapping paper
-  const paper = '#f6dfe6', paperS = shade(paper, 0.18);
-  for (let j = 0; j < 30; j++) {
-    const y = 56 + j; const half = Math.max(3, 26 - j * 0.85);
-    P(Math.round(cx - half), y, Math.round(half * 2), 1, j % 6 === 0 ? mix(paper, '#fff', 0.4) : paper);
-    P(Math.round(cx + half - 3), y, 3, 1, paperS);
+  const P = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(Math.round(a), Math.round(b), w, h); };
+  let seed = 11; const r = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  const cx = 48;
+  const paperL = mix(paper, '#ffffff', 0.45), paperS = shade(paper, 0.16), paperD = shade(paper, 0.3);
+  // paper fan behind the flowers, with a scalloped edge
+  for (let j = 0; j < 40; j++) {
+    const y = 18 + j, half = 34 - j * 0.55;
+    P(cx - half, y, half * 2, 1, j < 2 ? paperL : paper);
+    P(cx - half, y, 2, 1, paperS); P(cx + half - 2, y, 2, 1, paperS);
   }
-  // paper folds
-  for (let j = 0; j < 14; j++) { P(cx - 26 + j, 56 + j, 1, 1, paperS); P(cx + 25 - j, 56 + j, 1, 1, paperS); }
-  // ribbon
-  P(cx - 8, 70, 16, 3, '#e05a7a'); P(cx - 12, 67, 5, 4, '#e05a7a'); P(cx + 7, 67, 5, 4, '#e05a7a'); P(cx - 2, 69, 4, 5, '#c4587a');
-  P(cx - 4, 73, 2, 9, '#e05a7a'); P(cx + 2, 73, 2, 8, '#e05a7a');
+  for (let i = 0; i < 9; i++) { const sx = cx - 34 + i * 8.5; P(sx, 16, 6, 2, paperL); P(sx + 1, 15, 4, 1, paperL); }
+  // leaves fanning out between the heads
+  const leaf = (lx, ly, a, len, col) => { for (let k = 0; k < len; k++) { const w = k < len / 2 ? 1 + k / 2 : 1 + (len - k) / 2; P(lx + Math.cos(a) * k - w / 2, ly + Math.sin(a) * k, Math.max(1, w), 1, col); } };
+  for (let i = 0; i < 13; i++) { const a = -Math.PI + 0.15 + (i / 12) * (Math.PI - 0.3); leaf(cx + Math.cos(a) * 12, 46 + Math.sin(a) * 9, a, 24 + (i % 3) * 4, i % 2 ? '#4f9a4a' : '#6dbb5a'); }
+  // flower heads in a dome: a crown, then rows widening toward the front
+  const rows = [[1, 0, 12], [4, 26, 20], [5, 40, 29], [5, 52, 39], [4, 44, 47]];
+  const spots = [];
+  rows.forEach(([n, span, y]) => { for (let i = 0; i < n; i++) spots.push([cx + (n === 1 ? 0 : -span / 2 + (i * span) / (n - 1)) + (r() - 0.5) * 3, y + (r() - 0.5) * 3]); });
+  // every spot gets a head (repeating the flowers if there are fewer of them)
+  spots.forEach(([hx, hy], i) => { const f = flowers[i % flowers.length]; x.drawImage(flowerBig(f.species, f.color), Math.round(hx - 10), Math.round(hy - 10)); });
+  // baby's breath sprinkled around the dome
+  for (let i = 0; i < 40; i++) { const a = -Math.PI * r(), rr = 22 + r() * 14; const bx = cx + Math.cos(a) * rr * 1.15, by = 34 + Math.sin(a) * rr * 0.75; P(bx, by, 1, 1, '#fffaf2'); if (r() < 0.3) P(bx + 1, by, 1, 1, '#f3ead8'); }
+  // the paper cone in front: two folded panels gathered at the bottom
+  const top = 50, bot = 88, grip = { x: cx, y: 70 };
+  for (let j = 0; j <= bot - top; j++) {
+    const y = top + j, k = j / (bot - top), half = 27 * (1 - k) + 4 * k;
+    P(cx - half, y, half, 1, paper);
+    P(cx, y, half, 1, paperS);
+    P(cx - half, y, 1, 1, paperD); P(cx + half - 1, y, 1, 1, paperD);
+  }
+  for (let i = 0; i < 54; i += 6) { P(cx - 27 + i, top, 3, 1, paperL); }
+  for (let j = 0; j < 18; j++) { P(cx - 19 + j * 0.8, top + 2 + j * 1.2, 1, 1, paperL); P(cx + 18 - j * 0.8, top + 2 + j * 1.2, 1, 1, paperD); }
+  // satin bow where the cone is gathered, with two tails
+  const bow = '#e05a7a', bowD = '#b83f62', bowL = '#f39ab4';
+  P(cx - 13, 66, 11, 6, bow); P(cx + 2, 66, 11, 6, bow); P(cx - 12, 66, 9, 1, bowL); P(cx + 3, 66, 9, 1, bowL);
+  P(cx - 13, 71, 11, 1, bowD); P(cx + 2, 71, 11, 1, bowD);
+  P(cx - 3, 65, 6, 8, bowD); P(cx - 2, 66, 4, 6, bow);
+  for (let k = 0; k < 10; k++) { P(cx - 3 - k * 0.6, 73 + k, 3, 1, k % 4 ? bow : bowD); P(cx + 1 + k * 0.6, 73 + k, 3, 1, k % 4 ? bow : bowD); }
   const out = upscale(c, size / S);
-  return { canvas: out, flowers };
+  return { canvas: out, flowers, grip };
 }
 
 // ---------------------------------------------------------------- wish
@@ -184,35 +192,52 @@ function wrap(x, text, maxW) {
   return lines;
 }
 
+// The wish card: every line wraps inside the card, and the card grows taller
+// when there is more to say.
 export function wishCard(parts, bouquetPicked) {
-  const W = 900, H = 1200;
+  const W = 900, PADX = 110, TEXT_W = W - PADX * 2;
+  const m = canvas(1, 1)[1];
+  const fonts = { open: `bold 34px ${FONT_BODY}`, frag: `600 30px ${FONT_BODY}`, close: `bold 30px ${FONT_BODY}`, foot: `48px ${FONT_PX}` };
+  const lines = (font, text, w) => { m.font = font; return wrap(m, text, w); };
+  const openL = lines(fonts.open, parts.opening, TEXT_W);
+  const fragL = parts.fragments.map((f) => lines(fonts.frag, f, TEXT_W - 40));
+  const closeL = lines(fonts.close, parts.closing, TEXT_W);
+  const footL = lines(fonts.foot, parts.footer, W - 160);
+  // measure the content, then size the canvas to it
+  const cardTop = 330, titleY = cardTop + 90;
+  let y = titleY + 70;
+  y += openL.length * 46 + 14;
+  fragL.forEach((ls) => { y += ls.length * 42 + 8; });
+  y += 16 + closeL.length * 44 + 30;
+  const footY = y + 20;
+  y = footY + (footL.length - 1) * 52 + 50;
+  const H = Math.max(1200, y + 60);
   const [c, x] = canvas(W, H);
   const g = x.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, '#2a2556'); g.addColorStop(0.55, '#7a4a7e'); g.addColorStop(1, '#f39a8a');
   x.fillStyle = g; x.fillRect(0, 0, W, H);
-  // stars
-  for (let i = 0; i < 160; i++) { x.fillStyle = `rgba(255,248,230,${0.3 + Math.random() * 0.7})`; const s = Math.random() < 0.1 ? 4 : 2; x.fillRect(Math.random() * W | 0, Math.random() * H * 0.6 | 0, s, s); }
+  for (let i = 0; i < 160; i++) { x.fillStyle = `rgba(255,248,230,${0.3 + Math.random() * 0.7})`; const st = Math.random() < 0.1 ? 4 : 2; x.fillRect(Math.random() * W | 0, Math.random() * 300 | 0, st, st); }
   // card
-  x.fillStyle = '#fff8ee'; x.fillRect(60, 300, W - 120, H - 360);
-  x.fillStyle = '#3a2633'; x.fillRect(60, 300, W - 120, 6); x.fillRect(60, H - 66, W - 120, 6); x.fillRect(60, 300, 6, H - 360); x.fillRect(W - 66, 300, 6, H - 360);
-  const bq = drawBouquet(bouquetPicked, 300).canvas;
-  x.imageSmoothingEnabled = false; x.drawImage(bq, W / 2 - 150, 40);
+  const cardH = H - cardTop - 60;
+  x.fillStyle = '#fff8ee'; x.fillRect(60, cardTop, W - 120, cardH);
+  x.fillStyle = '#3a2633'; x.fillRect(60, cardTop, W - 120, 6); x.fillRect(60, cardTop + cardH - 6, W - 120, 6); x.fillRect(60, cardTop, 6, cardH); x.fillRect(W - 66, cardTop, 6, cardH);
+  // the bouquet sits on top of the card
+  const bq = drawBouquet(bouquetPicked, 384).canvas;
+  x.imageSmoothingEnabled = false; x.drawImage(bq, W / 2 - 192, cardTop - 330);
   x.fillStyle = '#c4587a'; x.textAlign = 'center';
-  x.font = `64px ${FONT_PX}`; x.fillText(content.wish.cardTitle, W / 2, 390);
+  x.font = `64px ${FONT_PX}`; x.fillText(content.wish.cardTitle, W / 2, titleY);
   x.textAlign = 'left'; x.fillStyle = '#3a2633';
-  let y = 460;
-  x.font = `bold 34px ${FONT_BODY}`; x.fillText(parts.opening, 110, y); y += 60;
-  x.font = `600 30px ${FONT_BODY}`;
-  for (const f of parts.fragments) {
-    const lines = wrap(x, f, W - 260);
-    x.fillStyle = '#e05a7a'; x.fillText('✿', 110, y); x.fillStyle = '#3a2633';
-    lines.forEach((l) => { x.fillText(l, 150, y); y += 42; });
+  y = titleY + 70;
+  x.font = fonts.open; openL.forEach((l) => { x.fillText(l, PADX, y); y += 46; }); y += 14;
+  x.font = fonts.frag;
+  fragL.forEach((ls) => {
+    x.fillStyle = '#e05a7a'; x.fillText('✿', PADX, y); x.fillStyle = '#3a2633';
+    ls.forEach((l) => { x.fillText(l, PADX + 40, y); y += 42; });
     y += 8;
-  }
+  });
   y += 16;
-  x.font = `bold 30px ${FONT_BODY}`;
-  wrap(x, parts.closing, W - 220).forEach((l) => { x.fillText(l, 110, y); y += 44; });
-  x.textAlign = 'center'; x.fillStyle = '#c4587a'; x.font = `48px ${FONT_PX}`;
-  x.fillText(parts.footer, W / 2, Math.min(H - 110, y + 60));
+  x.font = fonts.close; closeL.forEach((l) => { x.fillText(l, PADX, y); y += 44; });
+  x.textAlign = 'center'; x.fillStyle = '#c4587a'; x.font = fonts.foot;
+  footL.forEach((l, i) => x.fillText(l, W / 2, footY + i * 52));
   return c;
 }
