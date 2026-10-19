@@ -48,13 +48,18 @@ function valanceTex(a, b) {
   return pixelTex(c);
 }
 // a painted wooden sign in the pixel font
+// (the board grows to fit the text; use signW() for the matching plane width)
 function signTex(text, bg, fg) {
-  const [c, x] = canvas(96, 24);
-  x.fillStyle = shade(bg, 0.4); x.fillRect(0, 0, 96, 24); x.fillStyle = bg; x.fillRect(2, 2, 92, 20);
-  x.fillStyle = light(bg, 0.25); x.fillRect(2, 2, 92, 2);
-  x.fillStyle = fg; x.font = "18px 'VT323', monospace"; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, 48, 13);
+  const font = "18px 'VT323', monospace";
+  const m = canvas(1, 1)[1]; m.font = font;
+  const W = Math.max(64, Math.ceil(m.measureText(text).width) + 16);
+  const [c, x] = canvas(W, 24);
+  x.fillStyle = shade(bg, 0.4); x.fillRect(0, 0, W, 24); x.fillStyle = bg; x.fillRect(2, 2, W - 4, 20);
+  x.fillStyle = light(bg, 0.25); x.fillRect(2, 2, W - 4, 2);
+  x.fillStyle = fg; x.font = font; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, W / 2, 13);
   return pixelTex(c);
 }
+const signW = (tex, h) => (h * tex.image.width) / tex.image.height;
 // little pixel pictures for the food stalls' signs: skewers and a steaming bowl
 function foodSignTex(bg, kind) {
   const [c, x] = canvas(48, 24);
@@ -115,7 +120,8 @@ function stallMesh(kind, color, label) {
   const bulbCols = ['#ffe9a8', '#ffb3c6', '#bfe0ff'];
   for (let i = 0; i < 11; i++) { const bl = new THREE.Mesh(BULB, glowMat(bulbCols[i % 3])); bl.position.set(-1.45 + i * 0.29, 2.2, 0.8); g.add(bl); }
   // the sign on top of the awning
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(label ? 2 : 1.1, 0.5), new THREE.MeshBasicMaterial({ map: label ? signTex(label, '#3a2633', '#ffe9a8') : foodSignTex('#3a2633', kind === 'food2' ? 1 : 0) }));
+  const signMap = label ? signTex(label, '#3a2633', '#ffe9a8') : foodSignTex('#3a2633', kind === 'food2' ? 1 : 0);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(2.9, signW(signMap, 0.5)), 0.5), new THREE.MeshBasicMaterial({ map: signMap }));
   sign.position.set(0, 3.15, 0.55); g.add(sign);
   if (kind === 'ring') {
     // tiers of bottles on a back shelf, plush prizes on top, rings on the counter
@@ -339,7 +345,8 @@ export default async function village(game) {
     const beam2 = new THREE.Mesh(new THREE.BoxGeometry(10, 0.22, 0.4), red); beam2.position.set(0, 4.5, 2); S.add(beam2);
     const roofT = new THREE.Mesh(new THREE.BoxGeometry(12.8, 0.3, 1.5), tile); roofT.position.set(0, 5.8, 2); S.add(roofT);
     for (const x of [-6.3, 6.3]) { const tip = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.24, 1.5), tile); tip.position.set(x, 6.02, 2); tip.rotation.z = x < 0 ? -0.35 : 0.35; S.add(tip); }
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 0.95), new THREE.MeshBasicMaterial({ map: signTex(content.chapters[11]?.title || 'Lễ hội', '#c4383a', '#ffe9a8'), side: THREE.DoubleSide })); sign.position.set(0, 4.95, 2.3); S.add(sign);
+    const gateMap = signTex(content.chapters[11]?.title || 'Lễ hội', '#c4383a', '#ffe9a8');
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(9, signW(gateMap, 0.95)), 0.95), new THREE.MeshBasicMaterial({ map: gateMap, side: THREE.DoubleSide })); sign.position.set(0, 4.95, 2.3); S.add(sign);
     for (const x of [-3.4, 3.4]) {
       const big = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 8), glowMat('#ff4a3a')); big.scale.y = 1.25; big.position.set(x, 3.6, 2); S.add(big);
       for (const y of [4.25, 2.95]) { const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.1, 8), toon('#ffcf4a')); cap.position.set(x, y, 2); S.add(cap); }
