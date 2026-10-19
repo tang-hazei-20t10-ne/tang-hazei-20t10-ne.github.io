@@ -330,7 +330,7 @@ class Bed {
 
 // ------------------------------------------------------------ main audio
 class AudioEngine {
-  constructor() { this.ctx = null; this.music = null; this.musicName = null; this.beds = new Map(); this.volume = 0.8; this.muted = false; }
+  constructor() { this.ctx = null; this.music = null; this.musicName = null; this.beds = new Map(); this.volume = 0.5; this.muted = false; }
   init() {
     if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -339,10 +339,10 @@ class AudioEngine {
     this.master = ctx.createGain();
     const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
     this.master.connect(comp); comp.connect(ctx.destination);
-    this.musicBus = ctx.createGain(); this.musicBus.gain.value = 0.8; this.musicBus.connect(this.master);
-    this.ambBus = ctx.createGain(); this.ambBus.gain.value = 0.7; this.ambBus.connect(this.master);
-    this.sfxBus = ctx.createGain(); this.sfxBus.gain.value = 0.9; this.sfxBus.connect(this.master);
-    this.songBus = ctx.createGain(); this.songBus.connect(this.master);
+    this.musicBus = ctx.createGain(); this.musicBus.gain.value = 1.2; this.musicBus.connect(this.master);
+    this.ambBus = ctx.createGain(); this.ambBus.gain.value = 1.05; this.ambBus.connect(this.master);
+    this.sfxBus = ctx.createGain(); this.sfxBus.gain.value = 1.35; this.sfxBus.connect(this.master);
+    this.songBus = ctx.createGain(); this.songBus.gain.value = 0.75; this.songBus.connect(this.master);
     this.reverb = ctx.createConvolver(); this.reverb.buffer = this.impulse(2.8);
     const rg = ctx.createGain(); rg.gain.value = 0.5; this.reverb.connect(rg); rg.connect(this.musicBus);
     this.sfxVerb = ctx.createGain(); this.sfxVerb.gain.value = 0.3; this.sfxVerb.connect(this.reverb);
@@ -369,8 +369,8 @@ class AudioEngine {
     this.musicName = name; this.music = null;
     if (name && PRESETS[name]) { this.music = new MusicPlayer(this, PRESETS[name]); this.music.fadeIn(fade); }
   }
-  setMusicLevel(v, t = 1.5) { if (this.ctx) this.musicBus.gain.setTargetAtTime(v * 0.8, this.ctx.currentTime, t / 3); }
-  setAmbienceLevel(v, t = 1.5) { if (this.ctx) this.ambBus.gain.setTargetAtTime(v * 0.7, this.ctx.currentTime, t / 3); }
+  setMusicLevel(v, t = 1.5) { if (this.ctx) this.musicBus.gain.setTargetAtTime(v * 1.2, this.ctx.currentTime, t / 3); }
+  setAmbienceLevel(v, t = 1.5) { if (this.ctx) this.ambBus.gain.setTargetAtTime(v * 1.05, this.ctx.currentTime, t / 3); }
   // beds: array of names or {name: level}
   setBeds(list, fade = 2) {
     if (!this.ctx) return;
@@ -414,7 +414,7 @@ class AudioEngine {
       case 'launch': { const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.setValueAtTime(500, t); o.frequency.exponentialRampToValueAtTime(1800, t + 0.8); env(ctx, g, t, 0.05, 0.02, 0.8); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.9); break; }
       case 'applause': {
         // a full hall: dense hand claps that swell then fade over ~7s, plus a cheering crowd
-        const bus = ctx.createGain(); bus.gain.value = 1.8; bus.connect(out);
+        const bus = ctx.createGain(); bus.gain.value = 1.2; bus.connect(out);
         const dur = 7;
         for (let i = 0; i < 900; i++) {
           const k = Math.pow(Math.random(), 0.6) * dur; // denser near the start
@@ -476,7 +476,8 @@ class AudioEngine {
   // ---------------------------------------------------------- record player
   // Plays an audio file in a loop through the music bus (so mute/volume apply).
   // Resolves false if the file is missing, so callers can fall back.
-  async playRecord(url, { loop = true, onEnd } = {}) {
+  // `gain` evens out loud masters (about 0.35 for a -15 LUFS pop track).
+  async playRecord(url, { loop = true, onEnd, gain = 0.55 } = {}) {
     this.stopRecord();
     if (!this.ctx) return false;
     const el = new Audio(url); el.loop = loop; el.preload = 'auto';
@@ -487,7 +488,7 @@ class AudioEngine {
     const g = this.ctx.createGain(); g.gain.value = 0.0001;
     const analyser = this.ctx.createAnalyser(); analyser.fftSize = 256; analyser.smoothingTimeConstant = 0.7;
     src.connect(g); g.connect(this.musicBus); g.connect(analyser);
-    g.gain.linearRampToValueAtTime(1, this.ctx.currentTime + 1.2);
+    g.gain.linearRampToValueAtTime(gain, this.ctx.currentTime + 1.2);
     this.playMusic(null, 1);
     try { await el.play(); } catch { return false; }
     this.record = { el, g, analyser };

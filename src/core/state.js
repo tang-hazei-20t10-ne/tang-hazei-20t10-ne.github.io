@@ -11,7 +11,7 @@ const defaults = () => ({
   bookmark: false,
   outfit: { hat: false, glasses: false },
   seen: {}, // one-shot flags (toasts, tips)
-  settings: { volume: 0.8, muted: false },
+  settings: { volume: 0.5, muted: false },
 });
 
 let data = defaults();

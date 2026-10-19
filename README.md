@@ -50,13 +50,10 @@ marked `TODO`:
 
 You do not need to touch any other file to change text.
 
-## Train window video
+## Car ride music
 
-The train window plays `public/assets/train-window.mp4` (muted, looping). The default clip is
-"View from a Rigi Railways cogwheel train between Rigi Kulm and Rigi Staffel, 2026" by Ddayzzz,
-CC BY-SA 4.0, via Wikimedia Commons (cropped, re-encoded); the credit shows in the window. To use another clip,
-replace the file (mp4/H.264 plays everywhere, keep it a few MB) and update `train.videoCredit` in
-`content.js`. If the file is missing, a pixel-art landscape is shown instead.
+The car stereo plays `public/assets/car-song.mp3` (`train.carSong` in `content.js`); the ride ends
+when the song does. The scenery outside the car is pixel animation drawn in code.
 
 ## Replace the song
 
@@ -180,8 +177,8 @@ an `AnalyserNode` on the song.
 
 ## Licensing
 
-All code, art and sound in this project are original and generated in code, except the train-window
-video (CC BY-SA 4.0, credited above) and the record-corner piano recordings (credited below). Fonts: VT323 and Nunito
+All code, art and sound in this project are original and generated in code, except the car-ride song
+(belongs to its owner) and the record-corner piano recordings (credited below). Fonts: VT323 and Nunito
 (SIL Open Font License) via `@fontsource`. Three.js is MIT. The Discord look and logo are used privately
 for a personal, non-commercial gift. The song belongs to its owner and is not included.
 

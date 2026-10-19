@@ -251,10 +251,6 @@ export default {
     intro: [
       { who: 'partner', text: M.tau.moDau },
     ],
-    // Real footage shown in the train window. Put a video in public/assets/
-    // (mp4 or webm). If the file is missing, a pixel-art landscape is shown.
-    video: 'assets/train-window.mp4',
-    videoCredit: 'Video: Ddayzzz · CC BY-SA 4.0 · Wikimedia Commons',
     sights: {
       terraces: 'Ruộng bậc thang vàng óng…',
       lake: 'Mặt hồ phẳng như gương.',

@@ -75,6 +75,8 @@ function loadingScreen() {
 
 async function boot() {
   state.load();
+  // the default volume went from 80% to 50%; move old untouched saves along
+  if (state.data.settings.volume === 0.8 && state.once('vol50')) { state.data.settings.volume = 0.5; state.save(); }
   audio.volume = state.data.settings.volume; audio.muted = state.data.settings.muted;
   ui.init(app);
   input.init(stage);
