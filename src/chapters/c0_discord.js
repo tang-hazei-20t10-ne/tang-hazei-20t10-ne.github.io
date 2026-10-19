@@ -123,6 +123,8 @@ export const CSS = `
 .dc-grow canvas { width:100%; height:100%; image-rendering:pixelated; display:block; object-fit:cover; }
 .dc-members { display:none; }
 @media (min-width:1200px) { .dc { grid-template-columns:72px 240px 1fr 240px; } .dc-members { display:block; background:#2b2d31; padding:16px 8px; } }
+/* phones held sideways: no room for the side columns, the chat gets the whole screen */
+@media (max-height:500px) { .dc { grid-template-columns:1fr !important; } .dc-rail, .dc-side, .dc-members { display:none !important; } .dc-head { height:40px; } }
 @media (max-width:760px) { .dc { grid-template-columns:1fr; } .dc-rail, .dc-side { display:none; } .dc-head .back { display:block; } .dc-tile { width:min(340px,80vw); } .dc-msg .tx { font-size:15px; } }
 @media (max-height:520px) { .dc-tile { width:min(220px,30vw); } .dc-shelf { bottom:70px; } .dc-card .art { aspect-ratio:16/6; } }
 `;

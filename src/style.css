@@ -262,3 +262,6 @@ body.has-dialog #actions { opacity: 0; pointer-events: none; }
 /* the letter from the bouquet, opening before it is read */
 .letter-env { display: block; margin: 18px auto; width: min(220px, 50vw); height: auto; image-rendering: pixelated; animation: pop .35s ease-out; transition: opacity .45s, transform .45s; }
 .letter-env.gone { opacity: 0; transform: translateY(-20px) scale(1.1); }
+
+/* phones held sideways: the task list and Discord toasts fill the top corners, so centred notes and title cards sit lower */
+@media (max-height: 500px) { #note { top: calc(38% + var(--safe-t)); font-size: 22px; } .title-card { top: 42%; } }

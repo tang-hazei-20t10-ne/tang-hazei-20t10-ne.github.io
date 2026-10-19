@@ -21,12 +21,16 @@ for (const a of acts) {
 const r = await page.evaluate(async (dur) => {
   const a = window.__audio; const an = a.ctx.createAnalyser(); an.fftSize = 2048; a.master.connect(an);
   const buf = new Float32Array(2048); let sum = 0, n = 0, peak = 0;
+  const fb = new Float32Array(an.frequencyBinCount); let hi = 0, all = 0;
   const t0 = performance.now();
   while (performance.now() - t0 < dur) {
     an.getFloatTimeDomainData(buf); let s = 0; for (const v of buf) { s += v * v; peak = Math.max(peak, Math.abs(v)); }
-    sum += s / buf.length; n++; await new Promise((r) => setTimeout(r, 50));
+    sum += s / buf.length; n++;
+    an.getFloatFrequencyData(fb); const hz = a.ctx.sampleRate / 2 / fb.length;
+    fb.forEach((db, i) => { const e = Math.pow(10, db / 10); all += e; if (i * hz > 5000) hi += e; });
+    await new Promise((r) => setTimeout(r, 50));
   }
-  return { rms: 10 * Math.log10(sum / n + 1e-12), peak: 20 * Math.log10(peak + 1e-12), vol: a.volume, state: a.ctx.state };
+  return { rms: 10 * Math.log10(sum / n + 1e-12), peak: 20 * Math.log10(peak + 1e-12), vol: a.volume, state: a.ctx.state, hiss: (100 * hi / (all || 1)) };
 }, +dur);
-console.log(ch.padEnd(10), 'avg', r.rms.toFixed(1), 'dB  peak', r.peak.toFixed(1), 'dB  vol', r.vol, r.state);
+console.log(ch.padEnd(10), 'avg', r.rms.toFixed(1), 'dB  peak', r.peak.toFixed(1), 'dB  >5kHz', r.hiss.toFixed(1) + '%', ' vol', r.vol, r.state);
 await browser.close();

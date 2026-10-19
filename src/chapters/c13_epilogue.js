@@ -28,6 +28,7 @@ const EXTRA_CSS = `
 .dc-keep b { color:#f2f3f5; display:block; } .dc-keep small { color:#b5bac1; font-size:13px; }
 .dc-ep-actions { display:flex; gap:8px; flex-wrap:wrap; padding:0 16px 16px; }
 .dc-ep-actions .dc-btn.ghost { background:#4e5058; } .dc-ep-actions .dc-btn.ghost:hover { background:#6d6f78; }
+@media (max-height:500px) { .dc-ep-tiles { padding:6px 12px; } .dc-ep-tiles .dc-tile { width:120px; } .dc-ep-tiles .dc-tile canvas, .dc-ep-tiles .dc-tile img { width:30px; height:30px; } .dc-ep-actions { padding:0 12px 8px; } }
 `;
 
 function bookmarkArt() {

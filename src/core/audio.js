@@ -328,6 +328,11 @@ class Bed {
   }
 }
 
+const SFX_TRIM = {
+  flame: -9, firework: -6, pop: -3, select: -3, yay: -2,
+  shutter: 9, snap: 8, quack: 6, launch: 7, whoosh: 5, scratch: 5, page: 4, woof: 4, sip: 6,
+};
+
 // ------------------------------------------------------------ main audio
 class AudioEngine {
   constructor() { this.ctx = null; this.music = null; this.musicName = null; this.beds = new Map(); this.volume = 0.5; this.muted = false; }
@@ -385,7 +390,15 @@ class AudioEngine {
 
   sfx(name, opt = {}) {
     if (!this.ctx) return;
-    const ctx = this.ctx; const t = ctx.currentTime + 0.01; const out = this.sfxBus; const wet = this.sfxVerb;
+    const ctx = this.ctx; const t = ctx.currentTime + 0.01;
+    // per-effect trim (dB), measured so no effect jumps out of the scene or gets lost in it
+    let out = this.sfxBus, wet = this.sfxVerb;
+    const trim = SFX_TRIM[name];
+    if (trim) {
+      const k = Math.pow(10, trim / 20);
+      out = ctx.createGain(); out.gain.value = k; out.connect(this.sfxBus);
+      wet = ctx.createGain(); wet.gain.value = k; wet.connect(this.sfxVerb);
+    }
     const both = (fn) => { fn(out); fn(wet); };
     const nz = this.noise;
     switch (name) {
