@@ -66,7 +66,7 @@ export default {
     loadingHints: [
       'Đang gói ghém nắng sớm…',
       'Đang tưới mấy luống hoa…',
-      'Đang lau kính tàu hỏa…',
+      'Đang lau kính xe…',
       'Đang treo đèn lồng…',
     ],
     errorTitle: 'Ôi, có chút trục trặc rồi',
@@ -155,7 +155,7 @@ export default {
     { id: 'discord', title: 'Mở đầu', time: '' },
     { id: 'meadow', title: 'Bình minh trên đồng cỏ', time: 'Bình minh' },
     { id: 'market', title: 'Hội chợ & tiệm chụp hình', time: 'Buổi sáng' },
-    { id: 'train', title: 'Chuyến tàu đến địa điểm tổ chức lễ hội', time: 'Gần trưa' },
+    { id: 'train', title: 'Chuyến xe đến địa điểm tổ chức lễ hội', time: 'Gần trưa' },
     { id: 'bookshop', title: 'Tiệm sách cũ & góc đĩa than', time: 'Gần trưa' },
     { id: 'omakase', title: 'Bữa trưa omakase', time: 'Giữa trưa' },
     { id: 'cafe', title: 'Một góc cà phê', time: 'Đầu giờ chiều' },
@@ -244,7 +244,7 @@ export default {
       continue: 'Đi tiếp',
     },
     exitHint: M.cho.ruDiTiep,
-    exitSign: 'Ga tàu →',
+    exitSign: 'Ra xe →',
   },
 
   train: {
@@ -264,7 +264,10 @@ export default {
       balloons: 'Xa xa có khinh khí cầu…',
     },
     arrive: M.tau.sapToiGa,
-    arriveButton: 'Xuống tàu',
+    arriveButton: 'Xuống xe',
+    // Car stereo: plays once during the drive. Replace the file to change it.
+    carSong: { file: 'assets/car-song.mp3', title: 'Vài lần đón đưa' },
+    nowPlaying: 'Đang phát',
   },
 
   bookshop: {
@@ -295,7 +298,7 @@ export default {
     bookmark: {
       name: 'Kẹp sách hoa ép',
       desc: 'Một chiếc kẹp sách có ép bông cúc nhỏ, quà của cô chủ tiệm.',
-      line: 'Cô chủ tiệm nói: “Tặng cháu nè, giữ làm kỷ niệm nha.”',
+      line: 'Tặng cháu kẹp sách nè, giữ làm kỷ niệm nha.',
     },
     exitHint: M.tiemSach.ruDiTiep,
     exitSign: 'Đi ăn trưa →',
