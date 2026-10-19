@@ -115,11 +115,28 @@ export function bouquetFlowers(picked, min = 11) {
   return list;
 }
 
+// A little letter: cream envelope with a heart seal; open shows the flap up and the letter peeking out.
+export function drawEnvelope(open = false) {
+  const [c, x] = canvas(16, open ? 17 : 11);
+  const P = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+  const oy = open ? 6 : 0, edge = '#b8906e', paperC = '#fff6e8', inner = '#f3dcc0';
+  if (open) {
+    // flap folded up behind, the letter sliding out
+    for (let j = 0; j < 6; j++) P(1 + j, 6 - j, 14 - j * 2, 1, inner);
+    P(3, 1, 10, 9, '#fffdf8'); P(4, 3, 8, 1, '#d8c8b8'); P(4, 5, 6, 1, '#d8c8b8'); P(4, 7, 7, 1, '#d8c8b8');
+  }
+  P(0, oy, 16, 11, edge); P(1, oy + 1, 14, 9, paperC);
+  // the folds of the front
+  for (let k = 0; k < 6; k++) { P(1 + k, oy + 9 - k * 0.6 | 0, 1, 1, inner); P(14 - k, oy + 9 - k * 0.6 | 0, 1, 1, inner); }
+  if (!open) { for (let k = 0; k < 7; k++) { P(1 + k, oy + 1 + k * 0.7 | 0, 1, 1, edge); P(14 - k, oy + 1 + k * 0.7 | 0, 1, 1, edge); } P(6, oy + 5, 4, 3, '#e05a7a'); P(7, oy + 8, 2, 1, '#e05a7a'); P(6, oy + 5, 1, 1, '#f39ab4'); }
+  return c;
+}
+
 // A round, full bouquet: flower heads packed in a dome over leaves and baby's
 // breath, a fan of paper behind, a folded paper cone in front and a bow.
 // opts.paper sets the wrapping colour. Returns the canvas, the flowers and
 // where the cone gathers (in the 96px drawing), for hands to hold it.
-export function drawBouquet(picked, size = 256, { paper = '#f6dfe6' } = {}) {
+export function drawBouquet(picked, size = 256, { paper = '#f6dfe6', letter = false } = {}) {
   const flowers = bouquetFlowers(picked);
   const S = 96;
   const [c, x] = canvas(S, S);
@@ -141,8 +158,13 @@ export function drawBouquet(picked, size = 256, { paper = '#f6dfe6' } = {}) {
   const rows = [[1, 0, 12], [4, 26, 20], [5, 40, 29], [5, 52, 39], [4, 44, 47]];
   const spots = [];
   rows.forEach(([n, span, y]) => { for (let i = 0; i < n; i++) spots.push([cx + (n === 1 ? 0 : -span / 2 + (i * span) / (n - 1)) + (r() - 0.5) * 3, y + (r() - 0.5) * 3]); });
-  // every spot gets a head (repeating the flowers if there are fewer of them)
-  spots.forEach(([hx, hy], i) => { const f = flowers[i % flowers.length]; x.drawImage(flowerBig(f.species, f.color), Math.round(hx - 10), Math.round(hy - 10)); });
+  // every spot gets a head (repeating the flowers if there are fewer of them);
+  // a letter can be tucked in among them, half hidden by the front rows
+  const letterAt = { x: cx + 14, y: 27 };
+  spots.forEach(([hx, hy], i) => {
+    if (letter && i === 10) x.drawImage(drawEnvelope(), letterAt.x - 8, letterAt.y - 6);
+    const f = flowers[i % flowers.length]; x.drawImage(flowerBig(f.species, f.color), Math.round(hx - 10), Math.round(hy - 10));
+  });
   // baby's breath sprinkled around the dome
   for (let i = 0; i < 40; i++) { const a = -Math.PI * r(), rr = 22 + r() * 14; const bx = cx + Math.cos(a) * rr * 1.15, by = 34 + Math.sin(a) * rr * 0.75; P(bx, by, 1, 1, '#fffaf2'); if (r() < 0.3) P(bx + 1, by, 1, 1, '#f3ead8'); }
   // the paper cone in front: two folded panels gathered at the bottom
@@ -162,7 +184,7 @@ export function drawBouquet(picked, size = 256, { paper = '#f6dfe6' } = {}) {
   P(cx - 3, 65, 6, 8, bowD); P(cx - 2, 66, 4, 6, bow);
   for (let k = 0; k < 10; k++) { P(cx - 3 - k * 0.6, 73 + k, 3, 1, k % 4 ? bow : bowD); P(cx + 1 + k * 0.6, 73 + k, 3, 1, k % 4 ? bow : bowD); }
   const out = upscale(c, size / S);
-  return { canvas: out, flowers, grip };
+  return { canvas: out, flowers, grip, letterAt };
 }
 
 // ---------------------------------------------------------------- wish

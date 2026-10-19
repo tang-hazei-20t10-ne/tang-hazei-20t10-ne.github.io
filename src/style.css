@@ -258,3 +258,7 @@ body.has-dialog #actions { opacity: 0; pointer-events: none; }
 
 /* overheard chatter between villagers: smaller and softer than real dialogue */
 .bubble.chatter { font-size: clamp(12px, 1.4vw, 14px); font-weight: 600; padding: 4px 8px 5px; border-width: 2px; opacity: .92; }
+
+/* the letter from the bouquet, opening before it is read */
+.letter-env { display: block; margin: 18px auto; width: min(220px, 50vw); height: auto; image-rendering: pixelated; animation: pop .35s ease-out; transition: opacity .45s, transform .45s; }
+.letter-env.gone { opacity: 0; transform: translateY(-20px) scale(1.1); }

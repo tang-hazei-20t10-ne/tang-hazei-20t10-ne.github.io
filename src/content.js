@@ -640,6 +640,8 @@ export default {
     bouquetLine: M.sanKhau.tangHoa,
     giftNote: M.sanKhau.themHoa,
     happy: 'Món quà đầu tiên của tớ.',
+    letterNote: 'Có một lá thư nhỏ kẹp giữa những bông hoa…',
+    takeLetter: 'Lấy thư ra',
     wishTitle: 'Lời chúc cho Hazei',
     toEpilogue: 'Tiếp tục',
     stagePhoto: 'Hazei trên sân khấu',

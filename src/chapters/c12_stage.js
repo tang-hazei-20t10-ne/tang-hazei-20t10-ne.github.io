@@ -6,7 +6,7 @@ import { canvas, charSprite, LOOKS, flowerBig, shade } from '../core/sprites.js'
 import { ui, wait, esc, el } from '../core/ui.js';
 import { audio } from '../core/audio.js';
 import { state } from '../core/state.js';
-import { drawBouquet, wishParts, wishHTML, photoToAlbum } from '../core/photo.js';
+import { drawBouquet, drawEnvelope, wishParts, wishHTML, photoToAlbum } from '../core/photo.js';
 
 const C = content.stage;
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -458,19 +458,28 @@ export default async function stage(game) {
   await photoToAlbum(stageShot, { caption: C.stageCaption, title: C.stagePhoto });
   hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'idle', mood: 'happy' }));
   // the bouquet of the flowers Hazei picked, drawn big enough to read, held at chest height
-  const bqArt = (() => {
+  // (a letter is tucked in among the flowers; Hazei takes it out later, and the
+  // bouquet is swapped for the same drawing without it)
+  let bqBox = null, bqLetter = null;
+  const bqArtOf = (letter) => {
     // kraft-paper wrapping, so it stands apart from Hazei's pink skirt and doesn't glow under the spotlight
-    const { canvas: src, grip } = drawBouquet(state.data.flowers, 96, { paper: '#e2bf92' });
-    // crop to the drawing itself
-    const d = src.getContext('2d').getImageData(0, 0, 96, 96).data;
-    let x0 = 96, y0 = 96, x1 = 0, y1 = 0;
-    for (let j = 0; j < 96; j++) for (let i = 0; i < 96; i++) if (d[(j * 96 + i) * 4 + 3]) { x0 = Math.min(x0, i); x1 = Math.max(x1, i); y0 = Math.min(y0, j); y1 = Math.max(y1, j); }
-    const [c, x] = canvas(x1 - x0 + 1, y1 - y0 + 1); x.drawImage(src, -x0, -y0);
+    const { canvas: src, grip, letterAt } = drawBouquet(state.data.flowers, 96, { paper: '#e2bf92', letter });
+    // crop to the drawing itself (the box of the first drawing is kept for both)
+    if (!bqBox) {
+      const d = src.getContext('2d').getImageData(0, 0, 96, 96).data;
+      let x0 = 96, y0 = 96, x1 = 0, y1 = 0;
+      for (let j = 0; j < 96; j++) for (let i = 0; i < 96; i++) if (d[(j * 96 + i) * 4 + 3]) { x0 = Math.min(x0, i); x1 = Math.max(x1, i); y0 = Math.min(y0, j); y1 = Math.max(y1, j); }
+      bqBox = { x0, y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+      bqLetter = { x: letterAt.x - x0, y: letterAt.y - y0 };
+    }
+    const { x0, y0, w, h } = bqBox;
+    const [c, x] = canvas(w, h); x.drawImage(src, -x0, -y0);
     // two hands around the paper cone, just below the bow
     const skin = LOOKS.hazei().skin || '#ffdcc4';
     for (const [hx, hy] of [[grip.x - x0 - 7, grip.y - y0 + 4], [grip.x - x0 + 2, grip.y - y0 + 5]]) { x.fillStyle = shade(skin, 0.3); x.fillRect(hx - 1, hy - 1, 7, 6); x.fillStyle = skin; x.fillRect(hx, hy, 5, 4); }
     return c;
-  })();
+  };
+  const bqArt = bqArtOf(true);
   // lifted a little so the colours read under the stage light
   const bqSprite = billboard(bqArt, 0.0098, { fog: false }); bqSprite.material.color.setScalar(1.08); S.add(bqSprite);
   const holdAt = (who, dx = 0, dy = 0) => bqSprite.position.copy(who.position).add(new THREE.Vector3(dx, 0.3 + dy, 0.1));
@@ -492,7 +501,7 @@ export default async function stage(game) {
   audio.playMusic('hill', 3);
   await wait(900);
   await ui.dialog([{ who: 'partner', text: C.bouquetLine }]);
-  const bq = drawBouquet(state.data.flowers, 288);
+  const bq = drawBouquet(state.data.flowers, 288, { letter: true });
   if (bq.flowers.some((f) => f.gift)) await ui.dialog([{ who: 'partner', text: C.giftNote }]);
   // hand it over: the bouquet glides from Mino's hands to Hazei's
   for (let k = 0; k <= 1; k += 1 / 30) { const e = k * k * (3 - 2 * k); bqSprite.position.lerpVectors(partner.position, hazei.position, e).add(new THREE.Vector3(0, 0.3 + Math.sin(e * Math.PI) * 0.12, 0.1)); await wait(16); }
@@ -520,14 +529,48 @@ export default async function stage(game) {
       const b = el('button', 'btn', esc(content.ui.next)); b.onclick = () => ui.closeModal(); row.appendChild(b); s.appendChild(row);
     }, { closeable: false });
   });
+  // the letter tucked in the bouquet: Hazei takes it out herself
+  setCam(new THREE.Vector3(-0.6, STAGE_Y + 1.25, 3.2), new THREE.Vector3(-0.6, STAGE_Y + 0.95, 0.4));
+  ui.note(C.letterNote, 3500);
+  await new Promise((r) => ui.actions([{ label: '✉ ' + C.takeLetter, cls: '', onClick: () => { ui.actions(null); r(); } }]));
+  hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'bouquet', mood: 'happy', hold: 'big' }));
+  bqSprite.setCanvas(bqArtOf(false));
+  const envC = drawEnvelope(), env = billboard(envC, 0.0098, { fog: false });
+  const px = bqSprite.userData.px;
+  const envFrom = bqSprite.position.clone().add(new THREE.Vector3((bqLetter.x - bqBox.w / 2) * px, (bqBox.h - bqLetter.y - 5) * px, 0.02));
+  env.position.copy(envFrom); S.add(env);
+  audio.sfx('whoosh');
+  // pulled up out of the flowers, then brought toward the camera, growing
+  for (let k = 0; k <= 1; k += 1 / 70) {
+    const e = k * k * (3 - 2 * k);
+    const up = Math.min(1, k * 2.5);
+    env.position.copy(envFrom).add(new THREE.Vector3(0, up * 0.35, 0)).lerp(camPos.clone().add(new THREE.Vector3(0, -0.15, -0.9)), Math.max(0, (k - 0.35) / 0.65) ** 1.5);
+    env.userData.px = 0.0098 * (1 + e * 0.6); env.setCanvas(envC);
+    env.material.rotation = Math.sin(k * Math.PI * 3) * 0.12 * (1 - k);
+    await wait(16);
+  }
+  S.remove(env);
+  audio.sfx('pop');
   const wp = wishParts(state.data);
   await new Promise((resolve) => {
     ui.onModalClose = resolve;
     ui.modal((s) => {
-      s.insertAdjacentHTML('beforeend', `<h2 class="center">${esc(C.wishTitle)}</h2>` + wishHTML(wp, 0.9));
-      const row = el('div', 'row mt'); row.style.justifyContent = 'center';
-      const b = el('button', 'btn', esc(C.toEpilogue)); b.onclick = () => ui.closeModal(); row.appendChild(b); s.appendChild(row);
-      b.style.opacity = '0'; b.style.transition = 'opacity .8s'; setTimeout(() => { b.style.opacity = '1'; }, 7500);
+      // the envelope opens first, then the letter is read
+      const env2 = drawEnvelope(); env2.className = 'letter-env';
+      s.appendChild(env2);
+      setTimeout(() => {
+        const open = drawEnvelope(true); open.className = 'letter-env open'; env2.replaceWith(open); audio.sfx('page');
+        setTimeout(() => {
+          open.classList.add('gone');
+          setTimeout(() => {
+            open.remove();
+            s.insertAdjacentHTML('beforeend', `<h2 class="center">${esc(C.wishTitle)}</h2>` + wishHTML(wp, 0.9));
+            const row = el('div', 'row mt'); row.style.justifyContent = 'center';
+            const b = el('button', 'btn', esc(C.toEpilogue)); b.onclick = () => ui.closeModal(); row.appendChild(b); s.appendChild(row);
+            b.style.opacity = '0'; b.style.transition = 'opacity .8s'; setTimeout(() => { b.style.opacity = '1'; }, 7500);
+          }, 450);
+        }, 900);
+      }, 700);
     }, { closeable: false });
   });
   // linger on the two of them while the camera slowly eases back
