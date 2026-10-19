@@ -260,7 +260,8 @@ export default {
       balloons: 'Xa xa có khinh khí cầu…',
     },
     arrive: M.tau.sapToiGa,
-    arriveButton: 'Xuống xe',
+    arriveButton: 'Đến nơi rồi',
+    arriveAfter: 50, // giây nhạc phải chạy trước khi nút hiện
     // Car stereo: plays once during the drive. Replace the file to change it.
     carSong: { file: 'assets/car-song.mp3', title: 'Vài lần đón đưa' },
     nowPlaying: 'Đang phát',
@@ -634,6 +635,10 @@ export default {
     happy: 'Món quà đầu tiên của tớ.',
     wishTitle: 'Lời chúc cho Hazei',
     toEpilogue: 'Tiếp tục',
+    stagePhoto: 'Hazei trên sân khấu',
+    stageCaption: 'Đêm nhạc của Hazei',
+    bouquetPhoto: 'Hazei và bó hoa',
+    bouquetCaption: 'Bó hoa sau buổi diễn',
   },
 
   // Final wish = opening + five omakase fragments + closing + footer.

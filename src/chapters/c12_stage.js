@@ -6,7 +6,7 @@ import { canvas, charSprite, LOOKS, flowerBig } from '../core/sprites.js';
 import { ui, wait, esc, el } from '../core/ui.js';
 import { audio } from '../core/audio.js';
 import { state } from '../core/state.js';
-import { drawBouquet, wishParts, wishHTML } from '../core/photo.js';
+import { drawBouquet, wishParts, wishHTML, photoToAlbum } from '../core/photo.js';
 
 const C = content.stage;
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -427,6 +427,27 @@ export default async function stage(game) {
   await wait(1200);
   for (let k = 0; k <= 1; k += 1 / 50) { hazei.position.lerpVectors(new THREE.Vector3(0.9, RISER_Y, -6.2), new THREE.Vector3(-0.6, STAGE_Y, 0.4), k); if (k > 0.6) hazei.position.y = STAGE_Y; else hazei.position.y = RISER_Y; hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'walk', frame: Math.floor(k * 12) % 4, mood: 'happy' })); await wait(20); }
   hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'idle', mood: 'happy' }));
+  // the audience takes photos: camera flashes and clicks all over the hall
+  await wait(500);
+  hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'cheer', mood: 'happy' }));
+  setCam(new THREE.Vector3(0, 27, 58), new THREE.Vector3(0, STAGE_Y + 1, 4));
+  const near = people.filter((p) => p[2] < 52);
+  for (let i = 0; i < 46; i++) {
+    const [px, py, pz] = near[Math.floor(Math.random() * near.length)];
+    world.glow.emit(new THREE.Vector3(px, py + 1.4, pz), new THREE.Vector3(), '#ffffff', 0.2, { size: 10 });
+    // and a crisp glint on screen over the audience, so each flash reads through the confetti
+    const g = el('div', 'cam-glint'); g.style.left = (4 + Math.random() * 92) + '%'; g.style.top = (56 + Math.random() * 40) + '%';
+    game.stage.appendChild(g); setTimeout(() => g.remove(), 420);
+    if (i % 2 === 0) audio.sfx('snap');
+    await wait(50 + Math.random() * 110);
+  }
+  // one of those photos, from the front row
+  setCam(new THREE.Vector3(-0.5, STAGE_Y + 1.4, 7), new THREE.Vector3(-0.6, STAGE_Y + 1.0, 0.4));
+  cam.position.copy(camPos); cam.lookAt(look);
+  const stageShot = world.snap();
+  audio.sfx('shutter'); ui.flash();
+  await photoToAlbum(stageShot, { caption: C.stageCaption, title: C.stagePhoto });
+  hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'idle', mood: 'happy' }));
   const path = [new THREE.Vector3(0.8, 0, 10.4), new THREE.Vector3(13, 0, 6), new THREE.Vector3(13, 0, 3.4), new THREE.Vector3(13, STAGE_Y, 0.4), new THREE.Vector3(0.7, STAGE_Y, 0.4)];
   for (let s = 0; s < path.length - 1; s++) {
     const a = path[s], b = path[s + 1]; const steps = Math.ceil(a.distanceTo(b) / 0.07);
@@ -449,6 +470,14 @@ export default async function stage(game) {
   hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'bouquet', mood: 'happy' }));
   audio.sfx('yay'); audio.sfx('sparkle');
   for (let k = 0; k < 18; k++) world.glow.emit(new THREE.Vector3(-0.3 + (Math.random() - 0.5), STAGE_Y + 1.6 + Math.random(), 0.6), new THREE.Vector3((Math.random() - 0.5) * 0.5, 0.8, 0), ['#ff8fb0', '#ffe9a8', '#bfe0ff'][k % 3], 2);
+  // a moment together: Hazei holding the flowers, Mino beside her, then a photo for the album
+  setCam(new THREE.Vector3(0.05, STAGE_Y + 1.4, 6.2), new THREE.Vector3(0.05, STAGE_Y + 1.0, 0.4));
+  await wait(3000);
+  cam.position.copy(camPos); cam.lookAt(look);
+  const bouquetShot = world.snap();
+  audio.sfx('shutter'); ui.flash();
+  await photoToAlbum(bouquetShot, { caption: C.bouquetCaption, title: C.bouquetPhoto });
+  await wait(1500);
   await new Promise((resolve) => {
     ui.onModalClose = resolve;
     ui.modal((s) => {
@@ -469,6 +498,15 @@ export default async function stage(game) {
       b.style.opacity = '0'; b.style.transition = 'opacity .8s'; setTimeout(() => { b.style.opacity = '1'; }, 7500);
     }, { closeable: false });
   });
+  // linger on the two of them while the camera slowly eases back
+  const from = camPos.clone(), to = new THREE.Vector3(0.05, STAGE_Y + 2.6, 13);
+  for (let k = 0; k <= 1; k += 1 / 180) {
+    const e = k * k * (3 - 2 * k);
+    setCam(from.clone().lerp(to, e), new THREE.Vector3(0.05, STAGE_Y + 1.0 + e * 0.3, 0.4));
+    if (Math.random() < 0.3) world.fx.emit(new THREE.Vector3((Math.random() - 0.5) * 16, STAGE_Y + 9, Math.random() * 6 - 2), new THREE.Vector3(0.1, -1.2, 0), ['#ffc2d4', '#ffe066', '#7fe0ff', '#ffffff'][Math.floor(Math.random() * 4)], 10, { kind: 1, size: 3 });
+    await wait(25);
+  }
+  await wait(1500);
   await game.leave(world, { dark: true, ms: 1400 });
   await fin;
   audio.stopAll(2);

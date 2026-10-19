@@ -77,13 +77,41 @@ export async function takePhoto(srcCanvas, caption, title) {
   await savePhoto(p, { title: title || content.ui.photo, filename: `hazei-${Date.now()}.png` });
 }
 
+// A photo taken during a scene: saved to the album, it grows big in the middle
+// of the screen, then shrinks away into the album button.
+export async function photoToAlbum(src, { caption, title } = {}) {
+  const p = polaroid(src, caption);
+  const dataUrl = p.toDataURL('image/png');
+  await album.add({ kind: 'photo', title: title || content.ui.photo, dataUrl });
+  const hud = document.getElementById('hud'), hidden = hud?.classList.contains('hidden');
+  if (hidden) ui.hud(true);
+  const img = new Image(); img.src = dataUrl; img.className = 'album-fly'; img.alt = '';
+  const W = Math.min(innerWidth * 0.6, 460), H = W * p.height / p.width;
+  const box = (l, t, w, h) => ({ left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' });
+  Object.assign(img.style, box((innerWidth - W * 0.15) / 2, (innerHeight - H * 0.15) / 2, W * 0.15, H * 0.15), { opacity: '0' });
+  document.body.appendChild(img);
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  Object.assign(img.style, box((innerWidth - W) / 2, (innerHeight - H) / 2, W, H), { opacity: '1', transform: 'rotate(-3deg)' });
+  await new Promise((r) => setTimeout(r, 2600));
+  const btn = hud?.querySelector('.album')?.getBoundingClientRect();
+  const tx = btn?.width ? btn.left + btn.width / 2 : innerWidth - 40, ty = btn?.width ? btn.top + btn.height / 2 : 30;
+  Object.assign(img.style, box(tx - 14, ty - 11, 28, 22), { opacity: '0.3', transform: 'rotate(0deg)', borderWidth: '2px' });
+  await new Promise((r) => setTimeout(r, 750));
+  img.remove(); audio.sfx('pop');
+  const b = hud?.querySelector('.album'); if (b) { b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }
+  await new Promise((r) => setTimeout(r, 600));
+  if (hidden) ui.hud(false);
+}
+
 // ---------------------------------------------------------------- bouquet
 // Always at least MIN stems; gift flowers fill quietly.
+// Sunflowers stay out of the bouquet.
+const inBouquet = (f) => f.species !== 'sunflower';
 export function bouquetFlowers(picked, min = 11) {
-  const list = picked.slice(-21).map((f) => ({ ...f, gift: false }));
+  const list = picked.filter(inBouquet).slice(-21).map((f) => ({ ...f, gift: false }));
   let seed = 7;
   const r = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
-  while (list.length < min) list.push({ ...randomFlower(r), gift: true });
+  while (list.length < min) { const f = randomFlower(r); if (inBouquet(f)) list.push({ ...f, gift: true }); }
   return list;
 }
 

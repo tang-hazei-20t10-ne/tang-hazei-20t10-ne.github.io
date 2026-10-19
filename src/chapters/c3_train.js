@@ -395,7 +395,9 @@ export default async function car(game) {
     if (he.t > 0) he.t -= dt;
     emoteT -= dt;
     if (emoteT < 0) { emoteT = 6 + Math.random() * 6; if (Math.random() < 0.5) { pe.k = ['note', 'laugh', 'sparkle'][Math.floor(Math.random() * 3)]; pe.t = 1.8; } else { he.k = ['note', 'sparkle', 'heart'][Math.floor(Math.random() * 3)]; he.t = 1.8; } }
-    if (!s.earlyBtn && travel > 15) { s.earlyBtn = true; if (!rideEnded) ui.actions([{ label: C.arriveButton + ' →', cls: 'soft', onClick: () => arriveResolve() }]); }
+    // the button only shows once the song has played a while
+    const heard = audio.record?.el ? audio.record.el.currentTime : travel;
+    if (!s.earlyBtn && heard >= (C.arriveAfter ?? 50)) { s.earlyBtn = true; if (!rideEnded) ui.actions([{ label: C.arriveButton + ' →', cls: 'soft', onClick: () => arriveResolve() }]); }
     if (travel >= totalDur) arrive();
   };
 

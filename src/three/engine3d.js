@@ -526,14 +526,19 @@ export class World3D {
     this.resize();
   }
 
-  async photo(caption, title) {
+  // the current view as a 2D canvas, without the hands overlay
+  snap() {
     const prev = this.hideHands; this.hideHands = true;
     drawHands(this.hx, this.W, this.H, 'none', 0);
     this.render();
     const c = canvas(this.W, this.H)[0];
     c.getContext('2d').drawImage(this.canvas, 0, 0);
     this.hideHands = prev;
-    await takePhoto(c, caption, title);
+    return c;
+  }
+
+  async photo(caption, title) {
+    await takePhoto(this.snap(), caption, title);
   }
 
   // Mino's Discord messages: once per visit of a map (not once per save), so
