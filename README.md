@@ -198,5 +198,6 @@ missing, the record falls back to a generated loop.
 
 ### Balloon ride music
 
-`public/assets/balloon.mp3`: Claude Debussy – Clair de lune (Suite bergamasque), piano recording by Laurens
-Goedhart, public domain, via Wikimedia Commons (trimmed, loudness-matched).
+`public/assets/balloon.mp3`: Franz Liszt – Liebestraum No. 3 in A-flat major, piano recording from the Al Goldstein
+collection (Pandora Music repository, ibiblio.org), [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/),
+via Wikimedia Commons (trimmed, gently compressed and loudness-matched).

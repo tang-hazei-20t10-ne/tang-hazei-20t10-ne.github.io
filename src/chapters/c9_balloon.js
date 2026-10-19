@@ -7,7 +7,7 @@ import { ui, wait } from '../core/ui.js';
 import { audio } from '../core/audio.js';
 import { input } from '../core/input.js';
 
-const BALLOON_SONG = 'assets/balloon.mp3'; // Clair de lune, see README credits
+const BALLOON_SONG = 'assets/balloon.mp3'; // Liszt, Liebestraum No. 3, see README credits
 const C = content.balloon;
 const easeIO = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
@@ -112,10 +112,10 @@ export default async function balloon(game) {
     { label: '📷 ' + C.actions.photo, onClick: () => world.photo(C.lines.start.replace('…', ''), content.ui.photo) },
   ];
 
-  // Debussy's Clair de lune while drifting over the city (soft wind underneath);
+  // Liszt's Liebestraum No. 3 while drifting over the city (soft wind underneath);
   // the generated 'balloon' loop plays if the file is missing
   audio.scene(null, [['windHigh', 0.35]]);
-  audio.playRecord(BALLOON_SONG, { loop: true, gain: 0.6 }).then((ok) => { if (!ok) audio.playMusic('balloon', 2); });
+  audio.playRecord(BALLOON_SONG, { loop: true, gain: 0.38 }).then((ok) => { if (!ok) audio.playMusic('balloon', 2); });
   I.city.userData.setNight(0.15);
   const fin = world.start();
   await game.enter();
