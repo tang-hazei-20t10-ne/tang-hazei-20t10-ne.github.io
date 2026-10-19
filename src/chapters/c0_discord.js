@@ -228,7 +228,6 @@ export default async function discord(game) {
       const pick = await new Promise((resolve) => {
         replies.innerHTML = '';
         item.replies.forEach((r) => { const b = el('button', 'dc-reply', esc(r)); b.onclick = () => resolve(r); replies.appendChild(b); });
-        const g = el('button', 'dc-reply ghost', esc(content.ui.next) + ' →'); g.onclick = () => resolve(null); replies.appendChild(g);
         msgs.scrollTop = msgs.scrollHeight;
       });
       replies.innerHTML = '';
