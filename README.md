@@ -53,8 +53,8 @@ You do not need to touch any other file to change text.
 ## Train window video
 
 The train window plays `public/assets/train-window.mp4` (muted, looping). The default clip is
-"The view of Mount Cang and Erhai Lake outside the train K9613" by Nikita Yang, CC BY-SA 4.0, via
-Wikimedia Commons (colour-graded and re-encoded); the credit shows in the window. To use another clip,
+"View from a Rigi Railways cogwheel train between Rigi Kulm and Rigi Staffel, 2026" by Ddayzzz,
+CC BY-SA 4.0, via Wikimedia Commons (cropped, re-encoded); the credit shows in the window. To use another clip,
 replace the file (mp4/H.264 plays everywhere, keep it a few MB) and update `train.videoCredit` in
 `content.js`. If the file is missing, a pixel-art landscape is shown instead.
 

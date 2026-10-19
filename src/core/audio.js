@@ -137,6 +137,8 @@ const HIRA = [0, 2, 3, 7, 8];
 const PRESETS = {
   dawn: { root: 67, bpm: 92, beats: 4, prog: [[0, 4, 7], [5, 9, 12], [9, 12, 16], [7, 11, 14]], scale: MAJ, mel: 'pluck', mel2: 'bell', density: 0.5, pad: true, bass: true, drums: 'shaker', keys: true },
   market: { root: 67, bpm: 112, beats: 4, prog: [[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7]], scale: MAJ, mel: 'pluck', density: 0.6, pad: false, bass: 'bossa', drums: 'shaker', keys: true },
+  // upbeat ride: pop drums, bouncy bass, busy plucked melody
+  trainUp: { root: 67, bpm: 128, beats: 4, prog: [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12]], scale: MAJ, mel: 'pluck', mel2: 'bell', density: 0.7, pad: true, bass: 'bounce', drums: 'pop', keys: true },
   train1: { root: 65, bpm: 100, beats: 4, prog: [[0, 4, 7], [9, 12, 16], [5, 9, 12], [7, 11, 14]], scale: MAJ, mel: 'flute', density: 0.5, pad: true, bass: true, drums: 'shaker' },
   train2: { root: 69, bpm: 96, beats: 4, prog: [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12]], scale: MAJ, mel: 'bell', density: 0.45, pad: true, bass: true, drums: 'brush' },
   train3: { root: 64, bpm: 116, beats: 4, prog: [[0, 4, 7], [5, 9, 12], [0, 4, 7], [7, 11, 14]], scale: MAJ, mel: 'pluck', density: 0.6, pad: false, bass: true, drums: 'shaker' },
@@ -203,6 +205,8 @@ class MusicPlayer {
     if (p.bass === 'walk') {
       const walk = [chord[0], chord[1], chord[2], chord[1] + 1];
       walk.forEach((n, i) => INST.bass(ctx, dest, t0 + i * B, root - 24 + n, B * 0.9, 0.9));
+    } else if (p.bass === 'bounce') {
+      [[0, 0], [0.5, 12], [1.5, 0], [2, 7], [2.5, 12], [3.5, 7]].forEach(([b, o]) => INST.bass(ctx, dest, t0 + b * B, root - 24 + chord[0] + o, B * 0.45, 0.85));
     } else if (p.bass === 'waltz') INST.bass(ctx, dest, t0, root - 24 + chord[0], B, 1);
     else if (p.bass === 'bossa') {
       [[0, chord[0]], [1.5, chord[2] - 12], [2, chord[0]], [3.5, chord[2] - 12]].forEach(([b, n]) => INST.bass(ctx, dest, t0 + b * B, root - 24 + n, B * 0.6, 0.8));
@@ -216,6 +220,12 @@ class MusicPlayer {
     if (p.drums === 'shaker') for (let s = 0; s < p.beats * 2; s++) perc(ctx, dest, nz, t0 + s * B / 2, 'shaker', s % 2 ? 0.6 : 1);
     if (p.drums === 'lofi') { perc(ctx, dest, nz, t0, 'kick', 0.6); perc(ctx, dest, nz, t0 + 2.5 * B, 'kick', 0.4); perc(ctx, dest, nz, t0 + B, 'snare', 0.4); perc(ctx, dest, nz, t0 + 3 * B, 'snare', 0.4); for (let s = 0; s < 8; s++) perc(ctx, dest, nz, t0 + s * B / 2 + (s % 2 ? B * 0.1 : 0), 'hat', 0.6); }
     if (p.drums === 'bossa') { [0, 1.5, 3, 4.5, 6].forEach((s) => perc(ctx, dest, nz, t0 + s * B / 2 * 1.0, 'clack', 0.25)); for (let s = 0; s < 8; s++) perc(ctx, dest, nz, t0 + s * B / 2, 'shaker', 0.5); }
+    if (p.drums === 'pop') {
+      for (const b of [0, 1.5, 2, 3.5]) perc(ctx, dest, nz, t0 + b * B, 'kick', b % 2 === 0 ? 0.65 : 0.4);
+      perc(ctx, dest, nz, t0 + B, 'snare', 0.55); perc(ctx, dest, nz, t0 + 3 * B, 'snare', 0.55);
+      for (let s8 = 0; s8 < 8; s8++) perc(ctx, dest, nz, t0 + s8 * B / 2, 'hat', s8 % 2 ? 0.9 : 0.5);
+      if (this.bar % 4 === 3) for (let k = 0; k < 4; k++) perc(ctx, dest, nz, t0 + (3 + k / 4) * B, 'snare', 0.25 + k * 0.08); // little fill
+    }
     if (p.drums === 'festival') { perc(ctx, dest, nz, t0, 'kick', 0.5); perc(ctx, dest, nz, t0 + 2 * B, 'kick', 0.4); for (let s = 0; s < 8; s++) perc(ctx, dest, nz, t0 + s * B / 2, 'shaker', s % 2 ? 0.4 : 0.8); }
     if (p.crackle) for (let i = 0; i < 6; i++) perc(ctx, dest, nz, t0 + Math.random() * B * p.beats, 'hat', 0.25);
     // melody (eighth notes from motif, varied every 4 bars)

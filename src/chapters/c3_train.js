@@ -187,7 +187,7 @@ export default async function train(game) {
   } catch { video = null; }
   scene.cfg.cleanup = () => { video?.remove(); credit?.remove(); };
 
-  audio.scene('train1', [['train', 0.7]]);
+  audio.scene('trainUp', [['train', 0.5]]);
   const done = scene.start();
   await game.enter();
   await wait(2400);
