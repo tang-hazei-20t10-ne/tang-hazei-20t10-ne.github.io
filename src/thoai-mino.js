@@ -27,16 +27,16 @@ export default {
 
   // ---------------------------------------------------------- Chương 1: Đồng cỏ
   dongCo: {
-    moDau: 'Đồng hoa sáng sớm đẹp ghê ha.',
-    boaDauTien: 'Bông đó xinh nè.', // khi Hazei hái bông hoa đầu tiên
+    moDau: 'Đồng hoa sáng sớm đẹp ghê.',
+    boaDauTien: 'Bông đó xinh ha.', // khi Hazei hái bông hoa đầu tiên
     khenHoa: ['Đẹp ha', 'Thêm một bông 🌼', 'Yayy'], // thỉnh thoảng nói khi hái hoa
-    choMochi: 'Con này đòi đi theo mình luôn nè.',
+    choMochi: 'Con này đòi đi theo mình luôn kìa.',
     ghe: 'Ngồi nghỉ chút nhe.',
     ga: ['Cục ta cục tác!', 'Mấy con gà dậy sớm dữ'],
     coiXayGio: 'Cối xay gió gì quay chậm rì.',
     buom: 'Bướm đậu lên tay cậu kìa!',
     hoiChupHinh: 'Cậu muốn chụp hình ở đây không, tớ chụp cho?',
-    chupHinhSanSang: 'Rồi, cười lên nè… 1, 2, 3!',
+    chupHinhSanSang: 'Rồi, cười lên nà… 1, 2, 3!',
     khongChup: 'Oke!',
     ruDiTiep: 'Mình qua hội chợ bên kia ha',
   },
