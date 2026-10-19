@@ -8,7 +8,7 @@ const p = await (await b.newContext({ viewport: { width: 1280, height: 720 } }))
 const errs = [];
 p.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
 p.on('console', (m) => { if (m.type() === 'error' && !/GL Driver/.test(m.text())) errs.push('console: ' + m.text()); });
-await p.addInitScript(() => { if (!sessionStorage.getItem('i')) { sessionStorage.setItem('i', 1); localStorage.clear(); indexedDB.deleteDatabase('hazei-album'); } });
+await p.addInitScript((start) => { if (!sessionStorage.getItem('i')) { sessionStorage.setItem('i', 1); localStorage.clear(); indexedDB.deleteDatabase('hazei-album'); if (start) localStorage.setItem('hazei-journey-v1', JSON.stringify({ chapter: start, started: true })); } }, process.env.START || '');
 await p.goto('http://localhost:5199/?debug&fast');
 await p.waitForSelector('#loading .btn'); await p.click('#loading .btn');
 const t0 = Date.now(); let last = '', since = Date.now(), step = 0;
