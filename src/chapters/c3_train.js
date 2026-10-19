@@ -49,7 +49,7 @@ export default async function car(game) {
   const freq = new Uint8Array(128);
   let beat = 0, emoteT = 0;
   const pe = { k: 'note', t: 0 }; // Mino's emote
-  const he = { k: 'heart', t: 0 }; // Hazei's emote
+  const he = { k: 'note', t: 0 }; // Hazei's emote
   const roadTrees = [treeSprite('round', 0.8, 61), treeSprite('pine', 0.8, 62), treeSprite('round', 0.7, 63)];
 
   // cabin geometry (pixel space)
@@ -394,7 +394,7 @@ export default async function car(game) {
     if (pe.t > 0) pe.t -= dt;
     if (he.t > 0) he.t -= dt;
     emoteT -= dt;
-    if (emoteT < 0) { emoteT = 6 + Math.random() * 6; if (Math.random() < 0.5) { pe.k = ['note', 'laugh', 'sparkle'][Math.floor(Math.random() * 3)]; pe.t = 1.8; } else { he.k = ['note', 'sparkle', 'heart'][Math.floor(Math.random() * 3)]; he.t = 1.8; } }
+    if (emoteT < 0) { emoteT = 6 + Math.random() * 6; if (Math.random() < 0.5) { pe.k = ['note', 'laugh', 'sparkle'][Math.floor(Math.random() * 3)]; pe.t = 1.8; } else { he.k = ['note', 'sparkle'][Math.floor(Math.random() * 2)]; he.t = 1.8; } }
     // the button only shows once the song has played a while
     const heard = audio.record?.el ? audio.record.el.currentTime : travel;
     if (!s.earlyBtn && heard >= (C.arriveAfter ?? 50)) { s.earlyBtn = true; if (!rideEnded) ui.actions([{ label: C.arriveButton + ' →', cls: 'soft', onClick: () => arriveResolve() }]); }
@@ -407,7 +407,7 @@ export default async function car(game) {
   // the car stereo starts the song; the ride ends with it
   const song = C.carSong;
   const playing = song?.file && await audio.playRecord(song.file, { loop: false, gain: 0.16, onEnd: () => arrive() });
-  if (playing) { totalDur = Infinity; ui.note(`♪ ${C.nowPlaying}: ${song.title}`, 4000); }
+  if (playing) totalDur = Infinity;
   else audio.playMusic('trainUp', 1.5);
   await wait(2400);
   await ui.dialog(C.intro);

@@ -264,7 +264,6 @@ export default {
     arriveAfter: 50, // giây nhạc phải chạy trước khi nút hiện
     // Car stereo: plays once during the drive. Replace the file to change it.
     carSong: { file: 'assets/car-song.mp3', title: 'Vài lần đón đưa' },
-    nowPlaying: 'Đang phát',
   },
 
   bookshop: {

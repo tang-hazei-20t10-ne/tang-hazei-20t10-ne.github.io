@@ -205,12 +205,16 @@ class UI {
   }
   note(text, ms = 3200) {
     clearTimeout(this.noteTimer);
+    // the chapter title card sits in the same spot: wait until it has faded out
+    const busy = (this.titleUntil || 0) - performance.now();
+    if (busy > 0) { this.noteEl.classList.remove('show'); this.noteTimer = setTimeout(() => this.note(text, ms), busy); return; }
     this.noteEl.textContent = text; this.noteEl.classList.add('show');
     this.noteTimer = setTimeout(() => this.noteEl.classList.remove('show'), ms);
   }
   async titleCard(index, title, sub) {
     this.titleEl.innerHTML = `<div class="t">${esc(title)}</div>${sub ? `<div class="s">${esc(sub)}</div>` : ''}`;
     this.titleEl.classList.add('show');
+    this.titleUntil = performance.now() + 2600 + 1200; // shown, then a 1.2 s fade
     await wait(2600);
     this.titleEl.classList.remove('show');
   }
