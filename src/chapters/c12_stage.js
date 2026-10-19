@@ -387,6 +387,13 @@ export default async function stage(game) {
     [1.0, [0.8, RY(1.6), 0.5], [0, RY(0.95), -6.2]],
   ].map(([f, p, l]) => [f, new THREE.Vector3(...p), new THREE.Vector3(...l)]);
   let lyricIdx = -1; let mouthOpen = false, mouthT = 0;
+  // debug only: seek buttons in the debug panel so the song needn't be heard in full
+  const seekBar = game.debug ? document.getElementById('debug') : null;
+  const seekBtns = seekBar ? [['⏪ 10s', -10], ['⏩ 10s', 10], ['⏩ 30s', 30], ['⏭ cuối bài', Infinity]].map(([label, d]) => {
+    const b = el('button', 'seek', label);
+    b.onclick = () => song.seek(d === Infinity ? song.duration - 4 : song.time + d);
+    seekBar.appendChild(b); return b;
+  }) : [];
   await new Promise((resolve) => {
     const stop = world.every((dt, t) => {
       const st = fast ? Math.min(song.time * (song.duration / 12), song.duration) : song.time;
@@ -414,6 +421,7 @@ export default async function stage(game) {
     });
   });
   if (fast) song.stop();
+  seekBtns.forEach((b) => b.remove());
   songPlaying = false; ui.lyrics('');
 
   // ---------------------------------------------------- applause, bouquet, wish

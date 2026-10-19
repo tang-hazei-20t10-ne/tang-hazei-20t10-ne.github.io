@@ -530,7 +530,19 @@ class AudioEngine {
     src.connect(g); g.connect(analyser); analyser.connect(this.songBus);
     const startAt = ctx.currentTime + 0.05;
     src.start(startAt);
-    return { src, analyser, startAt, duration: buf.duration, get time() { return ctx.currentTime - startAt; }, stop() { try { src.stop(); } catch { /* */ } } };
+    return {
+      src, analyser, startAt, duration: buf.duration,
+      get time() { return ctx.currentTime - this.startAt; },
+      stop() { try { this.src.stop(); } catch { /* */ } },
+      // jump to a point in the song (debug fast-forward): a buffer source can't seek, so start a new one
+      seek(t) {
+        t = Math.max(0, Math.min(buf.duration - 0.05, t));
+        this.stop();
+        const s = ctx.createBufferSource(); s.buffer = buf; s.connect(g);
+        const at = ctx.currentTime + 0.02;
+        s.start(at, t); this.src = s; this.startAt = at - t;
+      },
+    };
   }
 }
 
