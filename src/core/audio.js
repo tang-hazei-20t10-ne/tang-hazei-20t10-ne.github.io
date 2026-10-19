@@ -487,7 +487,8 @@ class AudioEngine {
     const src = this.ctx.createMediaElementSource(el);
     const g = this.ctx.createGain(); g.gain.value = 0.0001;
     const analyser = this.ctx.createAnalyser(); analyser.fftSize = 256; analyser.smoothingTimeConstant = 0.7;
-    src.connect(g); g.connect(this.musicBus); g.connect(analyser);
+    // the analyser listens before the gain so visualisers don't depend on the level
+    src.connect(g); g.connect(this.musicBus); src.connect(analyser);
     g.gain.linearRampToValueAtTime(gain, this.ctx.currentTime + 1.2);
     this.playMusic(null, 1);
     try { await el.play(); } catch { return false; }

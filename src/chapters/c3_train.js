@@ -297,6 +297,29 @@ export default async function car(game) {
         for (let k = 0; k < len; k++) x.fillRect(left + (p.cx === l.seatL ? 7 * sc + k : 17 * sc - k), by + Math.round(k * 0.9), bw, bw);
         if (p.emote.t > 0) { const e = emoteSprite(p.emote.k); x.drawImage(e, left + 15 * sc, top - 2 * sc, e.width * 2, e.height * 2); }
       }
+      // steering wheel in front of Mino, drawn first so the dashboard hides its lower half:
+      // a round leather rim, two side spokes and the hub with a little pink badge
+      {
+        // the wheel tilts back toward Mino, so from here it reads as a wide ellipse below his chin
+        const d = l.dash, wx = l.seatR, wy = d - 2, ry = Math.round(H * 0.095), rx = Math.round(H * 0.16), t = Math.max(4, Math.round(H * 0.022));
+        for (let j = -ry - 1; j <= 3; j++) for (let i = -rx - 1; i <= rx + 1; i++) {
+          const e = (i / rx) ** 2 + (j / ry) ** 2, ei = (i / (rx - t)) ** 2 + (j / (ry - t)) ** 2;
+          if (e > 1 || ei < 1) continue;
+          // light on the upper inner edge, shade along the outer edge
+          const ein = (i / (rx - t + 1.5)) ** 2 + (j / (ry - t + 1.5)) ** 2;
+          x.fillStyle = e > 0.9 ? shade(COL.wheel, 0.18) : (ein < 1 && j < -ry * 0.3) ? COL.wheelL : COL.wheel;
+          x.fillRect(wx + i, wy + j, 1, 1);
+        }
+        // side spokes from the hub to the rim
+        for (const side of [-1, 1]) {
+          const a = wx + side * 9, b = wx + side * (rx - t + 1);
+          x.fillStyle = COL.wheel; x.fillRect(Math.min(a, b), wy - 3, Math.abs(b - a), 5);
+          x.fillStyle = COL.wheelL; x.fillRect(Math.min(a, b), wy - 3, Math.abs(b - a), 1);
+        }
+        rrect(x, wx - 11, wy - 8, 22, 11, 4, shade(COL.wheel, 0.1), 2);
+        rrect(x, wx - 9, wy - 7, 18, 8, 3, COL.wheelL, 2);
+        rrect(x, wx - 3, wy - 5, 6, 3, 1, '#f08fa8', 1);
+      }
       // dashboard: a gently curved padded top, wood trim, light lower face
       const d = l.dash;
       for (let i = 0; i < W; i++) {
@@ -323,19 +346,6 @@ export default async function car(game) {
       for (let i = 0; i < bars; i++) {
         const v = (freq[2 + i * 4] || 0) / 255; const hgt = Math.max(1, Math.round(v * (sh2 - 3)));
         x.fillStyle = `hsl(${320 - i * 10},80%,70%)`; x.fillRect(sx0 + 3 + i * bwid, sy0 + sh2 - 2 - hgt, Math.max(1, bwid - 1), hgt);
-      }
-      // steering wheel in front of Mino (warm brown leather), with his hands on it
-      const wx = l.seatR, wy = d + Math.round(H * 0.12), rx = Math.round(W * 0.12), ry = Math.round(H * 0.13);
-      x.strokeStyle = COL.wheel; x.lineWidth = Math.max(4, sc + 2);
-      x.beginPath(); x.ellipse(wx, wy, rx, ry, 0, Math.PI, Math.PI * 2); x.stroke();
-      x.strokeStyle = COL.wheelL; x.lineWidth = 1; x.beginPath(); x.ellipse(wx, wy - 2, rx, ry, 0, Math.PI * 1.1, Math.PI * 1.9); x.stroke();
-      x.fillStyle = COL.wheel; x.fillRect(wx - 3, wy - ry, 6, ry); rrect(x, Math.round(wx - rx * 0.6), wy - 3, Math.round(rx * 1.2), 5, 2, COL.wheel, 2);
-      rrect(x, wx - 7, wy - 9, 14, 9, 3, COL.wheelL, 3); x.fillStyle = '#f08fa8'; x.fillRect(wx - 2, wy - 6, 4, 3);
-      const skin = content.partnerLook.skin, sleeve = content.partnerLook.top;
-      for (const side of [-1, 1]) {
-        const hx = Math.round(wx + side * rx * 0.86), hy = Math.round(wy - ry * 0.55);
-        x.fillStyle = sleeve; x.fillRect(hx - 3 - side * 2, hy + 3, 7, 10);
-        rrect(x, hx - 3, hy - 3, 7, 7, 2, skin, 2); x.fillStyle = shade(skin, 0.2); x.fillRect(hx - 2, hy + 2, 5, 1);
       }
       // rear-view mirror on the windscreen with a flower air freshener
       const mx = Math.round(W / 2);
@@ -394,7 +404,7 @@ export default async function car(game) {
   await game.enter();
   // the car stereo starts the song; the ride ends with it
   const song = C.carSong;
-  const playing = song?.file && await audio.playRecord(song.file, { loop: false, gain: 0.35, onEnd: () => arrive() });
+  const playing = song?.file && await audio.playRecord(song.file, { loop: false, gain: 0.16, onEnd: () => arrive() });
   if (playing) { totalDur = Infinity; ui.note(`♪ ${C.nowPlaying}: ${song.title}`, 4000); }
   else audio.playMusic('trainUp', 1.5);
   await wait(2400);
