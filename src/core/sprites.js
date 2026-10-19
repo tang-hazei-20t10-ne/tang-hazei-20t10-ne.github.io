@@ -335,7 +335,7 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
     if (hold === 'book') { P(19, armY - 3, 4, 5, '#c4587a'); P(19, armY - 3, 1, 5, '#fff3e0'); }
     if (hold === 'lantern') { P(19, armY - 6, 4, 5, '#ffcf6b'); P(19, armY - 6, 4, 1, '#c4587a'); P(20, armY - 4, 2, 2, '#fff7d6'); }
   }
-  if (pose === 'bouquet') {
+  if (pose === 'bouquet' && hold !== 'big') { // hold 'big': the bouquet is drawn separately
     const by = bodyY - 2;
     P(9, by + 3, 6, 6, '#f3e3c8'); P(10, by + 8, 4, 2, '#e4cba4');
     const cols = ['#f08fa8', '#ffd23f', '#9b7fe0', '#ffffff', '#e9473f', '#7fa7f0'];

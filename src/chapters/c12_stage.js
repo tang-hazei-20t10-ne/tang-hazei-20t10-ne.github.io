@@ -2,7 +2,7 @@
 // light show, then the bouquet and the wish.
 import content from '../content.js';
 import { World3D, THREE, billboard, toon, pixelTex } from '../three/engine3d.js';
-import { canvas, charSprite, LOOKS, flowerBig } from '../core/sprites.js';
+import { canvas, charSprite, LOOKS, flowerBig, shade } from '../core/sprites.js';
 import { ui, wait, esc, el } from '../core/ui.js';
 import { audio } from '../core/audio.js';
 import { state } from '../core/state.js';
@@ -456,17 +456,35 @@ export default async function stage(game) {
   audio.sfx('shutter'); ui.flash();
   await photoToAlbum(stageShot, { caption: C.stageCaption, title: C.stagePhoto });
   hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'idle', mood: 'happy' }));
+  // the bouquet of the flowers Hazei picked, drawn big enough to read, held at chest height
+  const bqArt = (() => {
+    const src = drawBouquet(state.data.flowers, 96).canvas;
+    const [c, x] = canvas(72, 80); x.drawImage(src, 12, 6, 72, 80, 0, 0, 72, 80);
+    // kraft-paper wrapping, so it stands apart from Hazei's pink skirt and doesn't glow under the spotlight
+    const img = x.getImageData(0, 50, 72, 30), d = img.data;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] && d[i] > 200 && d[i + 1] > 180) { const k = d[i + 1] / 255; d[i] = 238 * k; d[i + 1] = 200 * k; d[i + 2] = 150 * k; }
+    x.putImageData(img, 0, 50);
+    const skin = LOOKS.hazei().skin || '#ffdcc4';
+    // two hands around the wrapping
+    for (const [hx, hy] of [[27, 66], [40, 68]]) { x.fillStyle = shade(skin, 0.3); x.fillRect(hx - 1, hy - 1, 7, 6); x.fillStyle = skin; x.fillRect(hx, hy, 5, 4); }
+    return c;
+  })();
+  // lifted a little so the colours read under the stage light
+  const bqSprite = billboard(bqArt, 0.0105, { fog: false }); bqSprite.material.color.setScalar(1.08); S.add(bqSprite);
+  const holdAt = (who, dx = 0, dy = 0) => bqSprite.position.copy(who.position).add(new THREE.Vector3(dx, 0.42 + dy, 0.1));
   const path = [new THREE.Vector3(0.8, 0, 10.4), new THREE.Vector3(13, 0, 6), new THREE.Vector3(13, 0, 3.4), new THREE.Vector3(13, STAGE_Y, 0.4), new THREE.Vector3(0.7, STAGE_Y, 0.4)];
   for (let s = 0; s < path.length - 1; s++) {
     const a = path[s], b = path[s + 1]; const steps = Math.ceil(a.distanceTo(b) / 0.07);
     for (let k = 1; k <= steps; k++) {
       partner.position.lerpVectors(a, b, k / steps);
       partner.setCanvas(charSprite(LOOKS.partner(), { pose: 'walk', frame: Math.floor(k / 4) % 4, mood: 'happy' }), b.x < a.x);
+      holdAt(partner, (b.x < a.x ? -1 : 1) * 0.3, -0.12 + (Math.floor(k / 4) % 2) * 0.03);
       setCam(new THREE.Vector3(4, 6, 20), partner.position.clone().lerp(new THREE.Vector3(0, STAGE_Y + 1.2, 0.4), 0.5).add(new THREE.Vector3(0, 0.8, 0)));
       await wait(16);
     }
   }
-  partner.setCanvas(charSprite(LOOKS.partner(), { pose: 'bouquet', mood: 'happy' }), true);
+  partner.setCanvas(charSprite(LOOKS.partner(), { pose: 'bouquet', mood: 'happy', hold: 'big' }), true);
+  holdAt(partner);
   setCam(new THREE.Vector3(0.05, STAGE_Y + 1.45, 5.2), new THREE.Vector3(0.05, STAGE_Y + 1.1, 0.4));
   audio.setBeds([['crowd', 0.3]], 2);
   audio.playMusic('hill', 3);
@@ -474,8 +492,11 @@ export default async function stage(game) {
   await ui.dialog([{ who: 'partner', text: C.bouquetLine }]);
   const bq = drawBouquet(state.data.flowers, 288);
   if (bq.flowers.some((f) => f.gift)) await ui.dialog([{ who: 'partner', text: C.giftNote }]);
+  // hand it over: the bouquet glides from Mino's hands to Hazei's
+  for (let k = 0; k <= 1; k += 1 / 30) { const e = k * k * (3 - 2 * k); bqSprite.position.lerpVectors(partner.position, hazei.position, e).add(new THREE.Vector3(0, 0.42 + Math.sin(e * Math.PI) * 0.12, 0.1)); await wait(16); }
   partner.setCanvas(charSprite(LOOKS.partner(), { pose: 'idle', mood: 'happy' }), true);
-  hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'bouquet', mood: 'happy' }));
+  hazei.setCanvas(charSprite(LOOKS.hazei(), { pose: 'bouquet', mood: 'happy', hold: 'big' }));
+  holdAt(hazei);
   audio.sfx('yay'); audio.sfx('sparkle');
   for (let k = 0; k < 18; k++) world.glow.emit(new THREE.Vector3(-0.3 + (Math.random() - 0.5), STAGE_Y + 1.6 + Math.random(), 0.6), new THREE.Vector3((Math.random() - 0.5) * 0.5, 0.8, 0), ['#ff8fb0', '#ffe9a8', '#bfe0ff'][k % 3], 2);
   // a moment together: Hazei holding the flowers, Mino beside her, then a photo for the album
