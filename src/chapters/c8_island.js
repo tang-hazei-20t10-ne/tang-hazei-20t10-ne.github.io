@@ -266,7 +266,7 @@ export default async function island(game) {
   const bellPos = SPOTS.shrine.clone().setY(H(SPOTS.shrine.x, SPOTS.shrine.z));
   guide.step('bell').pos = bellPos;
   world.interact.add({ pos: bellPos, range: 2.6, hold: 0.4, label: P.bell, onDone: async () => {
-    world.handPose = 'reach'; audio.sting([84, 91, 88, 96], 'bell', 0.16);
+    world.handPose = 'reach'; audio.sfx('jingle');
     for (let k = 0; k < 10; k++) world.glow.emit(bellPos.clone().add(new THREE.Vector3(0, 2, 0)), new THREE.Vector3((Math.random() - 0.5) * 1.5, Math.random() * 1.2, (Math.random() - 0.5) * 1.5), '#ffe9a8', 1.2);
     ui.note(C.bell, 2800); await wait(600); world.handPose = 'idle'; did('bell');
   } });

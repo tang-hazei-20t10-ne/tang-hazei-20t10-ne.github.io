@@ -412,7 +412,52 @@ class AudioEngine {
       case 'join': [67, 72, 79].forEach((m, i) => both((d) => INST.bell(ctx, d, t + i * 0.08, m, 0.2, 0.7))); break;
       case 'firework': { perc(ctx, out, nz, t, 'kick', 1.2); for (let i = 0; i < 14; i++) perc(ctx, out, nz, t + 0.25 + Math.random() * 0.9, 'hat', 1.6); break; }
       case 'launch': { const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.setValueAtTime(500, t); o.frequency.exponentialRampToValueAtTime(1800, t + 0.8); env(ctx, g, t, 0.05, 0.02, 0.8); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.9); break; }
-      case 'applause': { for (let i = 0; i < 260; i++) perc(ctx, out, nz, t + Math.random() * 5 * Math.pow(Math.random(), 0.5), 'snare', 0.25 + Math.random() * 0.25); break; }
+      case 'applause': {
+        // a full hall: dense hand claps that swell then fade over ~7s, plus a cheering crowd
+        const bus = ctx.createGain(); bus.gain.value = 1.8; bus.connect(out);
+        const dur = 7;
+        for (let i = 0; i < 900; i++) {
+          const k = Math.pow(Math.random(), 0.6) * dur; // denser near the start
+          const env = k < 0.6 ? k / 0.6 : 1 - (k - 0.6) / (dur - 0.6) * 0.85;
+          const tt = t + k;
+          const src = ctx.createBufferSource(); src.buffer = nz;
+          const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900 + Math.random() * 1800; f.Q.value = 1.2;
+          const g = ctx.createGain(); const v = (0.25 + Math.random() * 0.3) * env;
+          g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(Math.max(0.001, v), tt + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.07 + Math.random() * 0.05);
+          src.connect(f); f.connect(g); g.connect(bus); src.start(tt, Math.random() * 1.5); src.stop(tt + 0.15);
+        }
+        // crowd roar ("woo"): filtered noise swell + a few rising voice-like tones
+        const roar = ctx.createBufferSource(); roar.buffer = this.brown; roar.loop = true;
+        const rf = ctx.createBiquadFilter(); rf.type = 'bandpass'; rf.frequency.value = 700; rf.Q.value = 0.8;
+        const rg = ctx.createGain(); rg.gain.setValueAtTime(0.0001, t); rg.gain.linearRampToValueAtTime(0.9, t + 0.8); rg.gain.linearRampToValueAtTime(0.5, t + 3); rg.gain.linearRampToValueAtTime(0.0001, t + dur);
+        roar.connect(rf); rf.connect(rg); rg.connect(bus); roar.start(t); roar.stop(t + dur + 0.1);
+        for (let i = 0; i < 14; i++) {
+          const tt = t + 0.2 + Math.random() * 2.5; const o = ctx.createOscillator(); o.type = 'sawtooth';
+          const f0 = 260 + Math.random() * 260; o.frequency.setValueAtTime(f0, tt); o.frequency.exponentialRampToValueAtTime(f0 * 1.5, tt + 0.35); o.frequency.exponentialRampToValueAtTime(f0 * 1.2, tt + 0.9);
+          const vf = ctx.createBiquadFilter(); vf.type = 'bandpass'; vf.frequency.value = 1100; vf.Q.value = 3;
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, tt); g.gain.linearRampToValueAtTime(0.03, tt + 0.1); g.gain.linearRampToValueAtTime(0.0001, tt + 1);
+          o.connect(vf); vf.connect(g); g.connect(bus); o.start(tt); o.stop(tt + 1.05);
+        }
+        break;
+      }
+      case 'jingle': {
+        // small brass bell shaken by a rope: bright inharmonic partials, struck a few times
+        const bus = ctx.createGain(); bus.gain.value = 0.9; bus.connect(out); bus.connect(this.sfxVerb);
+        const strike = (tt, f0, v) => {
+          for (const [ratio, amp, decay] of [[1, 1, 1.6], [2.76, 0.55, 0.9], [5.4, 0.35, 0.5], [8.93, 0.22, 0.3], [13.3, 0.12, 0.18]]) {
+            const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f0 * ratio * (1 + (Math.random() - 0.5) * 0.004);
+            const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(0.09 * amp * v, tt + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, tt + decay);
+            o.connect(g); g.connect(bus); o.start(tt); o.stop(tt + decay + 0.05);
+          }
+          // metallic tick of the clapper
+          const n = ctx.createBufferSource(); n.buffer = nz; const hf = ctx.createBiquadFilter(); hf.type = 'highpass'; hf.frequency.value = 6000;
+          const ng = ctx.createGain(); ng.gain.setValueAtTime(0.06 * v, tt); ng.gain.exponentialRampToValueAtTime(0.0001, tt + 0.03);
+          n.connect(hf); hf.connect(ng); ng.connect(bus); n.start(tt, Math.random()); n.stop(tt + 0.05);
+        };
+        const hits = [[0, 1], [0.14, 0.8], [0.26, 0.9], [0.42, 0.6], [0.6, 0.7], [0.85, 0.4], [1.15, 0.3]];
+        hits.forEach(([dt, v], i) => strike(t + dt + Math.random() * 0.03, (i % 2 ? 1480 : 1320) * (1 + (Math.random() - 0.5) * 0.02), v));
+        break;
+      }
       case 'yay': both((d) => [72, 76, 79, 84, 88].forEach((m, i) => INST.pluck(ctx, d, t + i * 0.07, m, 0.2, 0.7))); break;
       case 'sip': perc(ctx, out, nz, t, 'shaker', 1.5); perc(ctx, out, nz, t + 0.2, 'shaker', 1.2); break;
       case 'clink': INST.bell(ctx, out, t, 98, 0.1, 0.5); INST.bell(ctx, out, t + 0.03, 103, 0.1, 0.3); break;
@@ -431,19 +476,21 @@ class AudioEngine {
   // ---------------------------------------------------------- record player
   // Plays an audio file in a loop through the music bus (so mute/volume apply).
   // Resolves false if the file is missing, so callers can fall back.
-  async playRecord(url) {
+  async playRecord(url, { loop = true, onEnd } = {}) {
     this.stopRecord();
     if (!this.ctx) return false;
-    const el = new Audio(url); el.loop = true; el.preload = 'auto';
+    const el = new Audio(url); el.loop = loop; el.preload = 'auto';
+    if (onEnd) el.onended = onEnd;
     const ok = await new Promise((res) => { el.oncanplay = () => res(true); el.onerror = () => res(false); setTimeout(() => res(false), 8000); });
     if (!ok) return false;
     const src = this.ctx.createMediaElementSource(el);
     const g = this.ctx.createGain(); g.gain.value = 0.0001;
-    src.connect(g); g.connect(this.musicBus);
+    const analyser = this.ctx.createAnalyser(); analyser.fftSize = 256; analyser.smoothingTimeConstant = 0.7;
+    src.connect(g); g.connect(this.musicBus); g.connect(analyser);
     g.gain.linearRampToValueAtTime(1, this.ctx.currentTime + 1.2);
     this.playMusic(null, 1);
     try { await el.play(); } catch { return false; }
-    this.record = { el, g };
+    this.record = { el, g, analyser };
     return true;
   }
   stopRecord(fade = 1) {
