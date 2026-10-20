@@ -35,73 +35,56 @@ const potSprite = () => spr(30, 26, (P) => {
 });
 const lampSprite = () => spr(10, 9, (P) => { P(4, 0, 2, 2, '#3a2633'); P(1, 2, 8, 5, '#f4e2bc'); P(0, 4, 10, 3, '#f4e2bc'); P(1, 2, 8, 1, '#fff6dc'); P(0, 7, 10, 1, '#d8c094'); P(3, 8, 4, 1, '#fff3c0'); });
 
-// The chef, drawn by hand: a tall glossy quiff with cropped sides, thick brows,
-// a huge toothy grin, a black tank top with a little print and a silver chain.
-// Same pixel density as the other characters, just a grown-up's proportions.
-const CHEF_PAL = {
-  H: '#18161e', h: '#363442', g: '#767690', U: '#6a5a5a',
-  S: '#e8b48a', s: '#c98d68', L: '#f6cca4', E: '#1e1418', W: '#ffffff', B: '#221c22',
-  M: '#5a1e26', T: '#fbf8f2', R: '#d0566a',
-  K: '#1e1e26', k: '#131318', w: '#34343f', r: '#d0503e', y: '#f2d48a',
-  C: '#e4e8ee', c: '#9aa0aa', P: '#2e2e3a', p: '#22222c', O: '#3a3038', o: '#5a5058',
-};
-const CHEF_ROWS = [
-  '........HHHHHHH.........',
-  '......HHgggghHHH........',
-  '.....HHggHHHhhHHH.......',
-  '.....HgHHhhHHHhHHH......',
-  '....UHHHHHHHHHHhHHHU....',
-  '....UUSSSSSSSSSSSSUU....',
-  '....USSSSSSSSSSSSSSU....',
-  '....USBBBSSSSSSBBBSU....',
-  '....SSEESSSSSSSEESSs....',
-  '....SSEESSSSsSSEESSs....',
-  '....sSSSSSSssSSSSSSs....',
-  '.....SSsMMMMMMMMsSS.....',
-  '.....SSMTTTTTTTTMSs.....',
-  '......sSMRRRRRRMSs......',
-  '.......sSSMMMMSSs.......',
-  '........sSSSSSSs........',
-  '.........sSSSSs.........',
-  '......SSKKSSSSKKSS......',
-  '.....SSSKKCSSCKKSSS.....',
-  '.....SSSKKKCCKKKsss.....',
-  '.....SSsKKKKKKKKsSs.....',
-  '.....SSsKwKKKKKKsSs.....',
-  '.....LSsKKryyrKKsSL.....',
-  '.....SS.KKKrrKKK.SS.....',
-  '........PPPPPPPP........',
-  '........PPPppPPP........',
-  '........PPP..PPP........',
-  '........PPp..PPp........',
-  '........PPp..PPp........',
-  '........OOO..OOO........',
-  '........ooO..ooO........',
-];
+// The chef: the same build as everyone else, with a slicked-up quiff and
+// cropped sides, thick brows and a wide toothy smile, in a plain white
+// double-breasted chef's coat.
 const chefCache = new Map();
 export function chefSprite(pose = 'idle', frame = 0, mood = 'normal') {
   const key = pose + frame + mood;
   if (chefCache.has(key)) return chefCache.get(key);
-  const rows = CHEF_ROWS.map((r) => r.split(''));
-  const set = (cx, cy, ch) => { if (rows[cy]) rows[cy][cx] = ch; };
-  const fill = (x0, y0, w, h, ch) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) set(x0 + i, y0 + j, ch); };
-  // eyes: open with a glint, blinking, or squeezed shut by the grin
-  if (mood === 'blink') { fill(6, 8, 2, 2, 'S'); fill(15, 8, 2, 2, 'S'); fill(6, 9, 2, 1, 'E'); fill(15, 9, 2, 1, 'E'); }
-  else if (mood === 'happy') { fill(6, 8, 2, 2, 'S'); fill(15, 8, 2, 2, 'S'); fill(6, 8, 2, 1, 'E'); set(5, 9, 'E'); set(8, 9, 'E'); fill(15, 8, 2, 1, 'E'); set(14, 9, 'E'); set(17, 9, 'E'); }
-  else { set(6, 8, 'W'); set(15, 8, 'W'); }
-  // arms: hanging, both hands working at the board, or one held out to serve
-  const clearArm = (side) => { const x0 = side ? 16 : 5; for (let j = 18; j < 24; j++) for (let i = 0; i < 3; i++) if (rows[j][x0 + i] !== 'K') set(x0 + i, j, '.'); };
-  if (pose === 'hold') {
-    clearArm(0); clearArm(1);
-    const up = frame % 2;
-    fill(6, 18, 2, 3, 'S'); fill(16, 18, 2, 3, 's');
-    fill(7, 21 - up, 3, 2, 'S'); fill(14, 21 - (1 - up), 3, 2, 'S'); set(9, 21 - up, 'L'); set(14, 21 - (1 - up), 'L');
-  } else if (pose === 'give') {
-    clearArm(1);
-    fill(16, 18, 5, 2, 'S'); fill(16, 19, 5, 1, 's'); fill(21, 17, 2, 3, 'L');
-  }
   const [c, x] = canvas(24, 34);
-  rows.forEach((r, j) => r.forEach((ch, i) => { if (ch !== '.') { x.fillStyle = CHEF_PAL[ch]; x.fillRect(i, j, 1, 1); } }));
+  const P = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+  const skin = '#f0bf94', skinS = shade(skin, 0.22);
+  const hair = '#1a1820', gloss = '#6c6c84', glossS = '#3a3846', crop = mix('#3a3640', skin, 0.3);
+  const coat = '#fbfaf5', coatS = '#d9d5cb', btn = '#4a4652';
+  const pants = '#3a3846', shoe = '#2a2430';
+  // legs
+  P(8, 22, 3, 4, pants); P(13, 22, 3, 4, pants); P(10, 22, 1, 4, shade(pants, 0.2)); P(15, 22, 1, 4, shade(pants, 0.2));
+  P(8, 26, 3, 2, shoe); P(13, 26, 3, 2, shoe); P(8, 26, 3, 1, light(shoe, 0.2)); P(13, 26, 3, 1, light(shoe, 0.2));
+  // coat: stand-up collar, double row of buttons
+  P(7, 16, 10, 7, coat); P(16, 17, 1, 6, coatS); P(7, 22, 10, 1, coatS);
+  P(9, 16, 2, 1, coatS); P(13, 16, 2, 1, coatS); P(11, 16, 2, 1, skinS);
+  P(12, 17, 1, 5, '#ebe7dd');
+  P(9, 18, 1, 1, btn); P(9, 20, 1, 1, btn); P(14, 18, 1, 1, btn); P(14, 20, 1, 1, btn);
+  // arms
+  if (pose === 'hold') { // both hands working on the board
+    const up = frame % 2;
+    P(5, 17, 2, 2, coat); P(17, 17, 2, 2, coatS); P(6, 19, 3, 2, coat); P(15, 19, 3, 2, coatS);
+    P(9, 20 - up, 2, 1, skin); P(13, 19 + up, 2, 1, skin);
+  } else {
+    P(5, 17, 2, 4, coat); P(5, 21, 2, 1, skin);
+    if (pose === 'give') { P(17, 17, 3, 2, coatS); P(20, 17, 2, 2, skin); }
+    else { P(17, 17, 2, 4, coatS); P(17, 21, 2, 1, skin); }
+  }
+  // head
+  P(6, 6, 12, 10, skin); P(5, 7, 14, 8, skin); P(18, 8, 1, 6, skinS); P(4, 10, 1, 2, skin);
+  // quiff: tall and glossy on top, swept back
+  [[1, 8, 6], [2, 7, 9], [3, 6, 12], [4, 5, 14], [5, 5, 14], [6, 5, 14], [7, 6, 12]].forEach(([y, a, w]) => P(a, y, w, 1, hair));
+  P(9, 2, 3, 1, gloss); P(8, 3, 2, 1, gloss); P(12, 3, 3, 1, glossS); P(14, 4, 3, 1, glossS); P(7, 5, 2, 1, glossS);
+  // cropped sides
+  P(4, 7, 2, 2, crop); P(18, 7, 2, 2, crop); P(5, 9, 1, 1, mix(crop, skin, 0.5)); P(18, 9, 1, 1, mix(crop, skin, 0.5));
+  // brows
+  P(9, 9, 2, 1, hair); P(8, 10, 1, 1, hair); P(14, 9, 2, 1, hair); P(16, 10, 1, 1, hair);
+  // eyes
+  const eye = '#2a1a24';
+  for (const ex of [9, 14]) {
+    if (mood === 'happy') { P(ex, 12, 1, 1, eye); P(ex + 1, 11, 1, 1, eye); P(ex + 2, 12, 1, 1, eye); }
+    else if (mood === 'blink') P(ex, 12, 2, 1, eye);
+    else { P(ex, 11, 2, 2, eye); P(ex, 11, 1, 1, '#ffffff'); }
+  }
+  // a wide smile showing his teeth
+  P(9, 13, 1, 1, '#7a2a36'); P(10, 13, 5, 1, '#fbf8f2'); P(15, 13, 1, 1, '#7a2a36');
+  P(10, 14, 5, 1, '#7a2a36'); P(11, 14, 3, 1, '#d0566a');
   const out = outline(c);
   chefCache.set(key, out);
   return out;
@@ -280,7 +263,7 @@ export default async function omakase(game) {
       plates.forEach((p) => { if (p) put(x, p.img, p.X, p.Y, p.Z, 20, false, 1); }); // dishes a size smaller than people
       // the chef stands on the right, facing the guests
       const cs = chefSprite(chef.pose, chef.frame, chef.blink < 0 ? 'blink' : chef.mood);
-      put(x, cs, CHEF.x, 0, CHEF.z, 31, true);
+      put(x, cs, CHEF.x, 0, CHEF.z, 28, true);
       x.drawImage(fore, 0, 0);
       guests.forEach((g, i) => {
         if (g.emoT <= 0) return;
