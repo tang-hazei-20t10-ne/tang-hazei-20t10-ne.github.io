@@ -220,8 +220,8 @@ export default async function omakase(game) {
       line(x, [mx - 7, TOP, mz - 8], [mx - 7, TOP, mz + 8], '#e0d8c6');
       line(x, [-13, TOP, mz - 6], [-13, TOP, mz + 6], '#c9a070', S);
       quad(x, [[-14, TOP, mz + 6], [-12, TOP, mz + 6], [-12, TOP, mz + 8], [-14, TOP, mz + 8]], '#c4584a');
-      put(x, props.tea, -12, TOP, mz + 15, 7);
-      put(x, props.towel, -12, TOP, mz - 14, 4);
+      put(x, props.tea, 2, TOP, mz + 5, 7);
+      put(x, props.towel, -12, TOP, mz - 11, 4);
     }
     // the chef's thick cutting board, a lacquered bowl, a vase at the far end
     box(x, 3, 13, TOP, TOP + 2, CHEF.z - 8, CHEF.z + 8, { top: '#f2dcae', front: '#c99a68', side: '#d8ac78' });
