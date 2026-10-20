@@ -323,6 +323,13 @@ export default {
             chef: 'Trứng phải hấp lửa thật nhỏ, không được vội, thì mặt mới mịn như vầy. Bác mong ngày nào của cháu cũng có lúc chậm lại như vậy, để được thở và thương chính mình.',
             fragment: 'luôn có những khoảng bình yên cho riêng mình',
             sprite: 'chawanmushi',
+            // lời bác kể trong lúc làm món, mỗi câu là một bước
+            steps: [
+              'Trứng gà đánh tan với nước dùng dashi, nhẹ tay thôi cho khỏi nổi bọt.',
+              'Lọc qua rây một lần cho thật mịn, rồi rót vào chén sứ.',
+              'Thả vào con tôm, hạt bạch quả, rồi hấp lửa liu riu. Món này mà vội là rỗ mặt liền.',
+              'Thêm cọng lá mitsuba cho thơm. Xong rồi đó!',
+            ],
           },
           {
             dish: 'Đậu hũ lạnh với hoa ăn được',
@@ -330,6 +337,13 @@ export default {
             chef: 'Đậu hũ giản dị thôi, mà rắc chút hoa lên là thành một khu vườn nhỏ. Cháu cũng vậy đó, đi tới đâu là ở đó có hoa nở.',
             fragment: 'ở đâu cũng nở được một mùa hoa của riêng mình',
             sprite: 'tofu',
+            // lời bác kể trong lúc làm món, mỗi câu là một bước
+            steps: [
+              'Đậu hũ non bác làm từ sáng, ngâm nước đá cho mát lạnh.',
+              'Cắt nhẹ thôi, đậu non mềm lắm, mạnh tay là vỡ liền.',
+              'Rưới chút nước tương pha dashi lạnh xung quanh.',
+              'Rồi đặt hoa lên, từng bông một, như trồng một khu vườn nhỏ.',
+            ],
           },
         ],
       },
@@ -342,6 +356,13 @@ export default {
             chef: 'Người Nhật hay ăn cá cam vào dịp năm mới, vì nó là cá của khởi đầu. Bác chúc cháu sáng nào thức dậy cũng thấy háo hức với một điều gì đó.',
             fragment: 'mỗi ngày đều bắt đầu bằng một điều háo hức',
             sprite: 'hamachi',
+            // lời bác kể trong lúc làm món, mỗi câu là một bước
+            steps: [
+              'Lót sợi củ cải bào với lá tía tô trước cho mát mắt.',
+              'Dao sashimi phải kéo một đường dứt khoát, không cưa tới cưa lui, thì mặt cá mới bóng.',
+              'Xếp các lát cá dựa vào nhau như cánh quạt.',
+              'Thêm chút wasabi bác mới mài tươi, với lát chanh.',
+            ],
           },
           {
             dish: 'Cá ngừ béo otoro',
@@ -349,6 +370,13 @@ export default {
             chef: 'Otoro là phần quý nhất của con cá, bác chỉ mời khách đặc biệt thôi. Cháu xứng đáng được đối xử nâng niu như vậy, ở bất cứ đâu.',
             fragment: 'luôn được đối đãi bằng sự trân trọng',
             sprite: 'otoro',
+            // lời bác kể trong lúc làm món, mỗi câu là một bước
+            steps: [
+              'Đây là phần bụng cá ngừ, vân mỡ trắng như đá cẩm thạch. Lót lá tía tô trước.',
+              'Cắt dày tay một chút, để mỡ tan từ từ trong miệng.',
+              'Xếp lên đĩa đá lạnh cho cá giữ được độ tươi.',
+              'Vài hạt muối biển, thêm một mảnh vàng lá, vì hôm nay là ngày đặc biệt.',
+            ],
           },
         ],
       },
@@ -361,6 +389,13 @@ export default {
             chef: 'Sò điệp ngọt nhẹ thôi, nhưng ngọt lâu lắm. Niềm vui lớn thì hiếm, còn niềm vui nhỏ thì ngày nào cũng có, chỉ cần mình để ý.',
             fragment: 'nhặt được thật nhiều niềm vui nhỏ',
             sprite: 'hotate',
+            // lời bác kể trong lúc làm món, mỗi câu là một bước
+            steps: [
+              'Cơm trộn giấm phải còn ấm bằng hơi người, nắm nhẹ trong lòng bàn tay.',
+              'Đặt sò điệp lên, ấn đúng ba lần. Chặt quá là cơm hết thở.',
+              'Quét một lớp nước tương nikiri cho bóng, rắc chút vỏ yuzu.',
+              'Đặt lên khay gỗ, ăn bằng tay cũng được nha.',
+            ],
           },
           {
             dish: 'Nhím biển uni',
@@ -368,6 +403,13 @@ export default {
             chef: 'Uni phải lặn sâu mới tìm được, vị của nó không lẫn vào đâu. Đừng quên là cháu cũng hiếm có như vậy nghe.',
             fragment: 'nhớ rằng cậu là duy nhất',
             sprite: 'uni',
+            // lời bác kể trong lúc làm món, mỗi câu là một bước
+            steps: [
+              'Nắm cơm nhỏ hơn bình thường một chút.',
+              'Quấn một vòng rong biển quanh cơm, thành chiếc thuyền nhỏ.',
+              'Uni mềm như kem, phải múc thật khẽ đặt lên.',
+              'Món này ăn liền tay, để lâu rong biển mềm mất.',
+            ],
           },
         ],
       },
@@ -380,6 +422,13 @@ export default {
             chef: 'Con tôm cong lưng giống ông bà mình lúc già, nên người xưa coi nó là điềm sống lâu. Bác chúc cháu khoẻ re, cười nhiều, sống thật lâu bên những người mình quý.',
             fragment: 'sống thật khoẻ và thật lâu',
             sprite: 'tempura',
+            // lời bác kể trong lúc làm món, mỗi câu là một bước
+            steps: [
+              'Bột tempura pha bằng nước đá, khuấy sơ thôi, còn lợn cợn mới giòn.',
+              'Dầu vừa tới, nghe xèo một tiếng là được.',
+              'Vớt ra khi vàng ruộm, con tôm cong lưng lại rồi nè.',
+              'Ăn kèm chén nước chấm với củ cải bào.',
+            ],
           },
           {
             dish: 'Lươn nướng anago',
@@ -387,6 +436,13 @@ export default {
             chef: 'Lươn mềm mà dai, bơi ngược dòng cũng không nản. Dịu dàng mà bền bỉ, bác thấy cháu có cái chất đó đó.',
             fragment: 'dẻo dai đi qua mọi chặng đường',
             sprite: 'anago',
+            // lời bác kể trong lúc làm món, mỗi câu là một bước
+            steps: [
+              'Lươn biển anago nướng trên than hồng, thơm từ đầu ngõ.',
+              'Phết sốt tare, nướng, rồi phết tiếp. Ba lần như vậy mới đậm.',
+              'Cắt miếng vừa ăn, đặt lên cơm.',
+              'Rắc chút tiêu sansho cho ấm bụng.',
+            ],
           },
         ],
       },
@@ -399,6 +455,12 @@ export default {
             chef: 'Trái dâu chua chua nằm trong lớp mochi ngọt mềm. Đời cũng có lúc chua, nhưng bác mong lúc nào cũng có thứ gì đó ngọt ngào bọc lấy cháu.',
             fragment: 'mọi điều chua cay đều được bọc trong ngọt ngào',
             sprite: 'mochi',
+            // lời bác kể trong lúc làm món, mỗi câu là một bước
+            steps: [
+              'Trái dâu tươi bọc một lớp đậu đỏ ngọt bùi.',
+              'Rồi bọc thêm lớp mochi dẻo, tay phải áo bột không là dính.',
+              'Cắt đôi ra mới thấy trái dâu nằm ở trong.',
+            ],
           },
           {
             dish: 'Pudding matcha',
@@ -406,6 +468,12 @@ export default {
             chef: 'Matcha đắng một chút ở đầu lưỡi, rồi ngọt dần ra. Ngày nào khó khăn, cháu nhớ là cuối cùng sẽ ngọt lại thôi.',
             fragment: 'ngày khó nào cũng sẽ có điều ngọt ngào',
             sprite: 'matcha',
+            // lời bác kể trong lúc làm món, mỗi câu là một bước
+            steps: [
+              'Bột matcha đánh bằng chổi tre, đưa tay theo hình chữ M thì mới lên bọt.',
+              'Pudding bác làm sẵn từ sáng cho đông, rưới thêm lớp sốt matcha.',
+              'Thêm kem tươi, đậu đỏ, rồi rây chút bột matcha lên trên.',
+            ],
           },
         ],
       },

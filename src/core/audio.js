@@ -331,6 +331,7 @@ class Bed {
 const SFX_TRIM = {
   flame: -9, firework: -6, pop: -3, select: -3, yay: -2,
   shutter: 9, snap: 8, quack: 6, launch: 7, whoosh: 5, scratch: 5, page: 4, woof: 4, sip: 6,
+  sizzle: -12, whisk: 16, pour: 8,
 };
 
 // ------------------------------------------------------------ main audio
@@ -477,6 +478,21 @@ class AudioEngine {
       case 'clink': INST.bell(ctx, out, t, 98, 0.1, 0.5); INST.bell(ctx, out, t + 0.03, 103, 0.1, 0.3); break;
       case 'wave': { const s = ctx.createBufferSource(); s.buffer = nz; const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(400, t); f.frequency.linearRampToValueAtTime(1600, t + 1); f.frequency.linearRampToValueAtTime(300, t + 2.5); const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.25, t + 1); g.gain.linearRampToValueAtTime(0.0001, t + 2.8); s.loop = true; s.connect(f); f.connect(g); g.connect(out); s.start(t); s.stop(t + 3); break; }
       case 'scratch': for (let i = 0; i < 3; i++) perc(ctx, out, nz, t + i * 0.05, 'brush', 2); break;
+      // kitchen sounds for the omakase close-ups
+      case 'chop': perc(ctx, out, nz, t, 'clack', 0.9); perc(ctx, out, nz, t + 0.01, 'kick', 0.25); break;
+      case 'whisk': for (let i = 0; i < 7; i++) perc(ctx, out, nz, t + i * 0.075, 'brush', 0.9 + (i % 2) * 0.4); break;
+      case 'pour': case 'sizzle': case 'steam': {
+        const len = name === 'sizzle' ? 1.6 : name === 'pour' ? 1.1 : 1.4;
+        const s = ctx.createBufferSource(); s.buffer = nz; s.loop = true;
+        const f = ctx.createBiquadFilter();
+        if (name === 'sizzle') { f.type = 'highpass'; f.frequency.value = 3200; }
+        else if (name === 'pour') { f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(700, t); f.frequency.linearRampToValueAtTime(1300, t + len); }
+        else { f.type = 'bandpass'; f.Q.value = 0.8; f.frequency.value = 1800; }
+        const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(name === 'sizzle' ? 0.32 : 0.22, t + 0.12); g.gain.linearRampToValueAtTime(0.0001, t + len);
+        s.connect(f); f.connect(g); g.connect(out); s.start(t); s.stop(t + len + 0.1);
+        if (name === 'sizzle') for (let i = 0; i < 10; i++) perc(ctx, out, nz, t + Math.random() * len * 0.8, 'hat', 0.35);
+        break;
+      }
       default: break;
     }
   }

@@ -6,11 +6,11 @@
 // pixel, so the counter keeps crisp edges.
 import content from '../content.js';
 import { Scene2D } from '../two/engine2d.js';
-import { canvas, shade, light, mix, outline, LOOKS, dishSprite, charSprite, emoteSprite } from '../core/sprites.js';
+import { canvas, shade, light, mix, outline, LOOKS, charSprite, emoteSprite } from '../core/sprites.js';
+import { pen as foodPen, drawDish, dishThumb, drawCloseup, RECIPES } from './omakase_food.js';
 import { audio } from '../core/audio.js';
 import { ui, wait, esc, el } from '../core/ui.js';
 import { state } from '../core/state.js';
-import { upscale } from '../core/photo.js';
 
 const C = content.omakase;
 
@@ -220,8 +220,8 @@ export default async function omakase(game) {
       line(x, [mx - 7, TOP, mz - 8], [mx - 7, TOP, mz + 8], '#e0d8c6');
       line(x, [-13, TOP, mz - 6], [-13, TOP, mz + 6], '#c9a070', S);
       quad(x, [[-14, TOP, mz + 6], [-12, TOP, mz + 6], [-12, TOP, mz + 8], [-14, TOP, mz + 8]], '#c4584a');
-      put(x, props.tea, -10, TOP, mz + 12, 7);
-      put(x, props.towel, -12, TOP, mz - 12, 4);
+      put(x, props.tea, -12, TOP, mz + 15, 7);
+      put(x, props.towel, -12, TOP, mz - 14, 4);
     }
     // the chef's thick cutting board, a lacquered bowl, a vase at the far end
     box(x, 3, 13, TOP, TOP + 2, CHEF.z - 8, CHEF.z + 8, { top: '#f2dcae', front: '#c99a68', side: '#d8ac78' });
@@ -232,7 +232,10 @@ export default async function omakase(game) {
   };
 
   // ---------------------------------------------------------------- state
-  const plates = [null, null]; // { img, X, Y, Z, steam }
+  const plates = [null, null]; // { kind, X, Y, Z, steam }
+  // the close-up of the chef's board, faded in over the wide shot while he cooks
+  const cook = { a: 0, kind: null, step: 0, t: 0, done: false, on: false };
+  let cookC = null;
   const chef = { pose: 'idle', frame: 0, mood: 'normal', blink: 3 };
   const guests = [
     { look: LOOKS.hazei(), pose: 'sit', hold: null, mood: 'normal', emo: null, emoT: 0, blink: 2 },
@@ -260,7 +263,12 @@ export default async function omakase(game) {
         heads[i] = put(x, sp, st.x, 9, st.z, 28);
       }
       x.drawImage(counter, 0, 0);
-      plates.forEach((p) => { if (p) put(x, p.img, p.X, p.Y, p.Z, 20, false, 1); }); // dishes a size smaller than people
+      // dishes are drawn straight onto the counter at their true size (a plate is ~13 units across)
+      plates.forEach((pl) => {
+        if (!pl) return;
+        const { P, F } = V(); const at = P(pl.X, pl.Y, pl.Z);
+        drawDish(foodPen(x, at.x, at.y, (F / at.d) * 6.5 / 18), pl.kind);
+      });
       // the chef stands on the right, facing the guests
       const cs = chefSprite(chef.pose, chef.frame, chef.blink < 0 ? 'blink' : chef.mood);
       put(x, cs, CHEF.x, 0, CHEF.z, 28, true);
@@ -273,6 +281,17 @@ export default async function omakase(game) {
         const ex = i ? heads[i].x - e.width / 2 : heads[i].x - 12 * S - e.width, ey = i ? heads[i].y - 10 * S : heads[i].y + 2 * S;
         x.drawImage(e, Math.round(ex), ey + pop + Math.round(Math.sin(s.t * 4)) * S);
       });
+    },
+    drawOverlay(x, s) {
+      if (cook.a <= 0) return;
+      const { W, H } = V();
+      if (!cookC || cookC.width !== W || cookC.height !== H) [cookC] = canvas(W, H);
+      const cx = cookC.getContext('2d');
+      drawCloseup(cx, W, H, cook.kind, cook.step, cook.t, s.t, cook.done);
+      // a soft vignette so it reads as a camera close-up
+      const g = cx.createRadialGradient(W / 2, H * 0.45, Math.min(W, H) * 0.4, W / 2, H * 0.5, Math.max(W, H) * 0.75);
+      g.addColorStop(0, 'rgba(30,16,24,0)'); g.addColorStop(1, 'rgba(30,16,24,0.45)'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+      x.save(); x.globalAlpha = cook.a; x.drawImage(cookC, 0, 0); x.restore();
     },
     drawLight(x, s) {
       const { S, P } = V();
@@ -293,12 +312,13 @@ export default async function omakase(game) {
   scene.cfg.update = (s, dt) => {
     const { S, P } = V();
     for (const g of [...guests, chef]) { g.blink -= dt; if (g.blink < -0.12) g.blink = 2 + Math.random() * 3; if (g.emoT > 0) g.emoT -= dt; }
+    if (cook.on) { chef.pose = 'hold'; chef.frame = Math.floor(s.t * 4); }
     // steam from the stock pot and from freshly served dishes
     if (Math.random() < dt * 4) { const p = P(41, 30, 112); s.spawn({ x: p.x + (Math.random() - 0.5) * 8 * S, y: p.y, vx: (Math.random() - 0.5) * 3, vy: -6 - Math.random() * 4, life: 2, color: '#ffffff', size: S, wobble: 1, screen: true, layer: 'mid' }); }
     plates.forEach((pl) => {
       if (!pl || pl.fly || !(pl.steam > 0)) return;
       pl.steam -= dt;
-      if (Math.random() < dt * 4) { const p = P(pl.X, pl.Y + 10, pl.Z); s.spawn({ x: p.x + (Math.random() - 0.5) * 10 * S, y: p.y, vx: (Math.random() - 0.5) * 2, vy: -5 - Math.random() * 3, life: 1.5, color: '#ffffff', size: S, wobble: 1, screen: true, layer: 'front' }); }
+      if (Math.random() < dt * 4) { const p = P(pl.X, pl.Y + 8, pl.Z); s.spawn({ x: p.x + (Math.random() - 0.5) * 10 * S, y: p.y, vx: (Math.random() - 0.5) * 2, vy: -5 - Math.random() * 3, life: 1.5, color: '#ffffff', size: S, wobble: 1, screen: true, layer: 'front' }); }
     });
   };
 
@@ -315,9 +335,9 @@ export default async function omakase(game) {
     };
     step();
   });
-  const serve = async (i, img) => {
+  const serve = async (i, kind) => {
     chef.pose = 'give'; chef.frame = 1;
-    const p = { img, ...hands(i), steam: 2.5 };
+    const p = { kind, ...hands(i), steam: ['chawanmushi', 'tempura', 'anago'].includes(kind) ? 3 : 0 };
     plates[i] = p;
     await fly(p, hands(i), { X: mat(i).x, Y: TOP, Z: mat(i).z }, 0.6);
     audio.sfx('pop');
@@ -336,6 +356,38 @@ export default async function omakase(game) {
     chef.pose = 'idle';
   };
 
+  // the close-up: each step of the recipe plays while the chef tells about it
+  const tween = (to, dur) => new Promise((res) => {
+    const from = cook.a, t0 = performance.now();
+    const st = () => { if (scene.dead) return res(); const k = Math.min(1, (performance.now() - t0) / (dur * 1000)); cook.a = from + (to - from) * k; if (k < 1) requestAnimationFrame(st); else res(); };
+    st();
+  });
+  const play = (i, step) => new Promise((res) => {
+    cook.step = i; cook.t = 0; const t0 = performance.now(), fired = new Set();
+    const st = () => {
+      if (scene.dead) return res();
+      const k = Math.min(1, (performance.now() - t0) / (step.dur * 1000)); cook.t = k;
+      (step.sfx || []).forEach(([at, name], j) => { if (k >= at && !fired.has(j)) { fired.add(j); audio.sfx(name); } });
+      if (k < 1) requestAnimationFrame(st); else res();
+    };
+    st();
+  });
+  const cookDish = async (opt) => {
+    const steps = RECIPES[opt.sprite] || [];
+    Object.assign(cook, { kind: opt.sprite, step: 0, t: 0, done: false, on: true });
+    audio.sfx('whoosh');
+    await tween(1, 0.4);
+    ui.note(opt.dish, 2000);
+    for (let i = 0; i < steps.length; i++) {
+      const text = (opt.steps || [])[i];
+      await Promise.all([play(i, steps[i]), text ? ui.dialog([{ who: 'chef', text }]) : wait(0)]);
+    }
+    cook.done = true; audio.sfx('sparkle');
+    await wait(1300);
+    cook.on = false; chef.pose = 'idle';
+    await tween(0, 0.4);
+  };
+
   audio.scene('omakase', [['room', 0.5]]);
   const done = scene.start();
   await game.enter();
@@ -352,7 +404,7 @@ export default async function omakase(game) {
         const g = el('div', 'grid-opts'); g.style.gridTemplateColumns = 'repeat(auto-fit,minmax(200px,1fr))';
         round.options.forEach((o, i) => {
           const b = el('button', 'opt');
-          const img = upscale(dishSprite(o.sprite), 4); img.style.width = '128px'; img.style.height = '96px'; img.style.imageRendering = 'pixelated';
+          const img = dishThumb(o.sprite, 96, 64); img.style.width = '192px'; img.style.height = '128px'; img.style.imageRendering = 'pixelated';
           b.append(img, el('span', 'n', esc(o.dish)), el('span', 'd', esc(o.short)));
           b.onclick = () => { audio.sfx('select'); resolve(i); ui.closeModal(); };
           g.appendChild(b);
@@ -362,12 +414,11 @@ export default async function omakase(game) {
     });
     const opt = round.options[pick];
     state.data.omakase[r] = pick; state.save();
-    // the chef prepares it on his board, then sets one down for each of them
+    // the chef makes it on his board (close-up), then sets one down for each of them
     chef.mood = 'normal';
-    for (let k = 0; k < 6; k++) { chef.pose = 'hold'; chef.frame = k; if (k % 2 === 0) audio.sfx('tick'); await wait(220); }
-    const img = dishSprite(opt.sprite);
-    await serve(0, img);
-    await serve(1, img);
+    await cookDish(opt);
+    await serve(0, opt.sprite);
+    await serve(1, opt.sprite);
     chef.pose = 'idle'; chef.mood = 'happy';
     await wait(400);
     await ui.dialog([{ who: 'chef', text: opt.chef }]);

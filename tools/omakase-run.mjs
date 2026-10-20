@@ -8,9 +8,9 @@ await p.goto('http://localhost:5199/?debug&fast'); await p.waitForSelector('#loa
 const tag = process.env.TAG || 'o';
 let n = 0; const shot = (k) => p.screenshot({ path: `test-shots/${tag}-${k}.png` });
 const t0 = Date.now(); let shots = 0, rounds = 0;
-while (Date.now() - t0 < 120000) {
+while (Date.now() - t0 < 400000) {
   const opt = await p.$('#modal .opt');
-  if (opt) { rounds++; await opt.evaluate((e) => e.click()); if (rounds <= 1) for (let k = 0; k < 8; k++) { await p.waitForTimeout(350); await shot('r1-' + k); } continue; }
+  if (opt) { await p.waitForTimeout(400); await shot('menu' + rounds); rounds++; await opt.evaluate((e) => e.click()); if (rounds <= 1) for (let k = 0; k < 16; k++) { await p.waitForTimeout(1500); await shot('r1-' + k); await p.keyboard.press('Space'); } continue; }
   const ch = await p.evaluate(() => window.__state?.data?.chapter);
   if (ch !== 'omakase') break;
   await p.keyboard.press('Space'); await p.waitForTimeout(300);
