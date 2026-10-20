@@ -2,7 +2,7 @@
   "name": "hazei-journey",
   "version": "1.0.0",
   "private": true,
-  "description": "Hazei's Journey: a cozy pixel-art browser game gift for 20/10",
+  "description": "Day Out: a cozy pixel-art browser game gift for 20/10",
   "type": "module",
   "scripts": {
     "dev": "vite",

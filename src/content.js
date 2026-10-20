@@ -40,7 +40,7 @@ export default {
     hazeiHandle: 'hazei',
     textChannels: ['chung', 'ảnh-đẹp', 'nhạc-hay', 'kèo-đi-chơi'],
     voiceChannel: 'Chill cùng nhau',
-    activityName: "Hazei's Journey",
+    activityName: 'Day Out',
     activityDesc: 'Một ngày đi chơi nho nhỏ, từ sáng sớm tới tối.',
     startButton: 'Bắt đầu chuyến hành trình',
     joinVoice: 'Tham gia kênh thoại',

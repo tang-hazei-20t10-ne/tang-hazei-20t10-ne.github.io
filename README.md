@@ -1,4 +1,4 @@
-# Hazei's Journey 🌷
+# Day Out 🌷
 
 A small, cozy pixel-art browser game made as a gift for Hazei on Vietnamese Women's Day (20/10).
 One whole day out together: a Discord chat at the start, dawn in a meadow, a morning market with a photo
@@ -70,7 +70,7 @@ The repo includes `.github/workflows/deploy.yml`, which builds with Vite and pub
 
 1. Create a GitHub repository and push this folder to the `main` branch:
    ```bash
-   git init && git add -A && git commit -m "Hazei's Journey"
+   git init && git add -A && git commit -m "Day Out"
    git branch -M main
    git remote add origin https://github.com/<you>/<repo>.git
    git push -u origin main
