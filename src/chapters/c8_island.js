@@ -4,7 +4,8 @@ import { World3D, THREE, makeSky, billboard, drawFist } from '../three/engine3d.
 import { buildMountain, mountainHeight, surfaceHeight, mountainWalkable, pondLevel, SPOTS } from '../three/mountain.js';
 import { Guide } from '../three/guide.js';
 import { TIMES } from '../core/palette.js';
-import { flowerSprite, randomFlower, dogSprite, catSprite, butterflySprite, flowerBig } from '../core/sprites.js';
+import { flowerSprite, randomFlower, butterflySprite, flowerBig } from '../core/sprites.js';
+import { dogHD, catHD } from '../three/pets.js';
 import { ui, wait } from '../core/ui.js';
 import { audio } from '../core/audio.js';
 import { input } from '../core/input.js';
@@ -48,7 +49,7 @@ export default async function island(game) {
   const G = C.guide;
   const tPos = (v) => () => v;
   const guide = new Guide(world, { title: G.title, optionalTitle: G.optional, steps: [
-    { id: 'flowers', text: G.flowers, label: G.m.flowers, pos: SPOTS.meadow.clone().setY(H(SPOTS.meadow.x, SPOTS.meadow.z)), total: 3 },
+    { id: 'flowers', text: G.flowers, label: G.m.flowers, pos: null, total: 3 },
     { id: 'grove', text: G.grove, label: G.m.grove, pos: SPOTS.grove.clone().setY(H(SPOTS.grove.x, SPOTS.grove.z)) },
     { id: 'boat', text: G.boat, label: G.m.boat, pos: () => I.boat.position, obj: I.boat },
     { id: 'tower', text: G.tower, label: G.m.tower, pos: null },
@@ -98,7 +99,7 @@ export default async function island(game) {
   });
 
   // ------------------------------------------------ dog
-  const dog = billboard(dogSprite(0), 0.07); dog.position.copy(at(6, 20)); S.add(dog);
+  const dog = billboard(dogHD(0), 0.031); dog.position.copy(at(6, 20)); S.add(dog);
   const dogS = { follow: 0, pet: false, t: 0, dir: 1 };
   world.every((dt, t) => {
     dogS.t += dt;
@@ -119,7 +120,7 @@ export default async function island(game) {
     // flip by screen-relative movement
     const right = new THREE.Vector3(Math.cos(world.player.yaw), 0, -Math.sin(world.player.yaw));
     if (moving) dogS.dir = Math.sign(d.dot(right)) || dogS.dir;
-    dog.setCanvas(dogSprite(moving ? Math.floor(dogS.t * 9) % 4 : (dist < 4 ? Math.floor(dogS.t * 6) % 2 : 0), dogS.pet || dist < 4 ? 'happy' : 'normal', moving ? 'stand' : 'sit'), dogS.dir < 0);
+    dog.setCanvas(dogHD(moving ? Math.floor(dogS.t * 9) % 4 : (dist < 4 ? Math.floor(dogS.t * 6) % 2 : 0), dogS.pet || dist < 4 ? 'happy' : 'normal', moving ? 'stand' : 'sit'), dogS.dir < 0);
   });
   world.interact.add({ pos: dog.position, range: 2.2, hold: 1.0, label: P.pet,
     onHold: () => { dogS.pet = true; world.handPose = 'pet'; if (Math.random() < 0.06) world.glow.emit(dog.position.clone().add(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(0, 0.8, 0), '#ff8fb0', 1.2); },
@@ -132,9 +133,9 @@ export default async function island(game) {
     } });
 
   // ------------------------------------------------ cat on the blanket
-  const cat = billboard(catSprite('sleep', 0, 'orange'), 0.06); cat.position.copy(I.blanket.position).add(new THREE.Vector3(-0.7, 0, 0.4)); S.add(cat);
+  const cat = billboard(catHD('sleep', 0), 0.026); cat.position.copy(I.blanket.position).add(new THREE.Vector3(-0.7, 0, 0.4)); S.add(cat);
   let catHappy = 0;
-  world.every((dt, t) => { catHappy -= dt; cat.setCanvas(catHappy > 0 ? catSprite('happy', Math.floor(t * 3) % 2, 'orange') : catSprite('sleep', Math.floor(t * 0.8) % 2, 'orange')); });
+  world.every((dt, t) => { catHappy -= dt; cat.setCanvas(catHappy > 0 ? catHD('happy', Math.floor(t * 3) % 2) : catHD('sleep', Math.floor(t * 0.8) % 2)); });
   world.interact.add({ pos: cat.position, range: 2.2, hold: 1.0, label: P.pet, priority: 1,
     onHold: () => { world.handPose = 'pet'; catHappy = 0.5; },
     onRelease: () => { world.handPose = 'idle'; },
@@ -255,7 +256,7 @@ export default async function island(game) {
     onDone: async () => {
       const save = world.player.pos.clone(), saveEye = world.player.eye;
       rowing = true; world.locked = true; world.handPose = 'none';
-      world.toastOnce('island_boat'); ui.note(C.boat, 3000); did('boat');
+      world.toastOnce('island_boat'); did('boat');
       const { curve, len, wl } = route, boat = I.boat, oars = boat.userData.oars;
       // climb in: seated on the stern thwart, facing the bow
       world.player.eye = 0.95;

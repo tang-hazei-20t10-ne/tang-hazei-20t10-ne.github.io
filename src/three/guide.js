@@ -22,8 +22,7 @@ const CSS = `
 #guide.min .cur-only { display:block; }
 @keyframes gpulse { 50% { transform:translateX(2px); } }
 .gmark { position:absolute; z-index:29; transform:translate(-50%,-100%); pointer-events:none; display:flex; flex-direction:column; align-items:center; gap:2px; transition:opacity .3s; }
-.gmark .gem { width:14px; height:14px; border-radius:50%; background:#fff6ea; border:3px solid #3a2633; box-shadow:0 0 0 3px rgba(255,255,255,.35); animation:gbob 1.2s ease-in-out infinite; }
-.gmark.main .gem { width:20px; height:20px; background:#ffd23f; box-shadow:0 0 14px 4px rgba(255,214,90,.8); }
+.gmark .gem { width:18px; height:18px; border-radius:50%; background:#ffd23f; border:3px solid #3a2633; box-shadow:0 0 12px 3px rgba(255,214,90,.75); animation:gbob 1.2s ease-in-out infinite; }
 .gmark .lbl { font-family:var(--pixel); font-size:18px; color:#fff; background:rgba(58,38,51,.78); padding:1px 8px 3px; border-radius:6px; white-space:nowrap; }
 .gmark .stem { width:3px; height:16px; background:linear-gradient(#ffd23f, rgba(255,210,63,0)); }
 @keyframes gbob { 50% { transform:translateY(-4px); } }

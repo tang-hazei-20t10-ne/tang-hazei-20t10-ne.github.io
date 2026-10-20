@@ -161,9 +161,9 @@ class MusicPlayer {
   constructor(audio, preset) {
     this.a = audio; this.p = preset;
     this.out = audio.ctx.createGain(); this.out.gain.value = 0.0001;
-    this.out.connect(audio.musicBus);
+    this.out.connect(audio.bgmBus);
     this.dry = audio.ctx.createGain(); this.dry.connect(this.out);
-    this.wet = audio.ctx.createGain(); this.wet.gain.value = 0.35; this.wet.connect(audio.reverb);
+    this.wet = audio.ctx.createGain(); this.wet.gain.value = 0.35 * 0.7; this.wet.connect(audio.reverb);
     this.reverbOut = this.out; // reverb returns through musicBus already
     this.beatDur = 60 / preset.bpm;
     this.bar = 0; this.next = audio.ctx.currentTime + 0.1;
@@ -331,7 +331,7 @@ class Bed {
 const SFX_TRIM = {
   flame: -9, firework: -6, pop: -3, select: -3, yay: -2,
   shutter: 9, snap: 8, quack: 6, launch: 7, whoosh: 5, scratch: 5, page: 4, woof: 4, sip: 6,
-  sizzle: -12, whisk: 16, pour: 8,
+  sizzle: -12, whisk: 16, pour: 8, jingle: 6,
 };
 
 // ------------------------------------------------------------ main audio
@@ -346,6 +346,8 @@ class AudioEngine {
     const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
     this.master.connect(comp); comp.connect(ctx.destination);
     this.musicBus = ctx.createGain(); this.musicBus.gain.value = 1.2; this.musicBus.connect(this.master);
+    // the background music sits 30% under the other music (the stage song) without moving the volume slider
+    this.bgmBus = ctx.createGain(); this.bgmBus.gain.value = 0.7; this.bgmBus.connect(this.musicBus);
     this.ambBus = ctx.createGain(); this.ambBus.gain.value = 1.05; this.ambBus.connect(this.master);
     this.sfxBus = ctx.createGain(); this.sfxBus.gain.value = 1.35; this.sfxBus.connect(this.master);
     this.songBus = ctx.createGain(); this.songBus.gain.value = 0.75; this.songBus.connect(this.master);
