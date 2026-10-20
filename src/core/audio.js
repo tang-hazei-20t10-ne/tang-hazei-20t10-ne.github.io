@@ -370,7 +370,8 @@ class AudioEngine {
     return b;
   }
   get ready() { return !!this.ctx; }
-  applyVolume() { if (!this.ctx) return; this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume, this.ctx.currentTime, 0.05); }
+  // the whole game plays at half the slider's level (the slider itself still starts at 50%)
+  applyVolume() { if (!this.ctx) return; this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume * 0.5, this.ctx.currentTime, 0.05); }
   setVolume(v) { this.volume = v; this.applyVolume(); }
   setMuted(m) { this.muted = m; this.applyVolume(); }
   suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend(); }
