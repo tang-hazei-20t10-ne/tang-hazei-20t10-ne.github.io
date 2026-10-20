@@ -490,6 +490,7 @@ export default {
         name: 'Trà',
         items: [
           { id: 'chamomile', name: 'Trà hoa cúc', desc: 'Dịu như một giấc ngủ trưa ngắn.', color: '#f2d37a', art: false },
+          { id: 'jasmine', name: 'Trà hoa nhài', desc: 'Thơm thoang thoảng, uống xong nhẹ cả người.', color: '#e4e0a0', art: false },
           { id: 'peach', name: 'Trà đào cam sả', desc: 'Chua ngọt, thơm sả, mát cả buổi chiều.', color: '#f7a86b', art: false },
           { id: 'oolong', name: 'Ô long sữa', desc: 'Béo nhẹ, thơm khói trà.', color: '#d9b48c', art: false },
           { id: 'matcha', name: 'Matcha latte', desc: 'Xanh mướt, có hình vẽ sữa phía trên.', color: '#9cc27a', art: true },
@@ -524,6 +525,7 @@ export default {
     // Each drink adds one line to the final wish (by drink id).
     fragments: {
       chamomile: 'luôn ngủ ngon và thức dậy thật nhẹ nhõm',
+      jasmine: 'lúc nào cũng thanh thơi, dịu dàng như hương hoa nhài',
       peach: 'mỗi buổi chiều đều mát lành, thư thái',
       oolong: 'giữ được sự ấm áp dịu dàng của riêng mình',
       matcha: 'luôn tươi xanh và tràn đầy năng lượng',
