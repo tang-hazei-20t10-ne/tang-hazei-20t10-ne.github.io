@@ -60,6 +60,7 @@ function rawHeight(x, z) {
 const deckLevel = rawHeight(DECK.x, DECK.z) + 0.2;
 const SCHOOL_PAD = { x: -13, z: 82, hw: 49, hd: 25 };
 const SCHOOL_LEVEL = rawHeight(0, 57);
+const BALLOON_PAD = { x: -16, z: -9, y: rawHeight(-16, -9) };
 export const schoolLevel = () => SCHOOL_LEVEL;
 function baseHeight(x, z) {
   let h = rawHeight(x, z);
@@ -72,7 +73,10 @@ function baseHeight(x, z) {
   // a flat terrace for the school, its yard and the football field
   const ox = Math.max(0, Math.abs(x - SCHOOL_PAD.x) - SCHOOL_PAD.hw), oz = Math.max(0, Math.abs(z - SCHOOL_PAD.z) - SCHOOL_PAD.hd);
   const sf = (1 - sstep(0, 12, ox)) * (1 - sstep(0, 12, oz));
-  return h * (1 - sf) + SCHOOL_LEVEL * sf;
+  h = h * (1 - sf) + SCHOOL_LEVEL * sf;
+  // a level patch of grass where the balloon waits, so the basket sits flat
+  const bf = 1 - sstep(1.8, 4.5, Math.hypot(x - BALLOON_PAD.x, z - BALLOON_PAD.z));
+  return h * (1 - bf) + BALLOON_PAD.y * bf;
 }
 const POND_LEVEL = baseHeight(POND.x, POND.z) - 1.6;
 export const pondLevel = () => POND_LEVEL;
@@ -232,6 +236,56 @@ export function lookoutTower() {
   return g;
 }
 
+// A brass telescope on a mahogany tripod, aimed along +x and a little down
+// (at the city on the plain): dew shield, rings, a finder scope, focuser and
+// eyepiece; a turned head, splayed legs with brass feet and a spreader tray.
+function telescopeMesh() {
+  const g = new THREE.Group();
+  const wood = toon('#6e3a24'), woodHi = toon('#8a4e30'), brass = toon('#d8a84a'), brassDk = toon('#a8782a'), black = toon('#2a2230');
+  const HEAD = 1.12;
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.1, 12), brassDk); head.position.y = HEAD; g.add(head);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), brass); knob.position.set(0, HEAD - 0.02, 0.14); g.add(knob);
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2 + 0.5, foot = new THREE.Vector3(Math.cos(a) * 0.55, 0, Math.sin(a) * 0.55), top = new THREE.Vector3(Math.cos(a) * 0.1, HEAD - 0.05, Math.sin(a) * 0.1);
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.06, foot.distanceTo(top), 0.035), i ? wood : woodHi);
+    leg.position.copy(foot).add(top).multiplyScalar(0.5); leg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), top.clone().sub(foot).normalize()); g.add(leg);
+    const shoe = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.07, 8), brass); shoe.position.copy(foot).setY(0.035); g.add(shoe);
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.05), brass); clamp.position.copy(foot).lerp(top, 0.55); clamp.quaternion.copy(leg.quaternion); g.add(clamp);
+  }
+  const tray = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.025, 3), wood); tray.position.y = 0.48; tray.rotation.y = 0.5; g.add(tray);
+  // the yoke and the tube, built along +x then tilted down
+  const yoke = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.2), brassDk); yoke.position.y = HEAD + 0.1; g.add(yoke);
+  const scope = new THREE.Group(); scope.position.y = HEAD + 0.2; scope.rotation.z = -0.22; g.add(scope);
+  const along = (r1, r2, len, x, mat, open = false) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r2, r1, len, 14, 1, open).rotateZ(-Math.PI / 2), mat); m.position.x = x; scope.add(m); return m; };
+  along(0.085, 0.1, 0.8, 0.12, brass);                 // main tube, widening to the objective
+  along(0.115, 0.115, 0.26, 0.62, brassDk, true);       // dew shield
+  const lens = new THREE.Mesh(new THREE.CircleGeometry(0.1, 14).rotateY(Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#7fb8e0' })); lens.position.x = 0.6; scope.add(lens);
+  for (const x of [-0.2, 0.1, 0.42]) along(0.098, 0.1, 0.035, x, brassDk);
+  along(0.06, 0.06, 0.2, -0.38, brassDk);               // draw tube
+  along(0.075, 0.075, 0.06, -0.3, black);               // focuser
+  along(0.04, 0.045, 0.14, -0.55, black);               // eyepiece
+  along(0.05, 0.05, 0.03, -0.63, black);                // eyecup
+  const knobs = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.24, 8).rotateX(Math.PI / 2), brass); knobs.position.set(-0.3, -0.04, 0); scope.add(knobs);
+  const finder = new THREE.Group(); finder.position.set(0.05, 0.15, 0); scope.add(finder);
+  const fb = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.34, 10).rotateZ(-Math.PI / 2), brass); finder.add(fb);
+  for (const x of [-0.08, 0.08]) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.06, 0.02), brassDk); st.position.set(x, -0.04, 0); finder.add(st); }
+  return g;
+}
+
+// a woven wicker panel: rows of over-and-under strands, darker between the rows
+function wickerTex() {
+  // over-and-under weavers wrapped round upright stakes, the gaps in shadow
+  const [c, x] = canvas(8, 8);
+  x.fillStyle = '#6a4424'; x.fillRect(0, 0, 8, 8);
+  for (let j = 0; j < 8; j += 2) for (let i = 0; i < 8; i += 4) {
+    const o = (j / 2) % 2 ? 2 : 0, px = (i + o) % 8;
+    x.fillStyle = '#d6a462'; x.fillRect(px, j, 3, 1); x.fillStyle = '#efc888'; x.fillRect(px + 1, j, 1, 1);
+    x.fillStyle = '#a87440'; x.fillRect(px, j + 1, 3, 1);
+    x.fillStyle = '#8a5a30'; x.fillRect((px + 3) % 8, j, 1, 2); // the stake showing between
+  }
+  const t = pixelTex(c); t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
 export function balloonMesh(colors = ['#f08fa8', '#fff3e0', '#f6c45f', '#7f9fdc']) {
   const g = new THREE.Group();
   const geo = new THREE.SphereGeometry(3.6, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.78).toNonIndexed();
@@ -245,13 +299,61 @@ export function balloonMesh(colors = ['#f08fa8', '#fff3e0', '#f6c45f', '#7f9fdc'
   for (let i = 0; i < pos.count; i++) { const y = pos.getY(i); if (y < 0) { const k = 1 + y / 3.6 * 0.45; pos.setX(i, pos.getX(i) * k); pos.setZ(i, pos.getZ(i) * k); } }
   geo.computeVertexNormals();
   const env = new THREE.Mesh(geo, toon('#ffffff', { vertexColors: true })); env.position.y = 7.2; g.add(env);
-  const basket = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.0, 1.5), toon('#a8703f')); basket.position.y = 0.5; g.add(basket);
-  const rim = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.15, 1.6), toon('#7a4a33')); rim.position.y = 1.05; g.add(rim);
+  // the basket: woven wicker walls, a padded leather rim, a wooden floor, gas
+  // cylinders in cosy covers and a little cushioned bench, a burner on a frame
+  // overhead, and the flying wires up to the mouth of the envelope
+  const basket = new THREE.Group(); g.add(basket);
+  const BW = 0.78, BH = 1.0;
+  const wall = toon('#ffffff', { map: wickerTex(), side: THREE.DoubleSide });
+  for (const [x, z, ry] of [[0, BW, 0], [0, -BW, Math.PI], [BW, 0, Math.PI / 2], [-BW, 0, -Math.PI / 2]]) {
+    const geo = new THREE.PlaneGeometry(BW * 2 - 0.1, BH, 1, 1); const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 9, uv.getY(i) * 6);
+    const w = new THREE.Mesh(geo, wall); w.position.set(x, BH / 2, z); w.rotation.y = ry; basket.add(w);
+  }
+  const post = toon('#8a5a32');
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, BH, 8), post); p.position.set(sx * (BW - 0.03), BH / 2, sz * (BW - 0.03)); basket.add(p); }
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(BW * 2, 0.06, BW * 2), toon('#7a4a2a')); floor.position.y = 0.03; basket.add(floor);
+  const skid = new THREE.Mesh(new THREE.BoxGeometry(BW * 2 + 0.06, 0.08, BW * 2 + 0.06), toon('#5a3a26')); skid.position.y = 0.04; basket.add(skid);
+  // padded rim: four leather rolls with stitched corners
+  const rim = new THREE.Group(); basket.add(rim);
+  const leather = toon('#6a3a26'), stitch = toon('#e8c88a');
+  for (const [x, z, ry] of [[0, BW, 0], [0, -BW, 0], [BW, 0, Math.PI / 2], [-BW, 0, Math.PI / 2]]) {
+    const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, BW * 2 + 0.1, 10).rotateZ(Math.PI / 2), leather); roll.position.set(x, BH + 0.04, z); roll.rotation.y = ry; rim.add(roll);
+    const seam = new THREE.Mesh(new THREE.CylinderGeometry(0.078, 0.078, BW * 2 - 0.1, 10, 1, true, Math.PI * 0.45, Math.PI * 0.1).rotateZ(Math.PI / 2), stitch); seam.position.copy(roll.position); seam.rotation.y = ry; rim.add(seam);
+  }
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const cap = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), leather); cap.position.set(sx * BW, BH + 0.04, sz * BW); rim.add(cap); }
+  // inside: two gas cylinders in knitted covers, a bench with a cushion
+  for (const [x, col] of [[-0.42, '#c4587a'], [-0.05, '#4f8a7a']]) {
+    const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.72, 12), toon(col)); tank.position.set(x, 0.42, -BW + 0.24); basket.add(tank);
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.1, 8), toon('#c0c4cc')); top.position.set(x, 0.83, -BW + 0.24); basket.add(top);
+    for (const y of [0.25, 0.6]) { const band = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.175, 0.05, 12), toon('#fff3e0')); band.position.set(x, y, -BW + 0.24); basket.add(band); }
+  }
+  const bench = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.36, 0.36), toon('#a06a40')); bench.position.set(BW - 0.36, 0.2, -BW + 0.24); basket.add(bench);
+  const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.34), toon('#f4a6c0')); cushion.position.set(BW - 0.36, 0.43, -BW + 0.24); basket.add(cushion);
+  // the burner frame: four rods from the corners to a square frame, a twin burner under it
+  const steel = toon('#9aa0aa'), FY = 2.75, FW = 0.42;
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const a = new THREE.Vector3(sx * (BW - 0.05), BH + 0.05, sz * (BW - 0.05)), b = new THREE.Vector3(sx * FW, FY, sz * FW);
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, a.distanceTo(b), 6), steel);
+    rod.position.copy(a).add(b).multiplyScalar(0.5); rod.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); basket.add(rod);
+  }
+  for (const [x, z, ry] of [[0, FW, 0], [0, -FW, 0], [FW, 0, Math.PI / 2], [-FW, 0, Math.PI / 2]]) { const bar = new THREE.Mesh(new THREE.BoxGeometry(FW * 2 + 0.05, 0.05, 0.05), steel); bar.position.set(x, FY, z); bar.rotation.y = ry; basket.add(bar); }
+  for (const x of [-0.15, 0.15]) {
+    const can = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.26, 12), toon('#c0c4cc')); can.position.set(x, FY + 0.12, 0); basket.add(can);
+    const coil = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.025, 6, 12).rotateX(Math.PI / 2), toon('#7a7f8a')); coil.position.set(x, FY + 0.2, 0); basket.add(coil);
+  }
+  // flying wires from the frame up to the envelope's mouth, a load ring around it
   const ropeMat = new THREE.LineBasicMaterial({ color: '#5a4030' });
-  for (const [x, z] of [[-0.7, -0.7], [0.7, -0.7], [-0.7, 0.7], [0.7, 0.7]]) g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, 1.05, z), new THREE.Vector3(x * 2.4, 4.6, z * 2.4)]), ropeMat));
-  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.6, 6), new THREE.MeshBasicMaterial({ color: '#ffb84a' })); flame.position.y = 3.0; flame.visible = false; g.add(flame);
-  const burner = new THREE.PointLight('#ffb060', 0, 12); burner.position.y = 3.2; g.add(burner);
-  g.userData = { env, flame, burner, basket, rim };
+  const pts = [];
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2, top = new THREE.Vector3(Math.cos(a) * 1.55, 4.75, Math.sin(a) * 1.55);
+    const sx = Math.sign(Math.cos(a + 0.01)), sz = Math.sign(Math.sin(a + 0.01));
+    pts.push(new THREE.Vector3(sx * FW, FY, sz * FW), top, new THREE.Vector3(sx * (BW - 0.05), BH + 0.08, sz * (BW - 0.05)), new THREE.Vector3(sx * FW, FY, sz * FW));
+  }
+  g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), ropeMat));
+  const mouth = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.04, 6, 24).rotateX(Math.PI / 2), toon('#5a4030')); mouth.position.y = 4.75; g.add(mouth);
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.7, 8), new THREE.MeshBasicMaterial({ color: '#ffb84a' })); flame.position.y = FY + 0.65; flame.visible = false; g.add(flame);
+  const burner = new THREE.PointLight('#ffb060', 0, 12); burner.position.y = FY + 0.5; g.add(burner);
+  g.userData = { env, flame, burner, basket, rim, basketW: BW, rimY: BH + 0.04 };
   return g;
 }
 
@@ -822,9 +924,7 @@ export function buildMountain(world) {
   const tower = lookoutTower(); tower.position.copy(at(SPOTS.lighthouse.x, SPOTS.lighthouse.z)); tower.position.y -= 0.2; tower.rotation.y = 0.5; S.add(tower);
 
   // ---- telescope on the deck, pointed toward the city
-  const tele = new THREE.Group();
-  const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.14, 1.1, 8), toon('#c9a24a')); tube.rotation.z = Math.PI / 2.6; tube.position.y = 1.25; tele.add(tube);
-  for (let i = 0; i < 3; i++) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.3, 4), toon('#5a4030')); const a = i * 2.1; leg.position.set(Math.cos(a) * 0.25, 0.6, Math.sin(a) * 0.25); leg.rotation.set(Math.sin(a) * 0.3, 0, -Math.cos(a) * 0.3); tele.add(leg); }
+  const tele = telescopeMesh();
   deck.updateMatrixWorld();
   const tPos = deck.localToWorld(new THREE.Vector3(2.2, 0, 3.4)); tPos.y = DECK_TOP; SPOTS.telescope.copy(tPos);
   tele.position.copy(tPos);

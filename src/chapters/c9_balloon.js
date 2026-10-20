@@ -1,6 +1,6 @@
 // Chapter 9: hot-air balloon flight at sunset over the island.
 import content from '../content.js';
-import { World3D, THREE, makeSky, billboard } from '../three/engine3d.js';
+import { World3D, THREE, makeSky, billboard, drawFist } from '../three/engine3d.js';
 import { buildMountain, mountainHeight, SPOTS } from '../three/mountain.js';
 import { birdSprite, mix } from '../core/sprites.js';
 import { ui, wait } from '../core/ui.js';
@@ -28,7 +28,7 @@ export default async function balloon(game) {
   world.grade.uniforms.tint.value.set('#fff2e4');
   const I = buildMountain(world);
   const S = world.scene;
-  world.handPose = 'rim';
+  world.handPose = 'none'; // hands rest on the basket's rim (drawn below)
 
   // flight path
   const b0 = H(SPOTS.balloon.x, SPOTS.balloon.z), hs = H(2, -27);
@@ -43,7 +43,20 @@ export default async function balloon(game) {
   let markI = 0;
   let flyT = 0, flying = false, bump = 0, flame = 0;
   const B = I.balloon;
-  B.userData.basket.visible = false; B.userData.rim.visible = false; // the hands overlay draws the rim
+  // Hazei stands in the basket, hands on the padded rim in front of wherever she looks
+  const fwd = new THREE.Vector3(), rimPt = new THREE.Vector3();
+  world.every(() => {
+    if (world.handPose !== 'none') return;
+    const BW = B.userData.basketW, y = B.userData.rimY;
+    world.camera.getWorldDirection(fwd); const L = Math.hypot(fwd.x, fwd.z) || 1, dx = fwd.x / L, dz = fwd.z / L;
+    const t = (BW - 0.02) / Math.max(Math.abs(dx), Math.abs(dz));
+    world.camera.updateMatrixWorld();
+    [-1, 1].forEach((sd) => {
+      const px = Math.max(-BW, Math.min(BW, dx * t - dz * sd * 0.34)), pz = Math.max(-BW, Math.min(BW, dz * t + dx * sd * 0.34));
+      const s = B.localToWorld(rimPt.set(px, y + 0.06, pz)).project(world.camera);
+      if (s.z < 1) drawFist(world.hx, world.H, (s.x + 1) / 2 * world.W, (1 - s.y) / 2 * world.H, sd < 0, sd < 0 ? 0.3 : -0.3);
+    });
+  });
   const up = new THREE.Vector3();
 
   // birds
@@ -63,7 +76,9 @@ export default async function balloon(game) {
       while (markI < marks.length && flyT >= marks[markI][0]) { const [, id, toast] = marks[markI]; ui.note(C.lines[id], 3800); if (toast) world.toastOnce(toast); markI++; }
       if (flyT >= 1) { flying = false; finishFlight(); }
     }
-    world.player.pos.set(B.position.x, B.position.y - world.player.eye + 1.75, B.position.z);
+    world.player.pos.set(B.position.x, B.position.y - world.player.eye + 1.5, B.position.z);
+    // the camera was placed before the balloon moved this frame: keep it in the basket
+    world.camera.position.set(B.position.x, B.position.y + 1.5, B.position.z);
     // flame
     flame = Math.max(0, flame - dt);
     B.userData.flame.visible = flame > 0; B.userData.flame.scale.setScalar(0.8 + Math.random() * 0.5);
@@ -102,13 +117,13 @@ export default async function balloon(game) {
       await wait(260);
     }
     await wait(500);
-    world.handPose = 'rim'; releasing = false;
+    world.handPose = 'none'; releasing = false;
   };
 
   const actions = [
     { label: '🌸 ' + C.actions.petals, onClick: () => releasePetals() },
     { label: '🔥 ' + C.actions.burner, onClick: () => { flame = 1.6; bump = Math.min(2.5, bump + 1.2); audio.sfx('flame'); } },
-    { label: '👋 ' + C.actions.wave, onClick: async () => { flock = 1; world.handPose = 'wave'; audio.sfx('chime'); await wait(1600); world.handPose = 'rim'; } },
+    { label: '👋 ' + C.actions.wave, onClick: async () => { flock = 1; world.handPose = 'wave'; audio.sfx('chime'); await wait(1600); world.handPose = 'none'; } },
     { label: '📷 ' + C.actions.photo, onClick: () => world.photo(C.lines.start.replace('…', ''), content.ui.photo) },
   ];
 
