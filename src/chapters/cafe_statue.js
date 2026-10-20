@@ -1,6 +1,6 @@
 // Plaster-figure painting at the café: pick a little white figure, tap a part to
 // fill it with paint or dab details with a fine brush. The finished figure goes
-// on the window sill to dry next to the one Mino painted.
+// on the window sill to dry and into the album.
 import content from '../content.js';
 import { canvas, shade, light, outline, hex2rgb, INK } from '../core/sprites.js';
 import { audio } from '../core/audio.js';
@@ -74,15 +74,6 @@ const FIGURES = {
     ['r', 'rim', 8, 28, 20, 3],
   ],
 };
-// what Mino paints, and where his brush slipped
-const MINO = {
-  bear: { colors: { base: '#b9a3e3', ears: '#a0704c', inner: '#f6e3c4', body: '#a0704c', belly: '#f6e3c4', feet: '#a0704c', head: '#a0704c', muzzle: '#f6e3c4', nose: '#3a2633', eyes: '#3a2633', cheeks: '#f7b6c8', heart: '#e9607a', paws: '#a0704c' }, oops: [[14, 24, '#e9607a'], [15, 25, '#e9607a'], [29, 37, '#f6e3c4'], [9, 41, '#a0704c']] },
-  cat: { colors: { base: '#9cc9ee', tail: '#f29a52', body: '#f29a52', belly: '#fbf7ef', feet: '#fbf7ef', paw: '#fbf7ef', ears: '#f29a52', inner: '#f7b6c8', head: '#f29a52', eyes: '#3a2633', cheeks: '#f7b6c8', nose: '#e9607a', collar: '#e9607a', bell: 'gold' }, oops: [[16, 10, '#a0704c'], [18, 9, '#a0704c'], [20, 10, '#a0704c'], [24, 34, '#e9607a'], [6, 41, '#f29a52']] },
-  cactus: { colors: { body: '#5fa865', arms: '#5fa865', spines: '#fbf7ef', flower: '#f7b6c8', fcenter: '#f6d35f', eyes: '#3a2633', cheeks: '#f7b6c8', soil: '#a0704c', pot: '#f29a52', rim: '#f6e3c4' }, oops: [[17, 12, '#f7b6c8'], [12, 34, '#5fa865'], [24, 29, '#f29a52']] },
-  bunny: { colors: { base: '#a8dcb0', ears: '#fbf7ef', inner: '#f7b6c8', body: '#fbf7ef', feet: '#f7b6c8', head: '#fbf7ef', eyes: '#3a2633', cheeks: '#f7b6c8', nose: '#e9607a', leaves: '#5fa865', carrot: '#f29a52', paws: '#fbf7ef' }, oops: [[19, 33, '#f29a52'], [20, 34, '#f29a52'], [8, 33, '#f7b6c8']] },
-};
-export const MINO_PICK = { cat: 'bear', bunny: 'cactus', bear: 'cat', cactus: 'bunny' };
-
 // ---------------------------------------------------------------- figure maps
 const built = new Map();
 function figure(id) {
@@ -164,13 +155,6 @@ export function renderFigure(F, colors, over, t = 0, anim = null) {
   x.putImageData(img, 0, 0);
   return outline(c, INK);
 }
-export function minoFigure(id) {
-  const F = figure(id), m = MINO[id];
-  const colors = F.keys.map((k) => m.colors[k]);
-  const over = new Map();
-  m.oops.forEach(([i, j, col]) => { if (F.reg[j * SW + i] >= 0) over.set(j * SW + i, col); });
-  return renderFigure(F, colors, over);
-}
 // a small copy for the window sill
 export function miniFigure(src, w = 13, h = 17) {
   const [c, x] = canvas(w - 2, h - 2);
@@ -182,17 +166,17 @@ export function miniFigure(src, w = 13, h = 17) {
   const [o, ox] = canvas(w, h); ox.drawImage(c, 1, 1);
   return outline(o, INK);
 }
-// the album picture: both figures side by side on the café table
-export function statuePhoto(mine, his) {
+// the album picture: the figure on the café table, paint pots beside it
+export function statuePhoto(mine) {
   const [c, x] = canvas(120, 90);
   x.fillStyle = '#efe2c8'; x.fillRect(0, 0, 120, 90);
   x.fillStyle = '#e6d5b6'; for (let j = 8; j < 60; j += 14) for (let i = (j % 28 ? 12 : 0) + 6; i < 120; i += 24) x.fillRect(i, j, 1, 4);
   x.fillStyle = '#6e4630'; x.fillRect(0, 56, 120, 16); x.fillStyle = '#c99566'; x.fillRect(0, 56, 120, 2);
   x.fillStyle = '#8c5c3e'; x.fillRect(0, 70, 120, 20); x.fillStyle = '#b07a52'; x.fillRect(0, 70, 120, 1);
-  x.globalAlpha = 0.25; x.fillStyle = '#3a2418'; x.fillRect(16, 79, 40, 2); x.fillRect(62, 79, 40, 2); x.globalAlpha = 1;
-  x.drawImage(mine, 18, 35); x.drawImage(his, 64, 35);
-  // paint pots and a brush between them
-  [['#f7b6c8', 52], ['#5fa865', 57]].forEach(([col, px]) => { x.fillStyle = '#fbf7ef'; x.fillRect(px, 74, 4, 4); x.fillStyle = col; x.fillRect(px, 74, 4, 1); });
+  x.globalAlpha = 0.25; x.fillStyle = '#3a2418'; x.fillRect(40, 79, 40, 2); x.globalAlpha = 1;
+  x.drawImage(mine, 42, 35);
+  // paint pots and a brush beside it
+  [['#f7b6c8', 24], ['#5fa865', 29]].forEach(([col, px]) => { x.fillStyle = '#fbf7ef'; x.fillRect(px, 74, 4, 4); x.fillStyle = col; x.fillRect(px, 74, 4, 1); });
   x.fillStyle = '#c99566'; x.fillRect(100, 76, 12, 1); x.fillStyle = '#3a2633'; x.fillRect(98, 76, 2, 1);
   x.save(); x.globalCompositeOperation = 'lighter'; x.globalAlpha = 0.08; x.fillStyle = '#ffe2b0';
   x.beginPath(); x.moveTo(0, 0); x.lineTo(50, 0); x.lineTo(110, 90); x.lineTo(60, 90); x.closePath(); x.fill(); x.restore();
@@ -298,24 +282,5 @@ export function paintStatue() {
       const up = () => { last = null; };
       cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     }
-  });
-}
-
-// Mino shows his figure next to Hazei's. Resolves when Hazei puts them on the sill.
-export function showPair(mine, his, line) {
-  return new Promise((resolve) => {
-    ui.onModalClose = resolve;
-    ui.modal((s) => {
-      s.insertAdjacentHTML('beforeend', `<h2>${esc(C.revealTitle)}</h2>`);
-      const pair = el('div', 'statue-pair');
-      [[mine, content.playerName], [his, content.partnerName]].forEach(([img, who]) => {
-        const f = el('figure'); const cv = big(img, 4); f.append(cv, el('figcaption', '', esc(who))); pair.appendChild(f);
-      });
-      s.appendChild(pair);
-      s.insertAdjacentHTML('beforeend', `<p class="mino-say"><b>${esc(content.partnerName)}:</b> ${esc(line)}</p>`);
-      const row = el('div', 'row mt'); row.style.justifyContent = 'center';
-      const b = el('button', 'btn', '🪟 ' + esc(C.place)); b.onclick = () => ui.closeModal();
-      row.appendChild(b); s.appendChild(row);
-    }, { closeable: false });
   });
 }

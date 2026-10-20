@@ -33,8 +33,6 @@ await p.waitForTimeout(300); await shot('studio');
 await (await p.$$('.tool-row .btn'))[2].click(); await p.waitForTimeout(200);
 await (await p.$$('.tool-row .btn'))[0].click();
 await p.click('.statue-side .btn.gold');
-await p.waitForSelector('.statue-pair'); await p.waitForTimeout(300); await shot('pair');
-await p.click('#modal .btn');
 await p.waitForTimeout(1400); await shot('album');
 await p.waitForTimeout(4500); await shot('sill');
 console.log(errs.length ? errs : 'no errors');

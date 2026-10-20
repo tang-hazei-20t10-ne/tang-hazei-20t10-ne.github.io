@@ -232,11 +232,6 @@ body.has-dialog #actions { opacity: 0; pointer-events: none; }
 .tool-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .tool-row .btn, .statue-side .row .btn { font-size: 20px; padding: 6px 10px 8px; }
 .tool-row .btn.on { background: var(--gold); box-shadow: inset 0 -4px 0 #d79a3a, 0 4px 0 rgba(30, 15, 25, .35); }
-.statue-pair { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; }
-.statue-pair figure { margin: 0; text-align: center; }
-.statue-pair canvas { width: 144px; height: 184px; image-rendering: pixelated; }
-.statue-pair figcaption { font-family: var(--pixel); font-size: 24px; }
-.mino-say { text-align: center; font-weight: 600; margin: 10px 0 0; }
 .booth-wrap { display: flex; gap: 16px; align-items: flex-start; }
 .booth-strip { flex: none; width: 120px; padding: 8px 8px 6px; background: #fffaf2; border: 3px solid var(--ink); border-radius: 6px; box-shadow: 0 4px 0 rgba(30,15,25,.25); display: flex; flex-direction: column; gap: 6px; transform: rotate(-1.5deg); }
 .booth-slot { aspect-ratio: 64 / 52; border: 2px dashed #d8c4b8; border-radius: 3px; background: #f6efe6; overflow: hidden; }

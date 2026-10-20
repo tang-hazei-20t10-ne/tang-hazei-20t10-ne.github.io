@@ -75,8 +75,7 @@ export default {
     // {nuoc} sẽ được thay bằng tên nước Hazei đã chọn
     goiNuoc: 'Cho mình một cà phê muối, với một {nuoc} nha!',
     ngoiChill: 'Ngồi đây nhìn ra cửa sổ thấy chill ghê. Uống nước xong mình sẽ ra biển á.',
-    ruToTuong: 'Tô đi cậu, tớ cũng tô một con nữa.', // bạn pha chế mời tô tượng
-    khoeTuong: 'Của tớ nè, hơi lem xíu, cậu đừng cười nha 😅', // khi hai đứa khoe tượng
+    ruToTuong: 'Ở đây có cho tô tượng á', // bạn pha chế mời tô tượng
   },
 
   // ---------------------------------------------------------- Chương 7: Biển
