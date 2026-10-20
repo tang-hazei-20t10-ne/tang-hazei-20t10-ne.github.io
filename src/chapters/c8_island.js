@@ -191,10 +191,13 @@ export default async function island(game) {
     } });
 
   // ------------------------------------------------ telescope
-  world.interact.add({ pos: I.telescope.position, range: 2.2, hold: 0.3, label: P.telescope,
+  let viewing = false;
+  world.interact.add({ pos: I.telescope.position, range: 2.2, hold: 0.3, label: P.telescope, cond: () => !viewing,
     onDone: async () => {
       const save = { pos: world.player.pos.clone(), yaw: world.player.yaw, pitch: world.player.pitch, fov: world.camera.fov };
       world.locked = true; world.hideHands = true;
+      // looking through the eyepiece: the telescope itself must not block the view
+      I.telescope.visible = false; viewing = true;
       world.player.pos.copy(I.telescope.position);
       const v = SPOTS.city.clone().sub(I.telescope.position).sub(new THREE.Vector3(0, 1.5, 0));
       world.player.yaw = Math.atan2(-v.x, -v.z); world.player.pitch = Math.atan2(v.y, Math.hypot(v.x, v.z));
@@ -209,7 +212,7 @@ export default async function island(game) {
       await wait(6000);
       stop(); world.camera.fov = save.fov; world.camera.updateProjectionMatrix();
       world.player.pos.copy(save.pos); world.player.yaw = save.yaw; world.player.pitch = save.pitch;
-      world.locked = false; world.hideHands = false;
+      world.locked = false; world.hideHands = false; I.telescope.visible = true; viewing = false;
     } });
 
   // ------------------------------------------------ boat
