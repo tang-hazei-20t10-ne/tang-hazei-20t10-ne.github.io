@@ -56,7 +56,7 @@ export default async function island(game) {
     { id: 'balloon', text: G.balloon, label: G.m.balloon, pos: () => I.balloon.position, hidden: true },
     { id: 'dog', text: G.dog, short: G.m.dog, optional: true, pos: null },
     { id: 'cat', text: G.cat, short: G.m.cat, optional: true, pos: null },
-    { id: 'ducks', text: G.ducks, short: G.m.ducks, optional: true, pos: SPOTS.pier.clone().setY(pondLevel() + 0.4) },
+    { id: 'ducks', text: G.ducks, optional: true, pos: null },
     { id: 'bell', text: G.bell, short: G.m.bell, optional: true, pos: null },
     { id: 'swing', text: G.swing, short: G.m.swing, optional: true, pos: () => I.swing.position },
     { id: 'photo', text: G.photo, optional: true },

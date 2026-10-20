@@ -558,7 +558,17 @@ export function rowBoat() {
   g.add(new THREE.Mesh(hg, toon('#ffffff', { vertexColors: true, side: THREE.DoubleSide })));
   // floorboards, two thwarts, the rail along the sheer
   const dark = toon('#6a4028'), seat = toon('#c99566');
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.03, 1.9), toon('#8a5a3a')); floor.position.set(0, keel(0) + 0.1, -0.1); g.add(floor);
+  // floorboards laid just above the waterline across the whole inside, so the
+  // pond never shows through the hull
+  const deckY = 0.08, deck = [];
+  for (let i = 0; i <= NZ; i++) {
+    const f = -1 + (2 * i) / NZ, yt = sheer(f), yb = keel(f);
+    const c = (yt - deckY) / (yt - yb), ph = c >= 1 ? 0 : (Math.acos(Math.pow(Math.max(0, c), 1 / 0.8)) * 2) / Math.PI;
+    deck.push([half(f) * Math.sin((ph * Math.PI) / 2) * 0.97, (f * L) / 2]);
+  }
+  const shp = new THREE.Shape(); deck.forEach(([w, z], i) => (i ? shp.lineTo(w, z) : shp.moveTo(w, z))); [...deck].reverse().forEach(([w, z]) => shp.lineTo(-w, z));
+  const floor = new THREE.Mesh(new THREE.ShapeGeometry(shp).rotateX(Math.PI / 2), toon('#8a5a3a', { side: THREE.DoubleSide })); floor.position.y = deckY; g.add(floor);
+  for (let k = -3; k <= 3; k++) { const seam = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.005, 2.2), toon('#6a4028')); seam.position.set(k * 0.12, deckY + 0.004, -0.1); g.add(seam); }
   for (const [z, w] of [[0.15, 1.12], [-0.85, 0.98]]) { const th = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, 0.24), seat); th.position.set(0, 0.2, z); g.add(th); }
   for (const sd of [-1, 1]) {
     const pts = []; for (let i = 0; i <= NZ; i++) { const f = -1 + (2 * i) / NZ; pts.push(new THREE.Vector3(sd * half(f), sheer(f) + 0.02, (f * L) / 2)); }
@@ -789,8 +799,20 @@ export function buildMountain(world) {
   // ---- school at the foot, city on the plain
   const sch = school(); sch.position.set(SPOTS.school.x, SCHOOL_LEVEL - 0.02, SPOTS.school.z); S.add(sch);
   const cty = city(rnd); S.add(cty);
+  const dv = new THREE.Vector3(), dv2 = new THREE.Vector3();
   world.every((dt, t) => { sch.userData.flag.rotation.y = Math.sin(t * 2) * 0.2; cty.userData.update(dt, t); fallMat.uniforms.time.value = t; pond.userData.uniforms.time.value = t;
-    ducks.forEach((o) => { const a = t * 0.25 + o.ph; o.d.position.set(POND.x + Math.cos(a) * o.r, wl + Math.sin(t * 2 + o.ph) * 0.02, POND.z + Math.sin(a) * o.r); o.d.setCanvas(duckSprite(Math.floor(t * 2 + o.ph) % 2), Math.sin(a) > 0); });
+    // the ducks paddle their circles but swim clear of the boat and its oars:
+    // inside an oval around the hull they are eased out to its edge
+    const bq = boat.quaternion, bp = boat.position;
+    ducks.forEach((o) => {
+      const a = t * 0.25 + o.ph, want = dv.set(POND.x + Math.cos(a) * o.r, 0, POND.z + Math.sin(a) * o.r);
+      const loc = want.clone().sub(bp).setY(0).applyQuaternion(bq.clone().invert());
+      const ex = 2.9, ez = 2.2, k = Math.hypot(loc.x / ex, loc.z / ez);
+      const push = k < 1 ? loc.clone().multiplyScalar(1 / Math.max(k, 0.05) - 1).setY(0).applyQuaternion(bq) : dv2.set(0, 0, 0);
+      o.push = (o.push || new THREE.Vector3()).lerp(push, 1 - Math.exp(-dt * 7));
+      o.d.position.set(want.x + o.push.x, wl + Math.sin(t * 2 + o.ph) * 0.02, want.z + o.push.z);
+      o.d.setCanvas(duckSprite(Math.floor(t * 2 + o.ph) % 2), Math.sin(a) > 0);
+    });
     if (Math.random() < dt * 14) world.fx.emit(new THREE.Vector3(wf.x + (Math.random() - 0.5) * 1.4, wl + 0.2, wf.z + 0.1), new THREE.Vector3((Math.random() - 0.5) * 0.8, 0.8 + Math.random(), 0.4 + Math.random() * 0.4), '#ffffff', 0.7, { kind: 2 });
   });
 
