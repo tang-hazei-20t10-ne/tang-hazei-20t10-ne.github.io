@@ -165,7 +165,6 @@ export default async function bookshop(game) {
       });
     });
     scene.hazei.forcePose = null; scene.hazei.hold = null;
-    if (Math.random() < 0.25) { await wait(300); scene.say(scene.partner, C.partnerRecs[bookI % C.partnerRecs.length], 3000); }
     scene.partner.emote('thumb');
   };
   [40, 120, 200, 330, 410].forEach((sx) => scene.interact.add({ x: sx, range: 18, hold: 0.3, label: P.read, onDone: readBook }));
@@ -185,7 +184,7 @@ export default async function bookshop(game) {
     if (!(rec.file && await audio.playRecord(rec.file))) { audio.stopRecord(); audio.playMusic(rec.style, 1.2); }
     ui.note(`♪ ${rec.title}${rec.composer ? ' · ' + rec.composer : ''}`, 3500);
     scene.partner.emote('note');
-    if (pick === 3) setTimeout(() => scene.say(scene.partner, C.partnerRecs[1], 3000), 1500);
+    if (pick === 3) setTimeout(() => scene.say(scene.partner, C.partnerRecs[0], 3000), 1500);
   } });
   scene.interact.add({ x: 528, range: 16, hold: 0.4, label: P.bookmark, cond: () => !state.data.bookmark, onDone: async () => {
     scene.say(lady, C.bookmark.line, 3600);
@@ -211,7 +210,7 @@ export default async function bookshop(game) {
       s.partnerAt(shelfX, 'hold');
       s.partner.hold = 'book';
       setTimeout(() => { if (!s.dead) { s.partner.emote(['note', 'sparkle', 'laugh'][Math.floor(Math.random() * 3)]); } }, 1800);
-      setTimeout(() => { if (!s.dead) { s.partnerAt(null); s.partner.hold = null; if (Math.random() < 0.2) s.say(s.partner, C.partnerRecs[Math.floor(Math.random() * C.partnerRecs.length)], 3000); } }, 4200);
+      setTimeout(() => { if (!s.dead) { s.partnerAt(null); s.partner.hold = null; } }, 4200);
     }
     if (Math.abs(s.hazei.vx) > 1 && s.partner.override && s.partner.override.pose === 'hold') { s.partnerAt(null); s.partner.hold = null; }
   };

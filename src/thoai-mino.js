@@ -18,9 +18,9 @@ export default {
     { from: 'partner', text: 'Hi Hazei' },
     { from: 'partner', text: 'Cậu coá đang rảnh hông' },
     { replies: ['Rảnh á', 'Đang nằm chill nè'] },
-    { from: 'partner', text: 'nay 20/10, tớ có làm cái này bất ngờ cho cậu 😆' },
-    { from: 'partner', text: 'Cậu vào link discord này nha' },
-    { replies: ['Hả, gì vậy 👀', 'có bất ngờ ko í =))'] },
+    { from: 'partner', text: 'nay 20/10, tớ có làm cái này 😆' },
+    { from: 'partner', text: 'Cậu vào discord xem thử nha'},
+    { replies: ['Oke đợi tớ xíu nha', 'có bất ngờ ko í =))'] },
     { from: 'partner', text: 'Tớ gửi nhó' },
     { from: 'partner', invite: true },
   ],
@@ -46,7 +46,7 @@ export default {
     moDau: 'Tới hội chợ rồi. Cuối dãy có photobooth á, lát ghé xem thử ha.',
     khenMu: 'Hợp phết!',
     khenKinh: 'Ngầu đó 😎',
-    boCau: 'Woww bồ câu bay kìa!',
+    boCau: 'Woww bồ câu biết bay kìa!',
     ruDiTiep: 'Ra ga thôi, tàu sắp chạy rồi.',
   },
 
@@ -59,7 +59,7 @@ export default {
   // ---------------------------------------------------------- Chương 4: Tiệm sách
   tiemSach: {
     moDau: 'Tiệm sách này có một bé mèo xinh yêu lắm á 😴',
-    goiY: ['Cuốn “Hoàng tử bé” hay lắm đó.', 'Đĩa “Arabesque” nghe êm ghê.'],
+    goiY: ['Đĩa “Arabesque” nghe êm ghê.'],
     meo: 'Nó kêu rừ rừ thì phải :)))',
     ruDiTiep: 'Cậu đói chưa, mình đi ăn nha.',
   },
@@ -71,15 +71,15 @@ export default {
 
   // ---------------------------------------------------------- Chương 6: Cà phê
   caPhe: {
-    moDau: 'Cậu chọn nước đi.',
+    moDau: 'Cậu uống gì nhỉ',
     // {nuoc} sẽ được thay bằng tên nước Hazei đã chọn
     goiNuoc: 'Cho mình một cà phê muối, với một {nuoc} nha!',
-    ngoiChill: 'Ngồi đây nhìn ra cửa sổ thấy chill ghê. Uống nước xong mình sẽ ra biển á.',
+    ngoiChill: 'Nhân viên thân thiện ghê',
   },
 
   // ---------------------------------------------------------- Chương 7: Biển
   bien: {
-    moDau: 'Nghe nói mọi người hay ra đây viết tên mình lên cát á',
+    moDau: 'Nghe nói mọi người hay ra đây viết tên lên cát á',
     ghe: 'Ngồi nghe sóng vỗ từng lớp xa',
     cua: 'Có bạn cua kìa 🦀',
     thaDen: 'Bay lên rùi hehe!',
@@ -89,12 +89,12 @@ export default {
 
   // ---------------------------------------------------------- Chương 8–11: tin nhắn Discord nhỏ ở góc màn hình
   tinNhanVoice: {
-    island_arrive: 'Cậu lên núi chưa? giờ này nắng đẹp nhất đó 🌅', // vừa lên núi
-    island_flower: 'Cậu thử hái hoa trên đó rùi hả', // hái hoa đầu tiên trên núi
+    island_arrive: 'Giờ này nắng đẹp nhất đó 🌅', // vừa lên núi
+    island_flower: 'Trên đó nhiều hoa lắm', // hái hoa đầu tiên trên núi
     island_cat: 'con mèo đó ngủ ngon ghê', // vuốt mèo
-    island_lighthouse: 'Quanh đó có 1 cái chòi để cậu leo lên á', // tới gần chòi
+    island_lighthouse: 'Quanh đó có 1 cái chòi nữa á', // tới gần chòi
     island_swing: 'Coi chừng ngã nha :)))', // ngồi xích đu
-    island_boat: 'Biết chèo thuyền lun ta', // chèo thuyền
+    island_boat: 'Biết chèo thuyền lun', // chèo thuyền
     island_balloon: 'Nếu cậu thấy khinh khí cầu thì nhất định phải thử á ✨', // khinh khí cầu sẵn sàng
     balloon_start: 'Nhìn từ trên cao thích ha',
     balloon_village: 'Thành phố lên đèn rồi!!!',
@@ -107,7 +107,7 @@ export default {
 
   // ---------------------------------------------------------- Chương 12: Sân khấu
   sanKhau: {
-    tangHoa: 'Hát hay quá dợ :))), hoa này là tớ hái trong lúc mình đi luôn á',
+    tangHoa: 'Hoa này là tớ hái trong lúc mình đi luôn á',
     themHoa: 'Vẫn còn thơm ha', // chỉ nói khi Hazei hái ít hoa
   },
 
@@ -116,7 +116,7 @@ export default {
   //           + "Chúc mừng ngày Phụ nữ Việt Nam 20/10!"
   loiChuc: {
     moDau: 'Đây là những lời chúc cậu có qua những lựa chọn xuyên suốt hành trình',
-    ketThuc: 'Cảm ơn cậu đã đi chơi với tớ nha.',
+    ketThuc: 'Cảm ơn vì hành trình này nha.',
   },
 
   // ---------------------------------------------------------- Kết: Discord

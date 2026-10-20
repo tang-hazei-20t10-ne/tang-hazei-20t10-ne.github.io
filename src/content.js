@@ -34,7 +34,7 @@ export default {
   avatars: { hazei: null, partner: null },
 
   discord: {
-    serverName: 'Hội Chill 🌿', // TODO
+    serverName: 'Phòng thời gian 🌿', // TODO
     serverInitials: 'HC',
     partnerHandle: 'mino', // tên Discord của Mino
     hazeiHandle: 'hazei',
@@ -308,7 +308,7 @@ export default {
     ],
     choose: 'Chọn món nào ta?',
     roundWord: 'Lượt',
-    fragmentNote: 'Một mảnh lời chúc đã được cất đi ✨',
+    fragmentNote: 'Một mảnh lời chúc đã được thêm vào ✨',
     outro: [
       { who: 'chef', text: 'Năm lời chúc nhỏ, bác gói lại cho cháu rồi. Tối nay cháu sẽ thấy.' },
       { who: 'partner', text: M.omakase.camOnBac },
@@ -546,7 +546,7 @@ export default {
       { who: 'partner', text: M.caPhe.ngoiChill },
     ],
     sip: 'Nhấp một ngụm',
-    sipReact: ['Ngon ghê…', 'Hợp gu ghê.', 'Đã thật.'],
+    sipReact: ['Ngon thíii', 'Hợp gu ghê.', 'Đã thật.'],
     lookOut: 'Nhìn ra cửa sổ',
     lookOutReact: 'Ngoài kia có bé mèo đang phơi nắng.',
     leave: 'Ra biển thôi',
@@ -568,7 +568,7 @@ export default {
       },
       paints: ['Trắng', 'Kem', 'Hồng phấn', 'Đỏ hồng', 'Cam', 'Vàng', 'Bạc hà', 'Xanh lá', 'Xanh trời', 'Xanh dương', 'Tím lavender', 'Nâu', 'Đen', 'Nhũ vàng'],
       dry: 'Để đó nắng chiều hong khô liền á!',
-      caption: 'Bé tượng Hazei tô',
+      caption: 'Tượng Hazei tô',
       photoTitle: 'Tô tượng ở quán cà phê',
     },
   },
@@ -723,19 +723,19 @@ export default {
 
   stage: {
     intro: 'Đèn sân khấu lần lượt bật sáng…',
-    screenTitle: 'Hazei',
-    screenSub: 'Đêm nhạc 20/10',
-    applause: 'Cả khán phòng vỗ tay rần rần!',
+    screenTitle: 'Hazei Concert',
+    screenSub: 'Phiên bản đặc biệt ngày 20/10',
+    applause: 'Cả khán phòng vỗ tay!',
     bouquetLine: M.sanKhau.tangHoa,
     giftNote: M.sanKhau.themHoa,
-    happy: 'Món quà đầu tiên của tớ.',
+    happy: 'Món quà đầu tiên.',
     letterNote: 'Có một lá thư nhỏ kẹp giữa những bông hoa…',
     takeLetter: 'Lấy thư ra',
-    wishTitle: 'Lời chúc cho Hazei',
+    wishTitle: 'Lời chúc dành cho Hazei',
     toEpilogue: 'Tiếp tục',
-    stagePhoto: 'Hazei trên sân khấu',
-    stageCaption: 'Đêm nhạc của Hazei',
-    bouquetPhoto: 'Hazei và bó hoa',
+    stagePhoto: 'Cậu trên sân khấu',
+    stageCaption: 'Đêm nhạc của ca sĩ Hazei',
+    bouquetPhoto: '2 bó hoa',
     bouquetCaption: 'Bó hoa sau buổi diễn',
   },
 
@@ -749,7 +749,7 @@ export default {
       'luôn có những khoảng bình yên cho riêng mình',
       'mỗi ngày đều bắt đầu bằng một điều háo hức',
       'nhặt được thật nhiều niềm vui nhỏ',
-      'sống thật khoẻ và thật lâu',
+      'Luôn dẻo dai và bền bỉ',
       'ngày khó nào cũng có hậu ngọt',
     ],
     cardTitle: 'Gửi Hazei',
@@ -759,7 +759,7 @@ export default {
   epilogue: {
     messages: M.cuoiNgay.tinNhan,
     attachmentsLabel: 'Tệp đính kèm',
-    bouquetLabel: 'Bó hoa của Hazei',
+    bouquetLabel: 'Bó hoa dành cho Hazei',
     bookmarkLabel: 'Kẹp sách hoa ép',
     replay: 'Chơi lại từ đầu',
     replayConfirm: 'Chơi lại sẽ giữ album ảnh nhưng bắt đầu lại hành trình. Chơi lại nha?',
@@ -772,7 +772,7 @@ export default {
   song: {
     file: 'assets/song.mp3',
     lyrics: 'assets/song.lrc', // optional LRC file; leave as-is if none
-    title: 'Bài hát của Hazei', // TODO
+    title: 'Bài hát của ca sĩ Hazei', // TODO
     artist: 'Hazei',
   },
 };
