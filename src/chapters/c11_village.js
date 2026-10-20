@@ -71,40 +71,137 @@ function foodSignTex(bg, kind) {
 const glowMat = (col) => new THREE.MeshBasicMaterial({ color: col });
 const BULB = new THREE.SphereGeometry(0.06, 6, 4);
 
-// two-storey shophouse: lit shopfront, shuttered windows, a balcony, eaves with lanterns, a banner
-function houseMesh(w, h, d, wall, roof, seed) {
+// ---- old-town shophouses in the Hội An manner: ochre walls, a tiled awning
+// between the floors, wooden shopfronts and shutters, silk lanterns, a gable
+// roof of curved tiles. They stand shoulder to shoulder along the street.
+const texOnce = new Map();
+const onceTex = (key, draw, wrap = false) => {
+  let t = texOnce.get(key);
+  if (!t) { t = pixelTex(draw()); if (wrap) t.wrapS = t.wrapT = THREE.RepeatWrapping; texOnce.set(key, t); }
+  return t;
+};
+// stretch a geometry's UVs so a repeating texture keeps its scale
+const uvScale = (geo, su, sv) => { const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * su, uv.getY(i) * sv); return geo; };
+// curved yin-yang tiles laid in channels down the slope, weathered dark in places
+const tileTex = () => onceTex('tile', () => {
+  const [c, x] = canvas(16, 16);
+  x.fillStyle = '#8e4232'; x.fillRect(0, 0, 16, 16);
+  for (let i = 0; i < 16; i += 4) { x.fillStyle = '#b25a40'; x.fillRect(i, 0, 3, 16); x.fillStyle = '#cc7552'; x.fillRect(i, 0, 1, 16); x.fillStyle = '#5e2a22'; x.fillRect(i + 3, 0, 1, 16); }
+  for (let j = 0; j < 16; j += 4) { x.fillStyle = '#6e3428'; x.fillRect(0, j + 3, 16, 1); }
+  [[1, 5], [9, 10], [13, 1], [5, 13], [10, 6]].forEach(([a, b]) => { x.fillStyle = '#5a4a36'; x.fillRect(a, b, 2, 1); });
+  return c;
+}, true);
+// dark timber planks for the wooden upper storeys
+const plankTex = () => onceTex('plank', () => {
+  const [c, x] = canvas(16, 16);
+  x.fillStyle = '#6a4230'; x.fillRect(0, 0, 16, 16);
+  for (let i = 0; i < 16; i += 4) { x.fillStyle = '#4a2c20'; x.fillRect(i + 3, 0, 1, 16); x.fillStyle = '#7a5038'; x.fillRect(i, 0, 1, 16); }
+  x.fillStyle = '#4a2c20'; x.fillRect(0, 7, 16, 1);
+  return c;
+}, true);
+// the open shopfront: folding wooden doors pushed aside, a warm room full of wares
+const shopTex = (kind) => onceTex('shop' + kind, () => {
+  const [c, x] = canvas(40, 26);
+  const R = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+  R(0, 0, 40, 26, '#f2b866'); R(0, 20, 40, 6, '#d89a52'); R(0, 0, 40, 2, '#3e2418');
+  const wares = [
+    ['#ff5a4a', '#ffc43a', '#ff6aa8', '#ff8a2a', '#5ad0b0'], // lanterns
+    ['#c43a4a', '#3f7f9a', '#e8b84a', '#7a4a9a', '#3f9a6a'], // silk
+    ['#f4efe6', '#7fa7d0', '#f4efe6', '#c8784a', '#9ab8a0'], // ceramics
+  ][kind];
+  for (const sy of [8, 15]) {
+    R(9, sy, 22, 1, '#a8703f');
+    for (let i = 0; i < 5; i++) {
+      const col = wares[(i + sy) % 5];
+      if (kind === 0) { R(10 + i * 4, sy - 4, 3, 3, col); R(11 + i * 4, sy - 1, 1, 1, '#ffcf4a'); }
+      else if (kind === 1) R(10 + i * 4, sy - 5, 3, 5, col);
+      else { R(10 + i * 4, sy - 3, 3, 3, col); R(11 + i * 4, sy - 4, 1, 1, col); }
+    }
+  }
+  if (kind === 0) for (let i = 0; i < 4; i++) { R(12 + i * 5, 2, 1, 2, '#3e2418'); R(11 + i * 5, 4, 3, 3, wares[i]); }
+  // the door leaves, panelled, folded back at each side
+  for (const ox of [0, 31]) { R(ox, 2, 9, 24, '#5a3422'); for (let k = 0; k < 3; k++) { R(ox + 1 + k * 3, 4, 2, 9, '#6e4230'); R(ox + 1 + k * 3, 15, 2, 9, '#6e4230'); R(ox + 3 + k * 3, 2, 1, 24, '#3e2418'); } }
+  return c;
+});
+// an upper window: a wooden grille lit from inside, louvred shutters folded open
+const windowTex = (lit, shutter) => onceTex('win' + lit + shutter, () => {
+  const [c, x] = canvas(26, 20);
+  const R = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
+  for (const ox of [0, 20]) { R(ox, 0, 6, 20, shutter); for (let j = 2; j < 19; j += 2) R(ox + 1, j, 4, 1, shade(shutter, 0.3)); R(ox, 0, 1, 20, light(shutter, 0.2)); }
+  R(6, 0, 14, 20, '#4a2e20'); R(7, 1, 12, 18, lit ? '#ffd27a' : '#3a3050');
+  for (let i = 9; i < 19; i += 3) R(i, 1, 1, 18, '#4a2e20');
+  R(7, 9, 12, 1, '#4a2e20');
+  return c;
+});
+const SILK = ['#ff4a3a', '#ffc43a', '#ff8a2a', '#ff6aa8', '#ff4a3a', '#5ad0b0'];
+function silkLantern(g, x, y, z, col) {
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), glowMat(col)); body.scale.y = 1.15; body.position.set(x, y, z); g.add(body);
+  for (const dy of [0.24, -0.24]) { const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.06, 8), toon('#3a2418')); cap.position.set(x, y + dy, z); g.add(cap); }
+  const tas = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.04), glowMat('#ffcf4a')); tas.position.set(x, y - 0.38, z); g.add(tas);
+  const cord = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.3, 0.02), toon('#3a2418')); cord.position.set(x, y + 0.42, z); g.add(cord);
+}
+// w along the street, h to the eaves, d deep; the front faces +z
+function houseMesh(w, h, d, wall, seed, timber) {
   const g = new THREE.Group();
   const r = (k) => ((Math.sin(seed * 12.9898 + k * 78.233) * 43758.5453) % 1 + 1) % 1;
-  const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), toon(wall)); b.position.y = h / 2; g.add(b);
-  const fz = d / 2 + 0.01;
-  // ground floor: a warm, open shopfront with a cloth awning
-  const shop = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.72, 1.5), glowMat(r(1) < 0.75 ? '#f0b26a' : '#7a5a50')); shop.position.set(0, 0.85, fz); g.add(shop);
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(w * 0.8, 0.12, 0.12), toon(shade(wall, 0.35))); frame.position.set(0, 1.66, fz); g.add(frame);
-  const cloth = new THREE.Mesh(new THREE.BoxGeometry(w * 0.8, 0.06, 0.8), new THREE.MeshLambertMaterial({ map: stripeTex(roof, '#fff3e0', 6) })); cloth.position.set(0, 1.85, fz + 0.38); cloth.rotation.x = 0.35; g.add(cloth);
-  // upper floor: windows with shutters, some lit
-  for (const sx of [-w * 0.25, w * 0.25]) {
-    const lit = r(sx + 3) < 0.7;
-    const wdw = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.65), glowMat(lit ? '#ffd27a' : '#3a3050')); wdw.position.set(sx, h * 0.72, fz + 0.01); g.add(wdw);
-    for (const o of [-0.4, 0.4]) { const sh = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.7), toon(shade(roof, 0.1))); sh.position.set(sx + o, h * 0.72, fz + 0.02); g.add(sh); }
+  const wood = toon('#4a2e20'), fz = d / 2 + 0.01;
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), toon(wall)); body.position.y = h / 2; g.add(body);
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(w, 0.25, d + 0.06), toon('#6a6058')); plinth.position.y = 0.125; g.add(plinth);
+  // ground floor: posts, a lintel and the open shop between them
+  for (const px of [-w / 2 + 0.12, w / 2 - 0.12]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.0, 0.2), wood); post.position.set(px, 1.25, fz + 0.06); g.add(post); }
+  const shop = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.44, 1.75), new THREE.MeshBasicMaterial({ map: shopTex(Math.floor(r(1) * 3)) })); shop.position.set(0, 1.12, fz); g.add(shop);
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(w, 0.16, 0.22), wood); lintel.position.set(0, 2.05, fz + 0.06); g.add(lintel);
+  // a tiled awning between the floors, the full width so the neighbours' run on
+  const awn = new THREE.Mesh(uvScale(new THREE.BoxGeometry(w + 0.02, 0.07, 1.05), w, 1.05), new THREE.MeshLambertMaterial({ map: tileTex() }));
+  awn.position.set(0, 2.36, fz + 0.48); awn.rotation.x = 0.34; g.add(awn);
+  const fascia = new THREE.Mesh(new THREE.BoxGeometry(w + 0.02, 0.1, 0.07), wood); fascia.position.set(0, 2.18, fz + 0.97); g.add(fascia);
+  // silk lanterns hanging from the awning
+  const nL = w > 4.2 ? 3 : 2;
+  for (let i = 0; i < nL; i++) silkLantern(g, -w / 2 + (i + 0.5) * w / nL, 1.6, fz + 0.75, SILK[Math.floor(r(3 + i) * SILK.length)]);
+  // upper floor: plain plaster or dark timber, one or two shuttered windows
+  const up = h - 2.55, uy = 2.55 + up / 2;
+  if (timber) { const pl = new THREE.Mesh(uvScale(new THREE.PlaneGeometry(w - 0.06, up), w, up), new THREE.MeshLambertMaterial({ map: plankTex() })); pl.position.set(0, uy, fz + 0.005); g.add(pl); }
+  const nW = w > 4.3 ? 2 : 1, shutter = timber ? '#7a4a2e' : r(4) < 0.6 ? '#3f7f7a' : '#6a7a3a';
+  for (let i = 0; i < nW; i++) {
+    const wx = -w / 2 + (i + 0.5) * w / nW;
+    const win = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.85), new THREE.MeshBasicMaterial({ map: windowTex(r(6 + i) < 0.75, shutter) })); win.position.set(wx, uy + 0.05, fz + 0.02); g.add(win);
+    const sill = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.06, 0.18), wood); sill.position.set(wx, uy - 0.4, fz + 0.09); g.add(sill);
   }
-  // balcony with a railing on the taller houses
-  if (h > 3.4) {
-    const slab = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.1, 0.6), toon(shade(wall, 0.3))); slab.position.set(0, h * 0.72 - 0.45, fz + 0.3); g.add(slab);
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.05, 0.05), toon('#6a4a3a')); rail.position.set(0, h * 0.72 - 0.05, fz + 0.58); g.add(rail);
-    for (let i = 0; i <= 6; i++) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.4, 0.04), toon('#6a4a3a')); post.position.set(-w * 0.35 + i * w * 0.7 / 6, h * 0.72 - 0.25, fz + 0.58); g.add(post); }
-    if (r(7) < 0.6) for (let i = 0; i < 3; i++) { const pot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), toon(['#e05a7a', '#ffd23f', '#9fd07a'][i])); pot.position.set(-w * 0.2 + i * w * 0.2, h * 0.72 - 0.3, fz + 0.4); g.add(pot); }
+  // bougainvillea tumbling down one corner
+  if (r(8) < 0.55) {
+    const side = r(9) < 0.5 ? -1 : 1, bx = side * (w / 2 - 0.45);
+    for (let k = 0; k < 14; k++) {
+      const yy = h - 0.15 - k * 0.12 - r(20 + k) * 0.3, xx = bx + (r(40 + k) - 0.5) * (0.9 - k * 0.04);
+      const bl = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.18, 0.12), toon(k % 3 === 2 ? '#3f7a46' : r(60 + k) < 0.5 ? '#e0508a' : '#f070a8'));
+      bl.position.set(xx, yy, fz + 0.08 + r(80 + k) * 0.06); g.add(bl);
+    }
   }
-  // eaves overhang, tiled roof and a ridge
-  const eave = new THREE.Mesh(new THREE.BoxGeometry(w + 0.7, 0.16, d + 0.7), toon(shade(roof, 0.25))); eave.position.y = h + 0.08; g.add(eave);
-  const rf = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.78, h * 0.5, 4), toon(roof)); rf.position.y = h + h * 0.25 + 0.1; rf.rotation.y = Math.PI / 4; g.add(rf);
-  // a pair of red lanterns under the eaves
-  for (const sx of [-w / 2 + 0.3, w / 2 - 0.3]) {
-    const l = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), glowMat('#ff5a4a')); l.scale.y = 1.25; l.position.set(sx, h - 0.45, fz + 0.3); g.add(l);
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.06, 6), toon('#3a2a2a')); cap.position.set(sx, h - 0.15, fz + 0.3); g.add(cap);
+  // gable roof with the ridge along the street, gable walls at the ends
+  const a = 0.52, run = d / 2 + 0.6, rise = run * Math.tan(a), L = run / Math.cos(a);
+  for (const s of [1, -1]) {
+    const rf = new THREE.Mesh(uvScale(new THREE.BoxGeometry(w + 0.02, 0.1, L), w, L), new THREE.MeshLambertMaterial({ map: tileTex() }));
+    rf.position.set(0, h + rise / 2 + 0.05, s * run / 2); rf.rotation.x = s * a; g.add(rf);
   }
-  // a hanging cloth banner
-  if (r(9) < 0.65) { const bn = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 1.3), toon(['#e05a5a', '#f6c45f', '#7f9fdc', '#8fd3b6'][Math.floor(r(11) * 4)])); bn.position.set((r(13) < 0.5 ? -1 : 1) * (w / 2 - 0.35), h * 0.45 + 0.4, fz + 0.05); g.add(bn); }
+  const top = h + (d / 2) * Math.tan(a), gv = [];
+  for (const sx of [-w / 2, w / 2]) gv.push(sx, h, d / 2, sx, top, 0, sx, h, -d / 2);
+  const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(gv, 3)); gg.computeVertexNormals();
+  g.add(new THREE.Mesh(gg, toon(wall, { side: THREE.DoubleSide })));
+  const ridge = new THREE.Mesh(new THREE.BoxGeometry(w + 0.04, 0.2, 0.26), toon('#5a3426')); ridge.position.set(0, h + rise + 0.08, 0); g.add(ridge);
+  const eave = new THREE.Mesh(new THREE.BoxGeometry(w + 0.02, 0.08, 0.08), toon('#5a3426')); eave.position.set(0, h - 0.02, run - 0.02); g.add(eave);
   return g;
+}
+// a row of houses filling the stretch of street from z0 to z1 without a gap
+const OCHRE = ['#e8b54a', '#efc35c', '#e3a842', '#f0cf7a', '#e9b955', '#dca048'];
+function houseRow(z0, z1, seed) {
+  const r = (k) => ((Math.sin(seed * 7.13 + k * 3.71) * 9187.31) % 1 + 1) % 1;
+  const len = z0 - z1, n = Math.max(1, Math.round(len / 4.4));
+  const wts = Array.from({ length: n }, (_, i) => 0.8 + r(i) * 0.5), sum = wts.reduce((s, v) => s + v, 0);
+  let z = z0;
+  return wts.map((wt, i) => {
+    const w = (len * wt) / sum, h = 3.7 + (i % 2) * 0.55 + r(i + 30) * 0.35;
+    const o = { w, h, z: z - w / 2, wall: OCHRE[Math.floor(r(i + 50) * OCHRE.length)], timber: r(i + 70) < 0.3, seed: seed * 31 + i };
+    z -= w; return o;
+  });
 }
 
 // a festival stall: striped awning with a scalloped edge and bulbs, a sign, and props for its game or food
@@ -354,14 +451,14 @@ export default async function village(game) {
     }
   }
 
-  // houses on both sides
+  // old-town houses shoulder to shoulder on both sides, the canal left open,
+  // and a row across the end of the street behind the stage
   const houses = [gate];
-  const walls = ['#f3dcc0', '#fff1e0', '#e8c8a8', '#f6e3cc'], roofs = ['#c4587a', '#d96a5a', '#7f6fb0', '#5a7aa0'];
-  for (let z = 4, i = 0; z > STREET_END - 10; z -= 7, i++) for (const side of [-1, 1]) {
-    const w = 4 + (i % 3), h = 3 + ((i + side + 3) % 3) * 0.8;
-    const hm = houseMesh(w, h, 4, walls[(i + (side > 0 ? 1 : 0)) % 4], roofs[(i * 3 + (side > 0 ? 2 : 0)) % 4], i * 2 + (side > 0 ? 1 : 0));
-    hm.position.set(side * (7 + w / 2), 0, z); hm.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; S.add(hm); houses.push(hm);
+  const place = (o, x, z, rot) => { const hm = houseMesh(o.w, o.h, 4, o.wall, o.seed, o.timber); hm.position.set(x, 0, z); hm.rotation.y = rot; S.add(hm); houses.push(hm); };
+  for (const side of [-1, 1]) for (const [z0, z1, k] of [[9, -32.2, 1], [-35.8, STREET_END - 14, 2]]) {
+    houseRow(z0, z1, k * 2 + (side > 0 ? 1 : 0)).forEach((o) => place(o, side * 9, o.z, side > 0 ? -Math.PI / 2 : Math.PI / 2));
   }
+  houseRow(24, -24, 9).forEach((o) => place(o, o.z, STREET_END - 16, 0));
   mergeStatic(S, houses);
   // lantern strings: across the street, plus long strings zig-zagging down it
   const lanternPts = [], lanternCols = [], strV = [];
