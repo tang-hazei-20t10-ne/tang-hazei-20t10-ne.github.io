@@ -333,6 +333,15 @@ export function drawHands(x, W, H, pose, t, { bob = 0, item, skin = content.haze
   }
 }
 
+// One of Hazei's fists at a point on the hands overlay, for poses driven from
+// outside (holding the oars). (cx, cy) is where the fingers grip.
+export function drawFist(x, H, cx, cy, mirror = false, rot = 0) {
+  const S = Math.max(1, Math.round(H / 100));
+  const img = handSprite('fist', content.hazeiLook.skin, content.hazeiLook.top, content.hazeiLook.dress);
+  x.save(); x.translate(Math.round(cx), Math.round(cy)); if (rot) x.rotate(rot); if (mirror) x.scale(-1, 1);
+  x.drawImage(img, (-img.width * S) / 2, -6 * S, img.width * S, img.height * S); x.restore();
+}
+
 // ---------------------------------------------------------------- world
 export class World3D {
   constructor(game, opts = {}) {

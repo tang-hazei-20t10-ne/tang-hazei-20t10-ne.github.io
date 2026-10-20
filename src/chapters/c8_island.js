@@ -1,6 +1,6 @@
 // Chapter 8: first-person walk on the mountain behind the school at golden hour.
 import content from '../content.js';
-import { World3D, THREE, makeSky, billboard } from '../three/engine3d.js';
+import { World3D, THREE, makeSky, billboard, drawFist } from '../three/engine3d.js';
 import { buildMountain, mountainHeight, surfaceHeight, mountainWalkable, pondLevel, SPOTS } from '../three/mountain.js';
 import { Guide } from '../three/guide.js';
 import { TIMES } from '../core/palette.js';
@@ -212,23 +212,109 @@ export default async function island(game) {
     } });
 
   // ------------------------------------------------ boat
-  world.interact.add({ pos: I.boat.position, range: 2.8, hold: 0.4, label: P.boat,
+  // The route is worked out from the pond's real shoreline: a berth by the pier
+  // deep enough to float the hull, then a smooth loop that keeps clear of the
+  // banks and comes back to the berth heading the way it left.
+  const route = (() => {
+    // (the ground drops below the water line again outside the pond's bank, so only count what is inside it)
+    const wl = pondLevel(), depth = (x, z) => (Math.hypot(x - SPOTS.lake.x, z - SPOTS.lake.z) > 6.1 ? 1 : mountainHeight(x, z) - wl);
+    let cx = 0, cz = 0, n = 0;
+    for (let x = 10; x <= 30; x += 0.5) for (let z = -6; z <= 14; z += 0.5) if (depth(x, z) < -1.8) { cx += x; cz += z; n++; }
+    const c = new THREE.Vector2(cx / n, cz / n);
+    const N = 24, reach = [];
+    for (let i = 0; i < N; i++) { const a = (i / N) * Math.PI * 2; let r = 0; while (r < 9 && depth(c.x + Math.cos(a) * (r + 0.2), c.y + Math.sin(a) * (r + 0.2)) < -0.7) r += 0.2; reach.push(r); }
+    const loop = reach.map((r, i) => {
+      const m = Math.min(r, (reach[(i + N - 1) % N] + r + reach[(i + 1) % N]) / 3), a = (i / N) * Math.PI * 2, rr = Math.max(1.2, m - 2.1);
+      return new THREE.Vector3(c.x + Math.cos(a) * rr, wl, c.y + Math.sin(a) * rr);
+    });
+    // the berth: the nearest spot to the pier where bow, middle and stern all float
+    const pier = new THREE.Vector2(SPOTS.pier.x, SPOTS.pier.z), dir = c.clone().sub(pier).normalize();
+    let berth = null;
+    for (let k = 1; k < 7 && !berth; k += 0.2) for (const side of [1, -1]) {
+      const b = pier.clone().add(dir.clone().multiplyScalar(k)).add(new THREE.Vector2(-dir.y, dir.x).multiplyScalar(side * 1.1));
+      if ([-1.5, 0, 1.5].every((o) => [-0.7, 0.7].every((q) => depth(b.x + dir.x * o - dir.y * q, b.y + dir.y * o + dir.x * q) < -0.55))) { berth = b; break; }
+    }
+    const M = new THREE.Vector3(berth.x, wl, berth.y);
+    let j = 0; loop.forEach((p, i) => { if (p.distanceTo(M) < loop[j].distanceTo(M)) j = i; });
+    const pts = [M];
+    for (let k = 1; k < N; k++) { const p = loop[(j + k) % N]; if (p.distanceTo(M) > 1.8) pts.push(p); }
+    const curve = new THREE.CatmullRomCurve3(pts, true, 'centripetal');
+    if (window.__game?.debug) window.__boatRoute = { curve, depth };
+    return { curve, len: curve.getLength(), wl };
+  })();
+  const restHeading = () => { const tg = route.curve.getTangentAt(0); return Math.atan2(tg.x, tg.z); };
+  I.boat.rotation.order = 'YXZ';
+  I.boat.position.copy(route.curve.getPointAt(0)); I.boat.rotation.set(0, restHeading(), 0);
+  // the oars rest along the gunwales while the boat is moored
+  const oarPose = (oar, sweep, dip, feather) => { oar.rotation.set(feather, sweep, dip); };
+  I.boat.userData.oars.forEach((o) => oarPose(o, -1.25, 0.12, 1.4));
+  world.every((dt, t) => { if (!rowing) { I.boat.position.y = route.wl + Math.sin(t * 1.3) * 0.015; I.boat.rotation.z = Math.sin(t * 0.9) * 0.012; } });
+  let rowing = false;
+  const angDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+  world.interact.add({ pos: I.boat.position, range: 2.8, hold: 0.4, label: P.boat, cond: () => !rowing,
     onDone: async () => {
-      const save = world.player.pos.clone();
-      world.locked = true; world.handPose = 'rim';
-      world.toastOnce('island_boat'); ui.note(C.boat, 3000); audio.sfx('splash'); did('boat');
-      const c = new THREE.Vector3(20, 0, 4); const r = 4.6; const wl = pondLevel();
-      const a0 = Math.atan2(I.boat.position.z - c.z, I.boat.position.x - c.x);
-      const dur = 16; let k = 0;
-      const stop = world.every((dt, t) => {
-        k += dt / dur; const a = a0 + k * Math.PI * 2;
-        I.boat.position.set(c.x + Math.cos(a) * r, wl + Math.sin(t * 2) * 0.04, c.z + Math.sin(a) * r);
-        I.boat.rotation.y = -a;
-        world.player.pos.set(I.boat.position.x, wl + 0.1, I.boat.position.z);
-        if (Math.random() < dt * 3) world.fx.emit(I.boat.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 1.5, 0.1, (Math.random() - 0.5) * 1.5)), new THREE.Vector3(0, 0.2, 0), '#ffffff', 0.8);
+      const save = world.player.pos.clone(), saveEye = world.player.eye;
+      rowing = true; world.locked = true; world.handPose = 'none';
+      world.toastOnce('island_boat'); ui.note(C.boat, 3000); did('boat');
+      const { curve, len, wl } = route, boat = I.boat, oars = boat.userData.oars;
+      // climb in: seated on the stern thwart, facing the bow
+      world.player.eye = 0.95;
+      let heading = restHeading();
+      world.player.yaw = heading + Math.PI; world.player.pitch = -0.14;
+      let s = 0, v = 0, ph = 0.6, el = 0, wakeT = 0, lastPh = ph;
+      const grips = [new THREE.Vector3(), new THREE.Vector3()], tmp = new THREE.Vector3();
+      const sm = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
+      await new Promise((resolve) => {
+        const stop = world.every((dt, t) => {
+          dt = Math.min(dt, 0.05); el += dt;
+          const remain = len - s, stroking = el > 0.8 && remain > 3.4;
+          // stroke cycle: the drive pulls the blades through the water, the recovery lifts and swings them forward
+          if (stroking || ph < 0.999) ph += dt / 1.9;
+          if (!stroking && ph >= 1) ph = 1;
+          const u = ph % 1, inDrive = stroking && u < 0.45;
+          const drive = inDrive ? Math.sin((Math.PI * u) / 0.45) : 0;
+          v += (drive * 2.3 - v * 0.7) * dt;
+          if (!stroking) v = Math.min(v, Math.sqrt(2 * 0.3 * Math.max(0, remain)) + 0.03); // glide in to the berth
+          s = Math.min(len, s + v * dt);
+          const p = curve.getPointAt(s / len), tg = curve.getTangentAt(s / len), h = Math.atan2(tg.x, tg.z);
+          // the view turns with the boat, whatever way Hazei is looking
+          const turn = angDiff(h, heading); world.player.yaw += turn; heading = h;
+          const roll = Math.sin(t * 1.1) * 0.022 - (turn / Math.max(dt, 1e-3)) * 0.04, pitch = -drive * 0.035 + Math.sin(t * 1.7) * 0.01;
+          boat.position.set(p.x, wl + Math.sin(t * 1.4) * 0.02 - drive * 0.015, p.z); boat.rotation.set(pitch, h, roll);
+          world.roll = roll * 0.7;
+          const seat = boat.localToWorld(tmp.set(0, 0, -0.85));
+          world.player.pos.set(seat.x, wl - 0.02, seat.z);
+          // oars
+          const dipK = stroking ? sm(0, 0.07, u) * (1 - sm(0.4, 0.5, u)) : 0;
+          const sweep = !stroking && ph >= 1 ? -0.55 : u < 0.45 ? -0.55 + 1.1 * sm(0, 0.45, u) : 0.55 - 1.1 * sm(0.45, 1, u);
+          oars.forEach((o) => oarPose(o, sweep, -0.26 * dipK + 0.1 * (1 - dipK), (1 - dipK) * 1.3));
+          // the catch: a splash where each blade bites, rings spreading through the drive
+          if (stroking && lastPh % 1 > 0.9 && u < 0.1) { audio.sfx('oar'); oars.forEach((o) => { const b = o.localToWorld(tmp.copy(o.userData.blade)); for (let k = 0; k < 6; k++) world.fx.emit(new THREE.Vector3(b.x, wl + 0.05, b.z), new THREE.Vector3((Math.random() - 0.5) * 0.8, 1 + Math.random() * 0.8, (Math.random() - 0.5) * 0.8), '#ffffff', 0.6, { kind: 2, size: 2 }); }); }
+          if (inDrive && Math.random() < dt * 14) oars.forEach((o) => { const b = o.localToWorld(tmp.copy(o.userData.blade)); world.fx.emit(new THREE.Vector3(b.x, wl + 0.03, b.z), new THREE.Vector3((Math.random() - 0.5) * 0.3, 0, (Math.random() - 0.5) * 0.3), '#e8fbff', 1.4); });
+          lastPh = ph;
+          // a V of foam opening out behind the stern, a ripple at the bow
+          wakeT -= dt;
+          if (v > 0.25 && wakeT < 0) {
+            wakeT = 0.06;
+            for (const sd of [-1, 1]) {
+              const q = boat.localToWorld(tmp.set(sd * 0.45, 0, -1.3));
+              const out = new THREE.Vector3(Math.cos(h) * sd, 0, -Math.sin(h) * sd).multiplyScalar(0.35 * v);
+              world.fx.emit(new THREE.Vector3(q.x, wl + 0.03, q.z), out, '#f2fdff', 2.2, { size: 2 });
+              const bw = boat.localToWorld(tmp.set(sd * 0.2, 0, 1.25));
+              if (Math.random() < 0.5) world.fx.emit(new THREE.Vector3(bw.x, wl + 0.04, bw.z), out.multiplyScalar(1.4), '#ffffff', 0.9);
+            }
+          }
+          // Hazei's hands on the oar grips
+          world.camera.updateMatrixWorld();
+          oars.forEach((o, i) => { o.updateMatrixWorld(); const g = o.localToWorld(grips[i].copy(o.userData.grip)).project(world.camera); grips[i].set((g.x + 1) / 2 * world.W, (1 - g.y) / 2 * world.H, g.z); });
+          grips.forEach((g, i) => { if (g.z < 1) drawFist(world.hx, world.H, g.x, g.y, i === 0, i === 0 ? 0.35 : -0.35); });
+          if (s >= len - 0.02 && v < 0.06) { stop(); resolve(); }
+        });
       });
-      await wait(dur * 1000);
-      stop(); world.player.pos.copy(save); world.handPose = 'idle'; world.locked = false;
+      boat.position.copy(curve.getPointAt(0)); boat.rotation.set(0, restHeading(), 0);
+      oars.forEach((o) => oarPose(o, -1.25, 0.12, 1.4));
+      world.roll = 0; world.player.eye = saveEye; world.player.pos.copy(save);
+      world.handPose = 'idle'; world.locked = false; rowing = false;
     } });
 
   // ------------------------------------------------ lighthouse

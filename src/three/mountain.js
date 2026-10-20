@@ -526,6 +526,61 @@ function horizon(world) {
 }
 
 // Builds static mountain content into the world. Returns handles.
+// A wooden rowing boat: a rounded clinker-style hull with a pointed bow and a
+// transom stern, two thwarts, a gunwale rail and a pair of oars in oarlocks.
+// Its origin sits on the waterline; the bow points to +z.
+// userData.oars holds the two oar groups (pivot at the oarlock, blade towards +x).
+export function rowBoat() {
+  const g = new THREE.Group();
+  const L = 2.7, Wd = 0.62, D = 0.48, top = 0.3, NZ = 18, NA = 12;
+  const half = (f) => (f > 0 ? Wd * Math.pow(Math.max(0, 1 - f * f), 0.55) : Wd * (1 - 0.32 * f * f));
+  const sheer = (f) => top + 0.07 * f * f + (f > 0 ? 0.07 * f : 0);
+  const keel = (f) => top - D * (f > 0 ? Math.pow(Math.max(0, 1 - f * f), 0.3) : 1 - 0.3 * f * f);
+  const pos = [], col = [], idx = [];
+  const C = { band: new THREE.Color('#f4efe6'), wood: new THREE.Color('#b5794a'), plank: new THREE.Color('#a06a40'), low: new THREE.Color('#5a7a8a') };
+  for (let i = 0; i <= NZ; i++) {
+    const f = -1 + (2 * i) / NZ, w = half(f), yt = sheer(f), yb = keel(f);
+    for (let j = 0; j <= NA; j++) {
+      const ph = -1 + (2 * j) / NA, x = w * Math.sin((ph * Math.PI) / 2), y = yt - (yt - yb) * Math.pow(Math.cos((ph * Math.PI) / 2), 0.8);
+      pos.push(x, y, (f * L) / 2);
+      // a pale band under the rail, planks in two tones, painted below the waterline
+      const c = y > yt - 0.06 ? C.band : y < 0.02 ? C.low : Math.floor((yt - y) / 0.09) % 2 ? C.plank : C.wood;
+      col.push(c.r, c.g, c.b);
+    }
+  }
+  for (let i = 0; i < NZ; i++) for (let j = 0; j < NA; j++) { const a = i * (NA + 1) + j, b = a + NA + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+  // close the transom
+  const c0 = pos.length / 3; pos.push(0, (sheer(-1) + keel(-1)) / 2 + 0.05, -L / 2); col.push(C.wood.r, C.wood.g, C.wood.b);
+  for (let j = 0; j < NA; j++) idx.push(c0, j + 1, j);
+  const hg = new THREE.BufferGeometry();
+  hg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); hg.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  hg.setIndex(idx); hg.computeVertexNormals();
+  g.add(new THREE.Mesh(hg, toon('#ffffff', { vertexColors: true, side: THREE.DoubleSide })));
+  // floorboards, two thwarts, the rail along the sheer
+  const dark = toon('#6a4028'), seat = toon('#c99566');
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.03, 1.9), toon('#8a5a3a')); floor.position.set(0, keel(0) + 0.1, -0.1); g.add(floor);
+  for (const [z, w] of [[0.15, 1.12], [-0.85, 0.98]]) { const th = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, 0.24), seat); th.position.set(0, 0.2, z); g.add(th); }
+  for (const sd of [-1, 1]) {
+    const pts = []; for (let i = 0; i <= NZ; i++) { const f = -1 + (2 * i) / NZ; pts.push(new THREE.Vector3(sd * half(f), sheer(f) + 0.02, (f * L) / 2)); }
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.035, 4), dark));
+  }
+  // oars: shaft out to +x from the oarlock, the grip inboard, a flat blade
+  const oars = [];
+  for (const sd of [-1, 1]) {
+    const mount = new THREE.Group(); mount.position.set(sd * (half(0.07) + 0.02), sheer(0.07) + 0.04, 0.07); mount.scale.x = sd; g.add(mount);
+    const lock = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.06), toon('#3a3346')); lock.position.y = -0.04; mount.add(lock);
+    const oar = new THREE.Group(); oar.rotation.order = 'YZX'; mount.add(oar);
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.1, 6).rotateZ(Math.PI / 2), toon('#d9b07a')); shaft.position.x = 0.5; oar.add(shaft);
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.26, 6).rotateZ(Math.PI / 2), dark); grip.position.x = -0.42; oar.add(grip);
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.2, 0.03), toon('#c98a54')); blade.position.x = 1.42; oar.add(blade);
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.035), toon('#e05a7a')); tip.position.x = 1.72; oar.add(tip);
+    oar.userData.grip = new THREE.Vector3(-0.44, 0, 0); oar.userData.blade = new THREE.Vector3(1.45, 0, 0);
+    oars.push(oar);
+  }
+  g.userData.oars = oars; g.userData.len = L; g.userData.beam = Wd;
+  return g;
+}
+
 export function buildMountain(world) {
   const S = world.scene;
   S.add(terrainMesh());
@@ -770,11 +825,8 @@ export function buildMountain(world) {
   const kiteLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#fff6ea' })); S.add(kiteLine);
   world.every((dt, t) => { kite.position.copy(blanket.position).add(new THREE.Vector3(Math.sin(t * 0.4) * 3 - 4, 14 + Math.sin(t * 0.9) * 1.2, -6)); kite.rotation.y = Math.sin(t * 0.7) * 0.4; kiteLine.geometry.setFromPoints([basket.position, kite.position]); });
 
-  // ---- boat at the pier
-  const boat = new THREE.Group();
-  const hull = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 2.4), toon('#d9a066')); hull.position.y = 0.15; boat.add(hull);
-  const hull2 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.1, 2.2), toon('#8a5a3a')); hull2.position.y = 0.36; boat.add(hull2);
-  const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.08, 2.42), toon('#e05a7a')); stripe.position.y = 0.3; boat.add(stripe);
+  // ---- rowing boat at the pier (the chapter moves it to a berth deep enough to float)
+  const boat = rowBoat();
   boat.position.set(SPOTS.boat.x, wl, SPOTS.boat.z); boat.rotation.y = 0.6; S.add(boat);
 
   // ---- balloon
