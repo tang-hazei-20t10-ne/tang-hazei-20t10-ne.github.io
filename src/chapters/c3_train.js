@@ -408,7 +408,7 @@ export default async function car(game) {
   const song = C.carSong;
   const playing = song?.file && await audio.playRecord(song.file, { loop: false, gain: 0.16, onEnd: () => arrive() });
   if (playing) totalDur = Infinity;
-  else audio.playMusic('trainUp', 1.5);
+  else audio.playMusic('trainUp', 1.5, { feature: true });
   await wait(2400);
   await ui.dialog(C.intro);
   if (game.debug && new URLSearchParams(location.search).has('fast')) totalDur = 20;

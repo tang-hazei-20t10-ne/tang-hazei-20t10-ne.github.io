@@ -130,7 +130,7 @@ export default async function balloon(game) {
   // Liszt's Liebestraum No. 3 while drifting over the city (soft wind underneath);
   // the generated 'balloon' loop plays if the file is missing
   audio.scene(null, [['windHigh', 0.35]]);
-  audio.playRecord(BALLOON_SONG, { loop: true, gain: 0.38 }).then((ok) => { if (!ok) audio.playMusic('balloon', 2); });
+  audio.playRecord(BALLOON_SONG, { loop: true, gain: 0.38 }).then((ok) => { if (!ok) audio.playMusic('balloon', 2, { feature: true }); });
   I.city.userData.setNight(0.15);
   const fin = world.start();
   await game.enter();

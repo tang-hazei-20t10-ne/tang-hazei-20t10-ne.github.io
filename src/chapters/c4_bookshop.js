@@ -181,7 +181,7 @@ export default async function bookshop(game) {
     if (pick < 0) return;
     audio.sfx('scratch'); spin = 1;
     const rec = C.records[pick];
-    if (!(rec.file && await audio.playRecord(rec.file))) { audio.stopRecord(); audio.playMusic(rec.style, 1.2); }
+    if (!(rec.file && await audio.playRecord(rec.file))) { audio.stopRecord(); audio.playMusic(rec.style, 1.2, { feature: true }); }
     ui.note(`♪ ${rec.title}${rec.composer ? ' · ' + rec.composer : ''}`, 3500);
     scene.partner.emote('note');
     if (pick === 3) setTimeout(() => scene.say(scene.partner, C.partnerRecs[0], 3000), 1500);

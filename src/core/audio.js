@@ -157,13 +157,18 @@ const PRESETS = {
   village: { root: 67, bpm: 108, beats: 4, prog: [[0, 4, 7], [9, 12, 16], [5, 9, 12], [7, 11, 14]], scale: MAJ, mel: 'flute', mel2: 'koto', density: 0.55, pad: true, bass: true, drums: 'festival' },
 };
 
+// Background music level under the other music. Pieces that are the scene's
+// own music (the balloon flight, the train ride, the bookshop's records) play
+// at FEATURE times that, where the background music used to be.
+const BGM = 0.35, FEATURE = 2;
+
 class MusicPlayer {
-  constructor(audio, preset) {
-    this.a = audio; this.p = preset;
+  constructor(audio, preset, level = 1) {
+    this.a = audio; this.p = preset; this.level = level;
     this.out = audio.ctx.createGain(); this.out.gain.value = 0.0001;
     this.out.connect(audio.bgmBus);
     this.dry = audio.ctx.createGain(); this.dry.connect(this.out);
-    this.wet = audio.ctx.createGain(); this.wet.gain.value = 0.35 * 0.7; this.wet.connect(audio.reverb);
+    this.wet = audio.ctx.createGain(); this.wet.gain.value = 0.35 * BGM * level; this.wet.connect(audio.reverb);
     this.reverbOut = this.out; // reverb returns through musicBus already
     this.beatDur = 60 / preset.bpm;
     this.bar = 0; this.next = audio.ctx.currentTime + 0.1;
@@ -177,7 +182,7 @@ class MusicPlayer {
     for (let i = 0; i < steps; i++) notes.push(r() < this.p.density ? Math.floor(r() * 7) : null);
     return notes;
   }
-  fadeIn(t = 2) { const g = this.out.gain; const now = this.a.ctx.currentTime; g.cancelScheduledValues(now); g.setValueAtTime(Math.max(g.value, 0.0001), now); g.linearRampToValueAtTime(1, now + t); }
+  fadeIn(t = 2) { const g = this.out.gain; const now = this.a.ctx.currentTime; g.cancelScheduledValues(now); g.setValueAtTime(Math.max(g.value, 0.0001), now); g.linearRampToValueAtTime(this.level, now + t); }
   stop(t = 2) {
     const g = this.out.gain; const now = this.a.ctx.currentTime;
     g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(0.0001, now + t);
@@ -346,8 +351,8 @@ class AudioEngine {
     const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
     this.master.connect(comp); comp.connect(ctx.destination);
     this.musicBus = ctx.createGain(); this.musicBus.gain.value = 1.2; this.musicBus.connect(this.master);
-    // the background music sits 30% under the other music (the stage song) without moving the volume slider
-    this.bgmBus = ctx.createGain(); this.bgmBus.gain.value = 0.7; this.bgmBus.connect(this.musicBus);
+    // generated music goes through here, held under the recorded songs without moving the volume slider
+    this.bgmBus = ctx.createGain(); this.bgmBus.gain.value = BGM; this.bgmBus.connect(this.musicBus);
     this.ambBus = ctx.createGain(); this.ambBus.gain.value = 1.05; this.ambBus.connect(this.master);
     this.sfxBus = ctx.createGain(); this.sfxBus.gain.value = 1.35; this.sfxBus.connect(this.master);
     this.songBus = ctx.createGain(); this.songBus.gain.value = 0.75; this.songBus.connect(this.master);
@@ -371,11 +376,12 @@ class AudioEngine {
   suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend(); }
   resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); }
 
-  playMusic(name, fade = 2.5) {
+  // feature: the piece is the scene's own music (balloon, train, a record), not background
+  playMusic(name, fade = 2.5, { feature = false } = {}) {
     if (!this.ctx || name === this.musicName) return;
     if (this.music) this.music.stop(fade);
     this.musicName = name; this.music = null;
-    if (name && PRESETS[name]) { this.music = new MusicPlayer(this, PRESETS[name]); this.music.fadeIn(fade); }
+    if (name && PRESETS[name]) { this.music = new MusicPlayer(this, PRESETS[name], feature ? FEATURE : 1); this.music.fadeIn(fade); }
   }
   setMusicLevel(v, t = 1.5) { if (this.ctx) this.musicBus.gain.setTargetAtTime(v * 1.2, this.ctx.currentTime, t / 3); }
   setAmbienceLevel(v, t = 1.5) { if (this.ctx) this.ambBus.gain.setTargetAtTime(v * 1.05, this.ctx.currentTime, t / 3); }
