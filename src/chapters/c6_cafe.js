@@ -461,8 +461,6 @@ export default async function cafe(game) {
   // the barista brings over a tray of plaster figures
   await wait(500);
   scene.say(barista, S.offer, 3600);
-  await wait(2800);
-  await ui.dialog([{ who: 'partner', text: S.invite }]);
 
   // cozy actions
   let leave;

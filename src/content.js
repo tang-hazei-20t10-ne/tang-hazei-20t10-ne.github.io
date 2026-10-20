@@ -555,7 +555,6 @@ export default {
       action: 'Tô tượng',
       again: 'Tô thêm tượng',
       offer: 'Quán mình có tô tượng thạch cao nè, hai bạn tô thử không?',
-      invite: M.caPhe.ruToTuong,
       pickTitle: 'Chọn một bé tượng',
       pickHint: 'Tượng thạch cao trắng tinh, đang chờ cậu tô màu nè.',
       hint: 'Chạm vào từng phần để tô cả phần đó, chọn cọ nhỏ để chấm thêm chi tiết.',
