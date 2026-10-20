@@ -35,6 +35,78 @@ const potSprite = () => spr(30, 26, (P) => {
 });
 const lampSprite = () => spr(10, 9, (P) => { P(4, 0, 2, 2, '#3a2633'); P(1, 2, 8, 5, '#f4e2bc'); P(0, 4, 10, 3, '#f4e2bc'); P(1, 2, 8, 1, '#fff6dc'); P(0, 7, 10, 1, '#d8c094'); P(3, 8, 4, 1, '#fff3c0'); });
 
+// The chef, drawn by hand: a tall glossy quiff with cropped sides, thick brows,
+// a huge toothy grin, a black tank top with a little print and a silver chain.
+// Same pixel density as the other characters, just a grown-up's proportions.
+const CHEF_PAL = {
+  H: '#18161e', h: '#363442', g: '#767690', U: '#6a5a5a',
+  S: '#e8b48a', s: '#c98d68', L: '#f6cca4', E: '#1e1418', W: '#ffffff', B: '#221c22',
+  M: '#5a1e26', T: '#fbf8f2', R: '#d0566a',
+  K: '#1e1e26', k: '#131318', w: '#34343f', r: '#d0503e', y: '#f2d48a',
+  C: '#e4e8ee', c: '#9aa0aa', P: '#2e2e3a', p: '#22222c', O: '#3a3038', o: '#5a5058',
+};
+const CHEF_ROWS = [
+  '........HHHHHHH.........',
+  '......HHgggghHHH........',
+  '.....HHggHHHhhHHH.......',
+  '.....HgHHhhHHHhHHH......',
+  '....UHHHHHHHHHHhHHHU....',
+  '....UUSSSSSSSSSSSSUU....',
+  '....USSSSSSSSSSSSSSU....',
+  '....USBBBSSSSSSBBBSU....',
+  '....SSEESSSSSSSEESSs....',
+  '....SSEESSSSsSSEESSs....',
+  '....sSSSSSSssSSSSSSs....',
+  '.....SSsMMMMMMMMsSS.....',
+  '.....SSMTTTTTTTTMSs.....',
+  '......sSMRRRRRRMSs......',
+  '.......sSSMMMMSSs.......',
+  '........sSSSSSSs........',
+  '.........sSSSSs.........',
+  '......SSKKSSSSKKSS......',
+  '.....SSSKKCSSCKKSSS.....',
+  '.....SSSKKKCCKKKsss.....',
+  '.....SSsKKKKKKKKsSs.....',
+  '.....SSsKwKKKKKKsSs.....',
+  '.....LSsKKryyrKKsSL.....',
+  '.....SS.KKKrrKKK.SS.....',
+  '........PPPPPPPP........',
+  '........PPPppPPP........',
+  '........PPP..PPP........',
+  '........PPp..PPp........',
+  '........PPp..PPp........',
+  '........OOO..OOO........',
+  '........ooO..ooO........',
+];
+const chefCache = new Map();
+export function chefSprite(pose = 'idle', frame = 0, mood = 'normal') {
+  const key = pose + frame + mood;
+  if (chefCache.has(key)) return chefCache.get(key);
+  const rows = CHEF_ROWS.map((r) => r.split(''));
+  const set = (cx, cy, ch) => { if (rows[cy]) rows[cy][cx] = ch; };
+  const fill = (x0, y0, w, h, ch) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) set(x0 + i, y0 + j, ch); };
+  // eyes: open with a glint, blinking, or squeezed shut by the grin
+  if (mood === 'blink') { fill(6, 8, 2, 2, 'S'); fill(15, 8, 2, 2, 'S'); fill(6, 9, 2, 1, 'E'); fill(15, 9, 2, 1, 'E'); }
+  else if (mood === 'happy') { fill(6, 8, 2, 2, 'S'); fill(15, 8, 2, 2, 'S'); fill(6, 8, 2, 1, 'E'); set(5, 9, 'E'); set(8, 9, 'E'); fill(15, 8, 2, 1, 'E'); set(14, 9, 'E'); set(17, 9, 'E'); }
+  else { set(6, 8, 'W'); set(15, 8, 'W'); }
+  // arms: hanging, both hands working at the board, or one held out to serve
+  const clearArm = (side) => { const x0 = side ? 16 : 5; for (let j = 18; j < 24; j++) for (let i = 0; i < 3; i++) if (rows[j][x0 + i] !== 'K') set(x0 + i, j, '.'); };
+  if (pose === 'hold') {
+    clearArm(0); clearArm(1);
+    const up = frame % 2;
+    fill(6, 18, 2, 3, 'S'); fill(16, 18, 2, 3, 's');
+    fill(7, 21 - up, 3, 2, 'S'); fill(14, 21 - (1 - up), 3, 2, 'S'); set(9, 21 - up, 'L'); set(14, 21 - (1 - up), 'L');
+  } else if (pose === 'give') {
+    clearArm(1);
+    fill(16, 18, 5, 2, 'S'); fill(16, 19, 5, 1, 's'); fill(21, 17, 2, 3, 'L');
+  }
+  const [c, x] = canvas(24, 34);
+  rows.forEach((r, j) => r.forEach((ch, i) => { if (ch !== '.') { x.fillStyle = CHEF_PAL[ch]; x.fillRect(i, j, 1, 1); } }));
+  const out = outline(c);
+  chefCache.set(key, out);
+  return out;
+}
+
 export default async function omakase(game) {
   state.data.omakase = []; state.save();
   const props = { tea: teaCup(), towel: towel(), bowl: bigBowl(), sake: sakeSet(), vase: vase(), tub: riceTub(), pot: potSprite(), lamp: lampSprite() };
@@ -207,8 +279,8 @@ export default async function omakase(game) {
       x.drawImage(counter, 0, 0);
       plates.forEach((p) => { if (p) put(x, p.img, p.X, p.Y, p.Z, 20, false, 1); }); // dishes a size smaller than people
       // the chef stands on the right, facing the guests
-      const cs = charSprite(LOOKS.chef, { pose: chef.pose, frame: chef.frame, mood: chef.blink < 0 ? 'blink' : chef.mood });
-      put(x, cs, CHEF.x, 0, CHEF.z, 28, true);
+      const cs = chefSprite(chef.pose, chef.frame, chef.blink < 0 ? 'blink' : chef.mood);
+      put(x, cs, CHEF.x, 0, CHEF.z, 31, true);
       x.drawImage(fore, 0, 0);
       guests.forEach((g, i) => {
         if (g.emoT <= 0) return;
