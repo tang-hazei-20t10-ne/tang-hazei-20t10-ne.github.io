@@ -64,7 +64,8 @@ function cached(key, fn) {
 export const LOOKS = {
   hazei: () => ({ kind: 'hazei', hairStyle: 'long', ...content.hazeiLook }),
   partner: () => ({ kind: 'partner', ...content.partnerLook }),
-  chef: { kind: 'npc', hair: '#4a3a33', hairStyle: 'short', skin: '#f2c49c', top: '#fbfbf6', bottom: '#3c3a4a', shoes: '#2f2a33', chefHat: true, beard: true },
+  // the omakase chef: slicked-up pompadour, big grin, black tank top, silver chain
+  chef: { kind: 'npc', hair: '#17151c', hairStyle: 'pomp', skin: '#e6ad84', top: '#1f1f26', bottom: '#2c2c36', shoes: '#2f2a33', tank: true, grin: true, chain: true },
   barista: { kind: 'npc', hair: '#6b3f2a', hairStyle: 'bun', skin: '#f7d2b4', top: '#e9dccb', bottom: '#4b3b38', shoes: '#3a2a2a', apron: '#4f6b5a' },
   bakerAunt: { kind: 'npc', hair: '#2e2329', hairStyle: 'bun', skin: '#f0c19c', top: '#f6a85e', bottom: '#7a4a5e', shoes: '#4a2f2a', apron: '#fff4e6' },
   florist: { kind: 'npc', hair: '#8a4b3a', hairStyle: 'long', skin: '#ffd9bd', top: '#9fd3a8', dress: '#5f9e78', shoes: '#4a3a2a', apron: '#fff4e6' },
@@ -83,7 +84,7 @@ export function charSprite(look, o = {}) {
   const mood = o.mood || 'normal';
   const hat = o.hat || look.strawHat; const sung = o.sunglasses;
   const view = o.top ? 'top' : o.back ? 'back' : '';
-  const key = [look.kind, look.hair, look.top, look.dress, look.bottom, look.hairStyle, look.glasses, look.apron, pose, frame, mood, hat, sung, look.chefHat, o.hold || '', view].join('|');
+  const key = [look.kind, look.hair, look.top, look.dress, look.bottom, look.hairStyle, look.glasses, look.apron, pose, frame, mood, hat, sung, look.chefHat, look.tank ? 'tank' : '', o.hold || '', view].join('|');
   return cached(key, () => outline(o.top ? drawTop(look, frame) : o.back ? drawBack(look, pose, frame) : drawChar(look, pose, frame, mood, hat, sung, o.hold)));
 }
 
@@ -206,6 +207,11 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
     P(9, bodyY + 4, 6, 2, topS);
   }
   if (L.kind === 'hazei') { P(10, bodyY, 4, 1, '#ffffff'); P(11, bodyY + 1, 2, 1, '#f08fa8'); }
+  if (L.tank) { // bare shoulders, a scoop neck and a silver chain
+    P(7, bodyY, 1, 1, skin); P(16, bodyY, 1, 1, skinS);
+    P(10, bodyY, 4, 1, skin); P(11, bodyY + 1, 2, 1, skin);
+    if (L.chain) { P(10, bodyY, 1, 1, '#e4e8ee'); P(13, bodyY, 1, 1, '#e4e8ee'); P(11, bodyY + 1, 2, 1, '#f4f6fa'); }
+  }
   if (L.apron) { P(9, bodyY + 1, 6, torsoH + (dress ? 3 : 1), L.apron); P(9, bodyY + 1, 6, 1, shade(L.apron, 0.15)); }
   if (L.chefHat) { P(9, bodyY + 1, 1, 1, '#c9c2b8'); P(9, bodyY + 3, 1, 1, '#c9c2b8'); P(14, bodyY + 1, 1, 1, '#c9c2b8'); P(14, bodyY + 3, 1, 1, '#c9c2b8'); }
   // skirt / dress
@@ -223,11 +229,13 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
   const armY = bodyY + 1;
   let la = 0, ra = 0;
   if (pose === 'walk') { la = frame === 1 ? 1 : frame === 3 ? -1 : 0; ra = -la; }
-  const armL = (yy) => { P(5, yy, 2, 4, top); P(5, yy + 4, 2, 1, skin); };
-  const armR = (yy) => { P(17, yy, 2, 4, topS); P(17, yy + 4, 2, 1, skin); };
-  const armUpR = () => { P(17, armY - 4, 2, 5, topS); P(17, armY - 6, 2, 2, skin); };
-  const armUpL = () => { P(5, armY - 4, 2, 5, top); P(5, armY - 6, 2, 2, skin); };
-  const armFwdR = () => { P(17, armY, 3, 2, topS); P(20, armY, 2, 2, skin); };
+  // a tank top leaves the arms bare
+  const slv = L.tank ? skin : top, slvS = L.tank ? skinS : topS;
+  const armL = (yy) => { P(5, yy, 2, 4, slv); P(5, yy + 4, 2, 1, skin); };
+  const armR = (yy) => { P(17, yy, 2, 4, slvS); P(17, yy + 4, 2, 1, skin); };
+  const armUpR = () => { P(17, armY - 4, 2, 5, slvS); P(17, armY - 6, 2, 2, skin); };
+  const armUpL = () => { P(5, armY - 4, 2, 5, slv); P(5, armY - 6, 2, 2, skin); };
+  const armFwdR = () => { P(17, armY, 3, 2, slvS); P(20, armY, 2, 2, skin); };
   switch (pose) {
     case 'wave': armL(armY + la); armUpR(); if (frame % 2) P(19, armY - 7, 1, 2, skin); break;
     case 'sitwave': { // seated, one hand up swaying slowly left/right
@@ -266,8 +274,10 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
   P(4, headY, 2, 4, hair); P(18, headY, 2, 3, hair);
   P(8, headY - 2, 4, 1, hairL); P(7, headY - 1, 2, 1, hairL);
   // fringe
-  P(5, headY + 2, 3, 1, hair); P(9, headY + 2, 2, 1, hair); P(12, headY + 2, 4, 1, hair); P(17, headY + 2, 2, 1, hair);
-  P(5, headY + 3, 1, 1, hair); P(13, headY + 3, 2, 1, hair); P(18, headY + 3, 1, 1, hair);
+  if (hs !== 'pomp') {
+    P(5, headY + 2, 3, 1, hair); P(9, headY + 2, 2, 1, hair); P(12, headY + 2, 4, 1, hair); P(17, headY + 2, 2, 1, hair);
+    P(5, headY + 3, 1, 1, hair); P(13, headY + 3, 2, 1, hair); P(18, headY + 3, 1, 1, hair);
+  }
   if (hs === 'long') {
     P(4, headY + 3, 2, 11, hair); P(18, headY + 3, 2, 9, hair);
     P(4, headY + 4, 1, 8, hairL);
@@ -278,6 +288,14 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
     P(9, headY - 5, 6, 3, hair); P(10, headY - 6, 4, 1, hair); P(10, headY - 5, 2, 1, hairL);
   } else if (hs === 'pig') {
     P(2, headY + 3, 3, 4, hair); P(19, headY + 3, 3, 4, hair); P(3, headY + 2, 2, 1, '#ef7d9a'); P(19, headY + 2, 2, 1, '#ef7d9a');
+  } else if (hs === 'pomp') { // tall glossy quiff swept back, faded sides
+    const gl = light(hair, 0.4), gl2 = light(hair, 0.22);
+    P(8, headY - 5, 7, 1, hair); P(7, headY - 4, 10, 1, hair); P(6, headY - 3, 12, 2, hair);
+    P(9, headY - 5, 4, 1, gl); P(8, headY - 4, 2, 1, gl); P(12, headY - 4, 3, 1, gl2); P(11, headY - 3, 2, 1, gl2); P(15, headY - 2, 2, 1, gl2); P(7, headY - 2, 2, 1, gl2);
+    P(6, headY - 1, 12, 2, hair); P(6, headY + 1, 3, 1, hair); P(15, headY + 1, 3, 1, hair);
+    // close-cropped sides
+    const fade = mix(hair, skin, 0.35);
+    P(4, headY, 2, 4, skin); P(18, headY, 2, 3, skin); P(5, headY, 1, 4, fade); P(18, headY, 1, 3, fade); P(6, headY + 1, 1, 2, fade);
   } else { // short
     P(4, headY + 3, 1, 3, hair); P(18, headY + 3, 2, 2, hair);
   }
@@ -298,12 +316,13 @@ function drawChar(L, pose, frame, mood, hat, sunglasses, hold) {
     if (mood === 'surprise') { P(ex1, ey - 1, 2, 1, eye); P(ex2, ey - 1, 2, 1, eye); }
   }
   // blush
-  P(ex1 - 1, ey + 2, 2, 1, '#f5a0a8'); P(ex2 + 1, ey + 2, 2, 1, '#f5a0a8');
+  if (!L.grin) { P(ex1 - 1, ey + 2, 2, 1, '#f5a0a8'); P(ex2 + 1, ey + 2, 2, 1, '#f5a0a8'); }
   // mouth
   const my = ey + 3;
   if (mood === 'happy' || mood === 'silly') { P(12, my, 2, 1, '#b8506a'); P(12, my + 1, 2, 1, '#e97f95'); }
   else if (mood === 'surprise' || pose === 'sing' || mood === 'sing' || mood === 'singHappy') { P(12, my, 2, 2, '#8a3a52'); P(12, my + 1, 2, 1, '#e97f95'); }
   else P(12, my, 2, 1, '#c26a7e');
+  if (L.grin && mood !== 'surprise') { P(9, my, 6, 2, '#7a2a32'); P(9, my, 6, 1, '#fbf8f2'); P(10, my + 1, 4, 1, '#c84a5a'); P(8, my - 1, 1, 1, skinS); P(15, my - 1, 1, 1, skinS); }
   if (L.beard) { P(8, my - 1, 9, 2, L.hair); P(10, my + 1, 5, 1, L.hair); P(12, my, 2, 1, '#c26a7e'); }
 
   if (L.glasses) {

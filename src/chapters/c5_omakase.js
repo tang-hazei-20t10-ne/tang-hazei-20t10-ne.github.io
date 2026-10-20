@@ -50,7 +50,7 @@ export default async function omakase(game) {
   // World units are sprite pixels: a character is ~30 tall. x runs across the
   // counter (guests at -x, chef at +x), y up from the floor, z along the counter.
   const TOP = 14, HALF = 15, LEN = 150; // counter top height, half width, length
-  const SEAT = [{ x: -23, z: 30 }, { x: -23, z: 53 }]; // Hazei (near), Mino
+  const SEAT = [{ x: -23, z: 28 }, { x: -23, z: 57 }]; // Hazei (near), Mino
   const CHEF = { x: 26, z: 41 };
   const mat = (i) => ({ x: -5, z: SEAT[i].z }); // where a guest's plate sits
 
