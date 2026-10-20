@@ -41,7 +41,7 @@ export default {
     textChannels: ['chung', 'ảnh-đẹp', 'nhạc-hay', 'kèo-đi-chơi'],
     voiceChannel: 'Chill cùng nhau',
     activityName: 'Day Out',
-    activityDesc: 'Một ngày đi chơi nho nhỏ, từ sáng sớm tới tối.',
+    activityDesc: 'Xách balo lên và đi nào.',
     startButton: 'Bắt đầu chuyến hành trình',
     joinVoice: 'Tham gia kênh thoại',
     typing: 'đang soạn tin…',
