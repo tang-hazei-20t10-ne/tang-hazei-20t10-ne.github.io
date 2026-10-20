@@ -287,7 +287,11 @@ export default async function omakase(game) {
       const { W, H } = V();
       if (!cookC || cookC.width !== W || cookC.height !== H) [cookC] = canvas(W, H);
       const cx = cookC.getContext('2d');
-      drawCloseup(cx, W, H, cook.kind, cook.step, cook.t, s.t, cook.done);
+      // keep the work clear of the dialog box, wherever the layout puts it
+      let band = [0, 1];
+      const d = document.getElementById('dialog'), r = d?.getBoundingClientRect(), vh = innerHeight;
+      if (r?.height) band = (r.top + r.bottom) / 2 > vh / 2 ? [0, Math.max(0.5, (r.top - 24) / vh)] : [Math.min(0.5, (r.bottom + 8) / vh), 1];
+      drawCloseup(cx, W, H, cook.kind, cook.step, cook.t, s.t, cook.done, band);
       // a soft vignette so it reads as a camera close-up
       const g = cx.createRadialGradient(W / 2, H * 0.45, Math.min(W, H) * 0.4, W / 2, H * 0.5, Math.max(W, H) * 0.75);
       g.addColorStop(0, 'rgba(30,16,24,0)'); g.addColorStop(1, 'rgba(30,16,24,0.45)'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
@@ -377,7 +381,9 @@ export default async function omakase(game) {
     Object.assign(cook, { kind: opt.sprite, step: 0, t: 0, done: false, on: true });
     audio.sfx('whoosh');
     await tween(1, 0.4);
-    ui.note(opt.dish, 2000);
+    // the dish's name hangs over the board for a moment before the hands start
+    ui.note(opt.dish, 1500);
+    await wait(1700);
     for (let i = 0; i < steps.length; i++) {
       const text = (opt.steps || [])[i];
       await Promise.all([play(i, steps[i]), text ? ui.dialog([{ who: 'chef', text }]) : wait(0)]);

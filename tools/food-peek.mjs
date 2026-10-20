@@ -20,4 +20,4 @@ await p.evaluate(async ([what, tt]) => {
     add(c, 2);
   }
 }, [what, tt]);
-await p.screenshot({ path: `test-shots/food-${what}.png`, fullPage: true }); await b.close();
+await p.screenshot({ path: `../test-shots/food-${what}.png`, fullPage: true }); await b.close();

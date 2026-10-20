@@ -394,7 +394,7 @@ export default {
               'Cơm trộn giấm phải còn ấm bằng hơi người, nắm nhẹ trong lòng bàn tay.',
               'Đặt sò điệp lên, ấn đúng ba lần. Chặt quá là cơm hết thở.',
               'Quét một lớp nước tương nikiri cho bóng, rắc chút vỏ yuzu.',
-              'Đặt lên khay gỗ, ăn bằng tay cũng được nha.',
+              'Sushi ngon nhất là lúc vừa nắm xong, cháu cầm tay ăn cũng được nha.',
             ],
           },
           {

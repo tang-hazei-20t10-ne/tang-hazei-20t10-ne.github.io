@@ -92,12 +92,34 @@ function flower(p, x, y, r, petal, centre) {
 }
 
 // ---------------------------------------------------------------- pieces
-function riceBlock(p, x, y, w = 5.6) { // an oblong mound of sushi rice
-  p.ell(x + 0.3, y + 0.2, w, w * 0.42, '#cfc8b8');
-  p.ell(x, y - 1.2, w, w * 0.5, '#f2eee4');
-  p.ell(x - 0.4, y - 1.8, w * 0.86, w * 0.4, '#fbf9f2');
-  for (let i = 0; i < 12; i++) p.dot(x - w + 1 + rnd(i + x) * (w * 2 - 2), y - 3 + rnd(i * 3 + x) * 3.4, '#e2dccc', 0.35);
-  for (let i = 0; i < 5; i++) p.dot(x - w * 0.6 + rnd(i + 40 + x) * w, y - 2.6 + rnd(i + 50) * 1.4, '#ffffff', 0.35);
+// A rounded oblong block lying on the plate, turned by `a`, from height z0 up
+// by h; `bulge` lifts its middle so a slice on top drapes down at both ends.
+function loaf(p, x, y, a, L, W, z0, h, top, side, bulge = 0) {
+  const c = Math.cos(a), sn = Math.sin(a);
+  const ring = (z) => {
+    const pts = [];
+    for (let i = 0; i < 28; i++) {
+      const t = i / 28 * Math.PI * 2, ct = Math.cos(t), st = Math.sin(t);
+      const u = L / 2 * Math.sign(ct) * Math.abs(ct) ** 0.5, v = W / 2 * Math.sign(st) * Math.abs(st) ** 0.5;
+      const zz = z + bulge * (1 - (2 * u / L) ** 2);
+      pts.push([x + u * c - v * sn, y + (u * sn + v * c) * SQ - zz]);
+    }
+    return pts;
+  };
+  for (let k = 0; k < Math.max(1, Math.ceil(h * 2)); k++) p.poly(ring(z0 + k * 0.5), side);
+  p.poly(ring(z0 + h), top);
+  return (u, v, z = 0) => [x + u * c - v * sn, y + (u * sn + v * c) * SQ - (z0 + h + z + bulge * (1 - (2 * u / L) ** 2))];
+}
+function riceBlock(p, x, y, w = 5.6, a = 0) { // an oblong mound of sushi rice
+  p.ell(x + 0.5, y + 1, w * 1.05, w * 0.36, 'rgba(90,60,30,0.16)');
+  const at = loaf(p, x, y, a, w * 1.8, w * 0.9, 0, 2.6, '#f8f6f0', '#e4ddcc');
+  for (let i = 0; i < 16; i++) p.dot(...at((rnd(i + x) - 0.5) * w * 1.6, (rnd(i * 3 + x) - 0.5) * w * 0.7), i % 3 ? '#e2dccc' : '#ffffff', 0.35);
+  return at;
+}
+// a nigiri: rice with a slice draped over it
+function nigiri(p, x, y, a, top, side) {
+  riceBlock(p, x, y, 5.4, a);
+  return loaf(p, x, y, a, 11.4, 5.2, 2.2, 0.8, top, side, 1.1);
 }
 function fishSlice(p, x, y, base, line, edge, w = 3.4, h = 2.4) {
   // a long slice standing slightly tilted: lit cut face, a darker side, the blood line
@@ -157,10 +179,12 @@ export const DISHES = {
     const sauce = has(o, 'sauce');
     if (sauce > 0) { p.ell(0.5, 1.2, 12 * sauce, 6.2 * sauce, '#4a2a1e'); p.ell(-3 * sauce, 0, 4 * sauce, 0.8 * sauce, '#7a4a32'); }
     if (!has(o, 'tofu')) return;
+    p = p.sub(0, -has(o, 'lift', 0) * 9, 1); // still in the chef's hands, coming down
     const h = 7;
     p.rect(-6.5, -h + 3.4, 13, h, '#ece6d6'); p.rect(4.5, -h + 3.4, 2, h, '#d8cfbb');
     p.rect(-6.5, -h - 3.4, 13, 6.8, '#fbf8ef'); p.rect(-6.5, -h - 3.4, 13, 0.6, '#ffffff');
     p.line(-6.5, -h + 3.4, 6.5, -h + 3.4, '#ddd6c4', 0.3);
+    for (const cx of [-2.2, 2.2]) { p.line(cx, -h - 3.4, cx, -h + 3.4, '#e6dfcd', 0.3); p.line(cx, -h + 3.4, cx, 3.4, '#d8d0bc', 0.3); }
     if (has(o, 'ginger')) {
       p.ell(-1.2, -h - 0.6, 2.4, 1.3, '#f0d488'); for (let i = 0; i < 6; i++) p.dot(-2.6 + rnd(i) * 2.8, -h - 1.3 + rnd(i + 9) * 1.4, '#e2bf62', 0.3);
       for (let i = 0; i < 5; i++) { const xx = 1 + rnd(i + 3) * 4, yy = -h - 2.4 + rnd(i + 7) * 3.4; p.ell(xx, yy, 0.6, 0.4, '#7cc05a'); p.dot(xx, yy, '#d8f0b0', 0.25); }
@@ -203,18 +227,15 @@ export const DISHES = {
     geta(p);
     if (has(o, 'gari')) for (let k = 0; k < 3; k++) p.ell(12.5 + k * 0.5, 2 - k * 0.8, 2.2, 1, ['#f2b8b4', '#f6c8c4', '#f8d4d0'][k]);
     const n = Math.round(has(o, 'pieces', 2));
+    // two pieces set on a slant, the back one a little to the right
     for (let i = 0; i < n; i++) {
-      const x = -7 + i * 12, y = 1;
-      riceBlock(p, x, y);
-      const g = has(o, 'glaze');
-      // a plump scallop draped over the rice, pearly white with a faint peach blush
-      p.ell(x + 0.2, y - 3.1, 6.6, 2.7, '#d8c4a8');
-      p.ell(x, y - 3.6, 6.3, 2.5, mix('#f2e8da', '#ead6b8', g * 0.4));
-      p.ell(x - 0.5, y - 4.1, 5, 1.7, mix('#fbf6ee', '#f4e6cc', g * 0.4));
-      p.ell(x + 2.4, y - 3.4, 2.2, 1, '#f6dcc8');
-      p.line(x - 3.6, y - 3.9, x + 3.4, y - 3.6, '#e2d4c0', 0.3);
-      if (g) { p.ell(x - 1.8, y - 4.6, 2, 0.4, '#ffffff'); p.ell(x + 1.6, y - 4.2, 0.9, 0.25, '#ffffff'); }
-      if (has(o, 'yuzu')) for (let k = 0; k < 4; k++) p.dot(x - 2 + rnd(k + i * 9) * 4, y - 4.6 + rnd(k + 11) * 1.4, '#f2cc3a', 0.4);
+      const x = -6 + i * 11, y = 2.6 - i * 3.6, g = has(o, 'glaze');
+      // a thick scallop opened over the rice: ivory, a peach edge, a soy sheen once brushed
+      const at = nigiri(p, x, y, -0.32, mix('#f7edd8', '#f0d6a6', g * 0.6), mix('#e8bc92', '#cf9460', g * 0.6));
+      p.poly([at(-3.6, -1.3, 0.3), at(3.4, -1.5, 0.3), at(3, 0.4, 0.3), at(-3.2, 0.6, 0.3)], mix('#fdf8ee', '#f8e6c0', g * 0.6));
+      p.line(...at(-3.4, -1.1, 0.5), ...at(1.6, -1.4, 0.5), '#ffffff', 0.3);
+      if (g) p.alpha(0.5 * g, () => { p.line(...at(-4, 1, 0.2), ...at(4, 0.8, 0.2), '#c88848', 0.35); p.dot(...at(2.4, -0.6, 0.6), '#ffffff', 0.45); });
+      if (has(o, 'yuzu')) for (let k = 0; k < 5; k++) p.dot(...at(-1.5 + rnd(k + i * 9) * 3, -0.8 + rnd(k + 11) * 1.4, 0.5), '#f2c43a', 0.4);
     }
   },
 
@@ -240,7 +261,7 @@ export const DISHES = {
   tempura(p, o = ALL) {
     slab(p, 36, 21, '#2a2226', '#160f12');
     p.rect(-18, -10.5, 36, 0.8, '#a83a3a');
-    if (has(o, 'paper')) { p.poly([[-13, -8], [9, -9.5], [12, 7], [-10, 8]], '#f8f4ea'); p.line(-11.5, 0, 10.5, -1.2, '#e8e2d2', 0.3); }
+    if (has(o, 'paper')) { const d = -has(o, 'paperLift', 0) * 12; p.poly([[-13, -8 + d], [9, -9.5 + d], [12, 7 + d], [-10, 8 + d]], '#f8f4ea'); p.line(-11.5, d, 10.5, -1.2 + d, '#e8e2d2', 0.3); }
     const n = Math.round(has(o, 'shrimp', 2));
     for (let i = 0; i < n; i++) shrimpCurl(p, i ? 4.5 : -5.5, i ? -1.5 : 3.5, 4.6, i ? '#e6aa40' : '#ecb84e', 1);
     if (has(o, 'lemon')) { p.poly([[8, 4], [13, 2.2], [12.4, 5.2]], '#f6e07a'); p.line(8, 4, 13, 2.2, '#e8c440', 0.4); }
@@ -253,14 +274,12 @@ export const DISHES = {
     const n = Math.round(has(o, 'pieces', 2));
     const glaze = has(o, 'glaze', 1);
     for (let i = 0; i < n; i++) {
-      const x = -7.5 + i * 13, y = 1.5;
-      riceBlock(p, x, y);
-      const body = mix('#c08a5a', '#8a4a26', glaze), dark = mix('#9a6a3e', '#5a2814', glaze);
-      p.poly([[x - 6.6, y - 3.4], [x + 6.4, y - 3.9], [x + 6.8, y - 2], [x - 6.4, y - 1.4]], dark);
-      p.ell(x, y - 4.2, 6.6, 2.4, body);
-      for (let k = 0; k < 4; k++) p.line(x - 4.5 + k * 3, y - 5.6, x - 3.4 + k * 3, y - 2.8, mix(dark, '#2a1008', 0.5), 0.35);
-      if (glaze > 0.5) { p.ell(x - 2, y - 5, 2.2, 0.45, '#e8a868'); p.ell(x + 2.8, y - 4.2, 1.2, 0.3, '#d89a5a'); }
-      if (has(o, 'sansho')) for (let k = 0; k < 5; k++) p.dot(x - 3 + rnd(k + i * 7) * 6, y - 5 + rnd(k + 3) * 1.8, '#7a9a3a', 0.4);
+      const x = -6.5 + i * 12, y = 2.6 - i * 3.4;
+      const body = mix('#c08a5a', '#8a4422', glaze), dark = mix('#9a6a3e', '#4a200e', glaze);
+      const at = nigiri(p, x, y, -0.3, body, dark);
+      for (let k = 0; k < 4; k++) p.line(...at(-3.8 + k * 2.5, -2, 0.1), ...at(-3.2 + k * 2.5, 2, 0.1), mix(dark, '#2a1008', 0.6), 0.4);
+      if (glaze > 0.5) { p.line(...at(-3.6, -1, 0.3), ...at(0, -1.3, 0.3), '#f0b878', 0.35); p.dot(...at(3, 0, 0.3), '#e8a868', 0.4); }
+      if (has(o, 'sansho')) for (let k = 0; k < 6; k++) p.dot(...at(-3 + rnd(k + i * 7) * 6, -1 + rnd(k + 3) * 2, 0.3), '#7a9a3a', 0.4);
     }
   },
 
@@ -331,7 +350,7 @@ const SKIN = '#f0bf94', SKIN_S = '#d49c74', COAT = '#fbfaf5', COAT_S = '#dcd8ce'
 function backdrop(p) {
   p.rect(-200, TOPY, 640, 400, '#e9cc9e');
   for (let i = Math.floor(TOPY / 5.3) - 1; i < 40; i++) p.line(-200, 4 + i * 5.3, 440, 3 + i * 5.3 + (i % 3), i % 2 ? '#e2c494' : '#f0d8ae', 0.4);
-  p.rect(-200, Math.min(0, TOPY), 640, 7 - Math.min(0, TOPY), COAT); p.rect(-200, 6, 640, 1.2, COAT_S); p.dot(110, 3.4, '#4a4652', 1.4); p.dot(130, 3.4, '#4a4652', 1.4);
+  p.rect(-200, Math.min(0, TOPY), 640, 7 - Math.min(0, TOPY), COAT); p.rect(-200, 6, 640, 1.2, COAT_S);
   // the board
   p.rect(30, 90, 180, 3, '#b88a5a');
   p.rect(28, 84, 184, 6, '#c99a68');
@@ -343,10 +362,16 @@ function backdrop(p) {
   p.ell(222, 68, 9, 5, '#d8d2c6'); p.ell(222, 67.4, 7.5, 4, '#a8c8d8');
 }
 function arm(p, sx, sy, hx, hy, hold) {
-  const dx = hx - sx, dy = hy - sy, l = Math.hypot(dx, dy) || 1, nx = -dy / l * 5 * HS, ny = dx / l * 5 * HS;
-  p.poly([[sx + nx, sy + ny], [hx + nx * 0.8, hy + ny * 0.8], [hx - nx * 0.8, hy - ny * 0.8], [sx - nx, sy - ny]], COAT);
-  p.poly([[sx - nx * 0.4, sy - ny * 0.4], [hx - nx * 0.4, hy - ny * 0.4], [hx - nx * 0.8, hy - ny * 0.8], [sx - nx, sy - ny]], COAT_S);
-  p.line(hx - nx * 0.8 - dx / l * 2, hy - ny * 0.8 - dy / l * 2, hx + nx * 0.8 - dx / l * 2, hy + ny * 0.8 - dy / l * 2, COAT_S, 0.9);
+  const dx = hx - sx, dy = hy - sy, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l, nx = -uy * 5 * HS, ny = ux * 5 * HS;
+  // sleeve rolled up to the elbow, then a bare forearm down to the hand
+  const fa = 9 * HS, mx = hx - ux * fa, my = hy - uy * fa;
+  p.poly([[sx + nx, sy + ny], [mx + nx * 0.9, my + ny * 0.9], [mx - nx * 0.9, my - ny * 0.9], [sx - nx, sy - ny]], COAT);
+  p.poly([[sx - nx * 0.4, sy - ny * 0.4], [mx - nx * 0.4, my - ny * 0.4], [mx - nx * 0.9, my - ny * 0.9], [sx - nx, sy - ny]], COAT_S);
+  p.poly([[mx + nx * 0.62, my + ny * 0.62], [hx + nx * 0.5, hy + ny * 0.5], [hx - nx * 0.5, hy - ny * 0.5], [mx - nx * 0.62, my - ny * 0.62]], SKIN);
+  p.poly([[mx - nx * 0.2, my - ny * 0.2], [hx - nx * 0.2, hy - ny * 0.2], [hx - nx * 0.5, hy - ny * 0.5], [mx - nx * 0.62, my - ny * 0.62]], SKIN_S);
+  // the rolled cuff
+  p.poly([[mx + nx * 1.02 - ux * 3, my + ny * 1.02 - uy * 3], [mx + nx * 1.02 + ux * 1.4, my + ny * 1.02 + uy * 1.4], [mx - nx * 1.02 + ux * 1.4, my - ny * 1.02 + uy * 1.4], [mx - nx * 1.02 - ux * 3, my - ny * 1.02 - uy * 3]], COAT);
+  p.line(mx + nx * 1.02 - ux * 0.8, my + ny * 1.02 - uy * 0.8, mx - nx * 1.02 - ux * 0.8, my - ny * 1.02 - uy * 0.8, COAT_S, 0.6);
   const cx = hx + dx / l * 3.2 * HS, cy = hy + dy / l * 3.2 * HS;
   p.ell(cx, cy + 0.9, 4.4 * HS, 3.4 * HS, SKIN_S);
   p.ell(cx, cy, 4.2 * HS, 3.2 * HS, SKIN);
@@ -354,18 +379,30 @@ function arm(p, sx, sy, hx, hy, hold) {
   if (hold !== 'flat') for (let k = -1; k <= 1; k++) p.line(cx + dx / l * 1.6 * HS + k * 1.6 * HS, cy + dy / l * 1.6 * HS - 1, cx + dx / l * 3 * HS + k * 1.6 * HS, cy + dy / l * 3 * HS + 0.6, SKIN_S, 0.45);
 }
 function hands(p, L, R) {
-  // shoulders sit wide, so the arms come in from the top corners and leave the food clear
-  if (L) arm(p, 56, Math.min(0, TOPY) - 4, L[0], L[1], L[2]);
-  if (R) arm(p, 184, Math.min(0, TOPY) - 4, R[0], R[1], R[2]);
+  // the chef leans over the counter: his shoulders are high above the frame, so the arms come in steeply from the top
+  if (L) arm(p, 62, Math.min(0, TOPY) - 46, L[0], L[1], L[2]);
+  if (R) arm(p, 178, Math.min(0, TOPY) - 46, R[0], R[1], R[2]);
 }
-function knife(p, x, y, a = 0) {
+function knife(p, x, y, a = 0, L = 30) {
   const c = Math.cos(a), s = Math.sin(a), T = (u, v) => [x + u * c - v * s, y + u * s + v * c];
-  p.poly([T(-30, 0.2), T(0, -1.8), T(0, 1.4), T(-27, 1.3)], '#d4d9e0');
-  p.line(...T(-28, -0.2), ...T(0, -1.5), '#f4f6fa', 0.4);
-  p.line(...T(-27, 1.2), ...T(0, 1.3), '#9aa2ae', 0.4);
+  p.poly([T(-L, 0.2), T(0, -1.8), T(0, 1.4), T(-L * 0.9, 1.3)], '#d4d9e0');
+  p.line(...T(-L * 0.93, -0.2), ...T(0, -1.5), '#f4f6fa', 0.4);
+  p.line(...T(-L * 0.9, 1.2), ...T(0, 1.3), '#9aa2ae', 0.4);
   p.poly([T(0, -1.9), T(2, -1.9), T(2, 1.7), T(0, 1.7)], '#ece6da');
   p.poly([T(2, -1.6), T(14, -1.4), T(14, 1.3), T(2, 1.4)], '#6a4a32');
   p.line(...T(3, -0.9), ...T(13, -0.8), '#8a6a4a', 0.4);
+}
+// a knife whose tip is at (tx, ty), held up at angle a; returns where the hand grips it
+function knifeTip(p, tx, ty, a = -1.35, L = 21) { // a shorter blade for cutting straight down
+  const c = Math.cos(a), s = Math.sin(a), x = tx + L * c, y = ty + L * s;
+  knife(p, x, y, a, L);
+  return [x + 9 * c, y + 9 * s - 2];
+}
+// an ellipse turned by angle a (for things tipped over)
+function tiltEll(p, cx, cy, rx, ry, a, col) {
+  const c = Math.cos(a), s = Math.sin(a), pts = [];
+  for (let i = 0; i < 24; i++) { const t = i / 24 * Math.PI * 2, u = Math.cos(t) * rx, v = Math.sin(t) * ry; pts.push([cx + u * c - v * s, cy + u * s + v * c]); }
+  p.poly(pts, col);
 }
 function bowl(p, cx, cy, r, col, inner, fillCol, fill = 1) {
   p.ell(cx, cy + r * 0.32, r * 0.92, r * SQ * 0.9, shade(col, 0.3));
@@ -407,9 +444,17 @@ const R = {
       dp.ell(0, -14, 7.6, 3.6, '#9aa0aa'); dp.ell(0, -14, 6.8, 3.1, '#c8ccd2');
       for (let i = -3; i <= 3; i++) dp.line(i * 2, -16.6, i * 2, -11.4, '#aeb4bc', 0.15);
       dp.rect(7.2, -14.6, 9, 1, '#6a4a32');
-      if (t > 0.08 && t < 0.92) dp.line(-4, -18, -1.5, -15, '#f2c050', 0.9);
-      const bp = p.sub(PLATE[0] - 9 * DS, PLATE[1] - 19.5 * DS, DS);
-      bp.ell(0, 0, 8, 4.2, '#f4f1ea'); bp.ell(1.5, -0.6, 6.2, 3, '#f2c050');
+      // the bowl tips further as it empties; a ribbon of custard runs into the sieve
+      const bp = p.sub(PLATE[0] - 9 * DS, PLATE[1] - 19.5 * DS, DS), tilt = 0.25 + k * 0.25;
+      tiltEll(bp, 0.6, 1.8, 7.8, 4.6, tilt, '#cfc6b8');
+      tiltEll(bp, 0, 0, 8, 4.2, tilt, '#f4f1ea');
+      tiltEll(bp, 0.4, 0.1, 6.8, 3.4, tilt, '#e6dfd2');
+      if (k < 0.97) tiltEll(bp, 1.4 + k, 0.5 + k * 0.4, 5.6 * (1 - k * 0.6), 2.6 * (1 - k * 0.6), tilt, '#f2c050');
+      if (t > 0.08 && t < 0.92) {
+        const lx = 8 * Math.cos(tilt) - 9, ly = 8 * Math.sin(tilt) - 19.5, w = Math.sin(T * 9) * 0.15;
+        dp.line(lx, ly, lx + 0.8 + w, -14.2, '#f2c050', 1.1); dp.line(lx - 0.2, ly, lx + 0.4 + w, -14.6, '#fbe090', 0.35);
+        for (let i = 0; i < 3; i++) dp.dot(-3 + i * 2.6, -11 + ((T * 2.5 + i / 3) % 1) * 3, '#f2c050', 0.5); // drips through the mesh
+      }
       hands(p, toB(PLATE, -17, -19), toB(PLATE, -1, -21));
     } },
     { dur: 3.2, sfx: [[0.05, 'pop'], [0.18, 'pop'], [0.45, 'steam']], draw(p, t, T) {
@@ -452,15 +497,19 @@ const R = {
       if (t > 0.64) pp.line(3, -9, 3, 5, '#ddd6c4', 0.3);
       drawDish(p.sub(...PLATE, DS), 'tofu', {});
       const cut = t < 0.5 ? -3 : 3, ph = (t * 2) % 1, down = ph < 0.6 ? ph / 0.6 : 1 - (ph - 0.6) / 0.4;
-      const [kx, ky] = toB(PREP, cut, -16 + down * 9);
-      knife(p, kx + 20, ky, -1.35);
-      hands(p, toB(PREP, -13, -3).concat('flat'), [kx + 24, ky - 18]);
+      const [kx, ky] = toB(PREP, cut, -11 + down * 16);
+      hands(p, toB(PREP, -13, -3).concat('flat'), knifeTip(p, kx, ky));
     } },
-    { dur: 2.4, sfx: [[0.25, 'pour']], draw(p, t, T) {
+    { dur: 3.0, sfx: [[0.12, 'pop'], [0.32, 'pour']], draw(p, t, T) {
       const dp = p.sub(...PLATE, DS);
-      drawDish(dp, 'tofu', { tofu: 1, sauce: ease(seg(t, 0.2, 0.9)) });
+      if (t < 0.22) { // the cut block is set down first
+        drawDish(dp, 'tofu', { tofu: 1, lift: 1 - ease(seg(t, 0, 0.18)) });
+        hands(p, toB(PLATE, -10, -6).concat('flat'), toB(PLATE, 10, -6).concat('flat'));
+        return;
+      }
+      drawDish(dp, 'tofu', { tofu: 1, sauce: ease(seg(t, 0.25, 0.92)) });
       // a little jug pours around the tofu
-      const a = t * Math.PI * 1.4, jx = Math.cos(a) * 9, jy = 2 + Math.sin(a) * 4;
+      const a = (t - 0.2) * Math.PI * 1.7, jx = Math.cos(a) * 9, jy = 2 + Math.sin(a) * 4;
       if (t > 0.15 && t < 0.92) dp.line(jx, jy - 9, jx, jy, '#5a3424', 0.6);
       dp.ell(jx + 1, jy - 12, 3.4, 2.2, '#f4f1ea'); dp.rect(jx - 2.4, jy - 14, 6.8, 2.4, '#f4f1ea'); dp.ell(jx + 1, jy - 14, 3.4, 1.4, '#6a3a24');
       hands(p, null, toB(PLATE, jx + 6, jy - 14));
@@ -518,8 +567,10 @@ const R = {
       shrimpCurl(pp, -2, 3.5, 4.6, '#e8b24a', 1);
       shrimpCurl(pp, 5, 2.5, 4.6, '#e8b24a', 1);
       steam(pp, 1, -2, T, 3, 0.4);
-      drawDish(p.sub(...PLATE, DS), 'tempura', { paper: t > 0.4 ? 1 : 0 });
-      hands(p, t < 0.4 ? toB(PLATE, 0, -2).concat('flat') : null, null);
+      // a sheet of washi is laid on the tray to soak up the last of the oil
+      const lift = 1 - ease(seg(t, 0.05, 0.45));
+      drawDish(p.sub(...PLATE, DS), 'tempura', { paper: 1, paperLift: lift });
+      if (t < 0.55) hands(p, toB(PLATE, -11, -lift * 12).concat('flat'), toB(PLATE, 11, -1 - lift * 12).concat('flat'));
     } },
     { dur: 2.6, sfx: [[0.2, 'pop'], [0.45, 'pop'], [0.7, 'pop'], [0.9, 'sparkle']], draw(p, t, T) {
       const dp = p.sub(...PLATE, DS);
@@ -568,8 +619,8 @@ const R = {
         pp.rect(-10, -4, 9.6, 4.4, '#8a4a26'); pp.rect(0.4, -4, 9.6, 4.4, '#8a4a26');
         pp.ell(-4, -3, 3, 0.5, '#e8a868');
         const down = t < 0.25 ? seg(t, 0, 0.25) : 1;
-        const [kx, ky] = toB(PREP, 0, -14 + down * 10);
-        knife(p, kx + 18, ky, -1.35); hands(p, toB(PREP, -12, -2).concat('flat'), [kx + 22, ky - 18]);
+        const [kx, ky] = toB(PREP, 0.2, -12 + down * 12.6);
+        hands(p, toB(PREP, -12, -2).concat('flat'), knifeTip(p, kx, ky));
       }
       drawDish(p.sub(...PLATE, DS), 'anago', { pieces: t < 0.55 ? 0 : t < 0.75 ? 1 : 2, glaze: 1 });
       if (t >= 0.55) hands(p, null, toB(PLATE, t < 0.75 ? -7 : 6, -6).concat('flat'));
@@ -607,18 +658,29 @@ const R = {
       drawDish(p.sub(...PLATE, DS), 'mochi', { leaf: 1 });
       hands(p, toB(PREP, -10, 2 - k * 2).concat('flat'), toB(PREP, 10, 2 - k * 2).concat('flat'));
     } },
-    { dur: 3.0, sfx: [[0.25, 'chop'], [0.6, 'pop'], [0.9, 'sparkle']], draw(p, t, T) {
+    { dur: 3.4, sfx: [[0.22, 'chop'], [0.45, 'pop'], [0.72, 'pop'], [0.92, 'sparkle']], draw(p, t, T) {
       const dp = p.sub(...PLATE, DS);
-      if (t < 0.5) {
+      if (t < 0.6) {
         const pp = p.sub(...PREP, DS);
-        pp.ell(0, 0, 7.5, 6.4, '#fbf8f4'); pp.ell(-2, -2, 2.4, 1.6, '#ffffff');
-        if (t > 0.27) pp.line(0, -6.4, 0, 6.4, '#e6ded6', 0.4);
-        const down = seg(t, 0, 0.27), [kx, ky] = toB(PREP, 0, -16 + down * 10);
-        knife(p, kx + 18, ky, -1.35); hands(p, toB(PREP, -12, 0).concat('flat'), [kx + 22, ky - 18]);
+        const g = ease(seg(t, 0.3, 0.5)) * 2.6; // the halves part
+        if (g > 0) {
+          // the cut faces: white mochi, a ring of bean paste, the strawberry in the middle
+          for (const sd of [-1, 1]) {
+            pp.ell(sd * g, 0.4, 7.5, 6.4, '#e6ded6', sd < 0 ? -1 : -1, 1);
+            pp.ell(sd * g, 0, 7.5, 6.4, '#fbf8f4');
+          }
+          pp.rect(-g, -6, g * 2, 12.4, '#efe6dc');
+          pp.ell(0, 0, Math.max(0.6, g * 0.9), 4.6, '#6a3a4a'); pp.ell(0, 0, Math.max(0.4, g * 0.6), 3.2, '#e8404a');
+        } else { pp.ell(0, 0.4, 7.5, 6.4, '#e6ded6'); pp.ell(0, 0, 7.5, 6.4, '#fbf8f4'); }
+        pp.ell(-2 - g, -2, 2.4, 1.6, '#ffffff');
+        if (t < 0.3) {
+          const down = ease(seg(t, 0, 0.26)), [kx, ky] = toB(PREP, 0, -8.5 + down * 15);
+          hands(p, toB(PREP, -11, 0).concat('flat'), knifeTip(p, kx, ky));
+        } else hands(p, toB(PREP, -10 - g, 1).concat('flat'), toB(PREP, 10 + g, 1).concat('flat'));
         drawDish(dp, 'mochi', { leaf: 1 });
       } else {
         drawDish(dp, 'mochi', { leaf: 1, halves: 1 });
-        if (t < 0.62) hands(p, toB(PLATE, -11, -2).concat('flat'), toB(PLATE, 11, -2).concat('flat'));
+        if (t < 0.75) hands(p, toB(PLATE, -11, -2).concat('flat'), toB(PLATE, 11, -2).concat('flat'));
       }
     } },
   ],
@@ -751,9 +813,9 @@ function nigiriRecipe(kind) {
       const n = Math.min(4, Math.floor(seg(t, 0.15, 0.95) * 4.99));
       drawDish(dp, 'uni', { gari: 1, nori: 1, pieces: 2, uni: n });
       // a little wooden spoon brings each lump over
-      const sx = 7 + (n % 2 ? -7 : 5), sy = -12;
-      dp.ell(sx, sy, 2.4, 1.4, '#d8ac78'); dp.ell(sx, sy - 0.3, 1.8, 1, '#f0a03a'); dp.line(sx + 2, sy - 0.6, sx + 10, sy - 7, '#d8ac78', 0.6);
-      hands(p, null, toB(PLATE, sx + 11, sy - 8));
+      const k = (seg(t, 0.15, 0.95) * 5) % 1, sx = n % 2 ? 5 : -7, sy = -8.4 - Math.sin(k * Math.PI) * 3;
+      dp.ell(sx, sy, 2.4, 1.4, '#d8ac78'); if (k < 0.6) dp.ell(sx, sy - 0.3, 1.8, 1, '#f0a03a'); dp.line(sx + 2, sy - 0.6, sx + 6, sy - 5, '#d8ac78', 0.6);
+      hands(p, null, toB(PLATE, sx + 6.5, sy - 6.5));
     } } : { dur: 2.6, sfx: [[0.2, 'whisk'], [0.65, 'pop']], draw(p, t, T) {
       const dp = p.sub(...PLATE, DS);
       drawDish(dp, 'hotate', { gari: 1, pieces: 2, glaze: seg(t, 0.05, 0.6), yuzu: t > 0.65 ? 1 : 0 });
@@ -770,16 +832,18 @@ function nigiriRecipe(kind) {
 export const RECIPES = R;
 
 // Draws one frame of the close-up into a W x H canvas context.
-export function drawCloseup(x, W, H, kind, step, t, T, done = false) {
-  // keep the working area (about 200 x 112 design units) in view on any screen
-  const f = Math.min(W / 200, H / 112);
-  const ox = W / 2 - 122 * f, oy = Math.max(-1 * f, H * 0.42 - 56 * f);
+// `band` is the part of the screen (fractions of H) left clear by the dialog box.
+export function drawCloseup(x, W, H, kind, step, t, T, done = false, band = [0, 1]) {
+  // frame the working area (about 186 x 100 design units, centred on 121, 46) as close as the clear band allows
+  const y0 = band[0] * H, hv = (band[1] - band[0]) * H;
+  const f = Math.min(W / 186, hv / 100);
+  const ox = W / 2 - 121 * f, oy = y0 + hv / 2 - 46 * f;
   TOPY = -oy / f;
   const p = pen(x, ox, oy, f);
   backdrop(p);
   const steps = R[kind] || R.chawanmushi;
   if (done) {
-    const dp = p.sub(PLATE[0] - 44, PLATE[1] + 14, DS * 1.15);
+    const dp = p.sub(PLATE[0] - 44, PLATE[1] + 8, DS * 1.15);
     drawDish(dp, kind, ALL);
     return;
   }
