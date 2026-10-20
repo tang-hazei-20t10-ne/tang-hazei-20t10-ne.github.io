@@ -72,7 +72,7 @@ export default async function island(game) {
     const inGrove = i >= 12;
     const x = inGrove ? -25 + (I.rnd() - 0.5) * 14 : 2 + (I.rnd() - 0.5) * 22;
     const z = inGrove ? 6 + (I.rnd() - 0.5) * 14 : 26 + (I.rnd() - 0.5) * 18;
-    if (!mountainWalkable(x, z)) continue;
+    if (!mountainWalkable(x, z) || Math.hypot(x - SPOTS.blanket.x, z - SPOTS.blanket.z) < 3) continue;
     pickSpots.push([x, z]);
   }
   pickSpots.forEach(([x, z]) => {

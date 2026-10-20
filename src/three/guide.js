@@ -77,7 +77,7 @@ export class Guide {
   anchorOf(s, main) {
     if (s.obj) {
       const o = s.obj;
-      if (o.isSprite) return o.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, o.scale.y * (1 - o.center.y) + 0.25, 0));
+      if (o.isSprite) return o.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, o.scale.y * (1 - o.center.y) + 0.1, 0));
       const b = (s._box ||= new THREE.Box3()).setFromObject(o);
       return new THREE.Vector3((b.min.x + b.max.x) / 2, b.max.y + 0.25, (b.min.z + b.max.z) / 2);
     }

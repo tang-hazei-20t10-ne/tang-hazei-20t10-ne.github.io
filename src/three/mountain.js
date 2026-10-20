@@ -685,6 +685,8 @@ export function buildMountain(world) {
       const r = rnd();
       if (r < 0.55) { x = 2 + (rnd() - 0.5) * 34; z = 26 + (rnd() - 0.5) * 24; } else if (r < 0.8) { const p = PATHS[0][Math.floor(rnd() * (PATHS[0].length - 1))]; x = p[0] + (rnd() < 0.5 ? -1 : 1) * (1.6 + rnd() * 1.4); z = p[1] + (rnd() - 0.5) * 8; } else { x = (rnd() - 0.5) * 100; z = (rnd() - 0.5) * 100 + 6; }
       if (!inside(x, z) || nearPond(x, z) || pathDist(x, z) < 1.2 || inDeck(x, z)) continue;
+      // keep the picnic blanket and the cat napping on it clear
+      if (Math.abs(x - SPOTS.blanket.x) < 2.8 && Math.abs(z - SPOTS.blanket.z) < 2.5) continue;
       list.push({ x, y: H(x, z), z, s: 0.9 + rnd() * 0.4 });
     }
     const m = instancedBillboards(flowerSprite(ft.species, ft.colors[k % 2 ? 0 : ft.colors.length - 1]), list, { size: 0.04, color: '#fff4e4' });
