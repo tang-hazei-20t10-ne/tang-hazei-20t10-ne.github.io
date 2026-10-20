@@ -50,15 +50,15 @@ export default async function island(game) {
   const guide = new Guide(world, { title: G.title, optionalTitle: G.optional, steps: [
     { id: 'flowers', text: G.flowers, label: G.m.flowers, pos: SPOTS.meadow.clone().setY(H(SPOTS.meadow.x, SPOTS.meadow.z)), total: 3 },
     { id: 'grove', text: G.grove, label: G.m.grove, pos: SPOTS.grove.clone().setY(H(SPOTS.grove.x, SPOTS.grove.z)) },
-    { id: 'boat', text: G.boat, label: G.m.boat, pos: () => I.boat.position },
+    { id: 'boat', text: G.boat, label: G.m.boat, pos: () => I.boat.position, obj: I.boat },
     { id: 'tower', text: G.tower, label: G.m.tower, pos: null },
-    { id: 'telescope', text: G.telescope, label: G.m.telescope, pos: () => I.telescope.position },
-    { id: 'balloon', text: G.balloon, label: G.m.balloon, pos: () => I.balloon.position, hidden: true },
+    { id: 'telescope', text: G.telescope, label: G.m.telescope, pos: () => I.telescope.position, obj: I.telescope },
+    { id: 'balloon', text: G.balloon, label: G.m.balloon, pos: () => I.balloon.position, obj: I.balloon, hidden: true },
     { id: 'dog', text: G.dog, short: G.m.dog, optional: true, pos: null },
     { id: 'cat', text: G.cat, short: G.m.cat, optional: true, pos: null },
     { id: 'ducks', text: G.ducks, optional: true, pos: null },
     { id: 'bell', text: G.bell, short: G.m.bell, optional: true, pos: null },
-    { id: 'swing', text: G.swing, short: G.m.swing, optional: true, pos: () => I.swing.position },
+    { id: 'swing', text: G.swing, short: G.m.swing, optional: true, pos: () => I.swing.position, obj: I.swing },
     { id: 'photo', text: G.photo, optional: true },
   ] });
   world.opts.cleanup = () => guide.destroy();
@@ -267,14 +267,15 @@ export default async function island(game) {
       await new Promise((resolve) => {
         const stop = world.every((dt, t) => {
           dt = Math.min(dt, 0.05); el += dt;
-          const remain = len - s, stroking = el > 0.8 && remain > 3.4;
+          const remain = len - s, stroking = el > 0.8 && remain > 2.4;
           // stroke cycle: the drive pulls the blades through the water, the recovery lifts and swings them forward
           if (stroking || ph < 0.999) ph += dt / 1.9;
           if (!stroking && ph >= 1) ph = 1;
           const u = ph % 1, inDrive = stroking && u < 0.45;
           const drive = inDrive ? Math.sin((Math.PI * u) / 0.45) : 0;
           v += (drive * 2.3 - v * 0.7) * dt;
-          if (!stroking) v = Math.min(v, Math.sqrt(2 * 0.3 * Math.max(0, remain)) + 0.03); // glide in to the berth
+          // glide in to the berth: slowing down, but never so slow it doesn't get there
+          if (!stroking && el > 0.8) v = Math.max(Math.min(v, Math.sqrt(2 * 0.3 * Math.max(0, remain)) + 0.05), Math.min(0.55, 0.25 + remain * 0.15));
           s = Math.min(len, s + v * dt);
           const p = curve.getPointAt(s / len), tg = curve.getTangentAt(s / len), h = Math.atan2(tg.x, tg.z);
           // the view turns with the boat, whatever way Hazei is looking
@@ -308,7 +309,7 @@ export default async function island(game) {
           world.camera.updateMatrixWorld();
           oars.forEach((o, i) => { o.updateMatrixWorld(); const g = o.localToWorld(grips[i].copy(o.userData.grip)).project(world.camera); grips[i].set((g.x + 1) / 2 * world.W, (1 - g.y) / 2 * world.H, g.z); });
           grips.forEach((g, i) => { if (g.z < 1) drawFist(world.hx, world.H, g.x, g.y, i === 0, i === 0 ? 0.35 : -0.35); });
-          if (s >= len - 0.02 && v < 0.06) { stop(); resolve(); }
+          if (s >= len - 0.01 || el > 90) { if (world.game.debug) window.__rideTime = el; stop(); resolve(); }
         });
       });
       boat.position.copy(curve.getPointAt(0)); boat.rotation.set(0, restHeading(), 0);
@@ -340,7 +341,7 @@ export default async function island(game) {
     } });
 
   guide.step('tower').pos = door.clone();
-  guide.step('dog').pos = dog.position; guide.step('cat').pos = cat.position;
+  Object.assign(guide.step('dog'), { pos: dog.position, obj: dog }); Object.assign(guide.step('cat'), { pos: cat.position, obj: cat });
 
   // ------------------------------------------------ ducks at the pier, bell at the red gate
   world.interact.add({ pos: SPOTS.pier.clone().setY(pondLevel()), range: 2.4, hold: 0.5, label: P.feed, onDone: async () => {
@@ -350,7 +351,7 @@ export default async function island(game) {
   } });
   I.shrine.updateMatrixWorld();
   const bellPos = SPOTS.shrine.clone().setY(H(SPOTS.shrine.x, SPOTS.shrine.z));
-  guide.step('bell').pos = bellPos;
+  Object.assign(guide.step('bell'), { pos: bellPos, obj: I.shrine });
   world.interact.add({ pos: bellPos, range: 2.6, hold: 0.4, label: P.bell, onDone: async () => {
     world.handPose = 'reach'; audio.sfx('jingle');
     for (let k = 0; k < 10; k++) world.glow.emit(bellPos.clone().add(new THREE.Vector3(0, 2, 0)), new THREE.Vector3((Math.random() - 0.5) * 1.5, Math.random() * 1.2, (Math.random() - 0.5) * 1.5), '#ffe9a8', 1.2);

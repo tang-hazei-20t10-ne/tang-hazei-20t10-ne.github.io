@@ -22,11 +22,11 @@ const CSS = `
 #guide.min .cur-only { display:block; }
 @keyframes gpulse { 50% { transform:translateX(2px); } }
 .gmark { position:absolute; z-index:29; transform:translate(-50%,-100%); pointer-events:none; display:flex; flex-direction:column; align-items:center; gap:2px; transition:opacity .3s; }
-.gmark .gem { width:14px; height:14px; transform:rotate(45deg); background:#fff6ea; border:3px solid #3a2633; box-shadow:0 0 0 3px rgba(255,255,255,.35); animation:gbob 1.2s ease-in-out infinite; }
+.gmark .gem { width:14px; height:14px; border-radius:50%; background:#fff6ea; border:3px solid #3a2633; box-shadow:0 0 0 3px rgba(255,255,255,.35); animation:gbob 1.2s ease-in-out infinite; }
 .gmark.main .gem { width:20px; height:20px; background:#ffd23f; box-shadow:0 0 14px 4px rgba(255,214,90,.8); }
 .gmark .lbl { font-family:var(--pixel); font-size:18px; color:#fff; background:rgba(58,38,51,.78); padding:1px 8px 3px; border-radius:6px; white-space:nowrap; }
 .gmark .stem { width:3px; height:16px; background:linear-gradient(#ffd23f, rgba(255,210,63,0)); }
-@keyframes gbob { 50% { transform:rotate(45deg) translate(-3px,-3px); } }
+@keyframes gbob { 50% { transform:translateY(-4px); } }
 .garrow { position:absolute; z-index:29; width:0; height:0; pointer-events:none; }
 .garrow b { position:absolute; left:-15px; top:-15px; width:30px; height:30px; display:grid; place-items:center; background:#ffd23f; border:3px solid #3a2633; border-radius:50%; box-shadow:0 0 12px rgba(255,214,90,.8); }
 .garrow b::after { content:''; border-left:9px solid #3a2633; border-top:6px solid transparent; border-bottom:6px solid transparent; margin-left:3px; }
@@ -35,7 +35,8 @@ const CSS = `
 `;
 
 export class Guide {
-  // steps: [{ id, text, pos: Vector3 | () => Vector3, optional, total, hidden, label }]
+  // steps: [{ id, text, pos: Vector3 | () => Vector3, obj: Object3D, optional, total, hidden, label }]
+  // With obj, the marker sits just above that object's top; otherwise a little above pos.
   constructor(world, { title = 'Việc có thể làm', optionalTitle = 'Thêm nếu thích', steps = [], startMin = false } = {}) {
     this.world = world; this.steps = steps.map((s) => ({ count: 0, done: false, ...s }));
     this.title = title; this.optionalTitle = optionalTitle;
@@ -73,26 +74,36 @@ export class Guide {
       + `<ul>${main.map(li).join('')}${opt.length ? `<li class="sep">${esc(this.optionalTitle)}</li>` + opt.map(li).join('') : ''}</ul>`;
   }
   posOf(s) { return typeof s.pos === 'function' ? s.pos() : s.pos; }
+  // the point the marker points down at: the top of the step's object, or above its spot
+  anchorOf(s, main) {
+    if (s.obj) {
+      const o = s.obj;
+      if (o.isSprite) return o.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, o.scale.y * (1 - o.center.y) + 0.25, 0));
+      const b = (s._box ||= new THREE.Box3()).setFromObject(o);
+      return new THREE.Vector3((b.min.x + b.max.x) / 2, b.max.y + 0.25, (b.min.z + b.max.z) / 2);
+    }
+    const v = this.posOf(s); return v && v.clone().setY(v.y + (s.lift ?? (main ? 1.6 : 1.2)));
+  }
   update() {
     const w = this.world; const cam = w.camera; const p = w.player.pos;
     const cur = this.current;
     const ox = (innerWidth - w.W * w.cssScale) / 2, oy = (innerHeight - w.H * w.cssScale) / 2;
     const vw = w.W * w.cssScale, vh = w.H * w.cssScale;
     const active = new Set();
-    const target = this.override || (cur && cur.pos ? { pos: this.posOf(cur), label: cur.label || cur.text, main: true } : null);
+    const target = this.override || (cur && (cur.pos || cur.obj) ? { pos: this.posOf(cur) || cur.obj.position, top: this.anchorOf(cur, true), label: cur.label || cur.text, main: true } : null);
     const items = [];
     if (target) items.push({ key: 'main', ...target, main: true });
     if (!this.override) for (const s of this.steps) {
-      if (s === cur || s.done || s.hidden || !s.pos) continue;
-      const v = this.posOf(s); if (!v) continue;
-      if (Math.hypot(v.x - p.x, v.z - p.z) < 28) items.push({ key: s.id, pos: v, label: s.short || '', main: false });
+      if (s === cur || s.done || s.hidden || !(s.pos || s.obj)) continue;
+      const v = this.posOf(s) || s.obj.position; if (!v) continue;
+      if (Math.hypot(v.x - p.x, v.z - p.z) < 28) items.push({ key: s.id, pos: v, top: this.anchorOf(s, false), label: s.short || '', main: false });
     }
     for (const it of items) {
       active.add(it.key);
       let m = this.marks.get(it.key);
       if (!m) { m = document.createElement('div'); m.className = 'gmark' + (it.main ? ' main' : ''); m.innerHTML = '<div class="lbl"></div><div class="gem"></div>' + (it.main ? '<div class="stem"></div>' : ''); this.layer.appendChild(m); this.marks.set(it.key, m); }
       m.classList.toggle('main', !!it.main);
-      const top = it.pos.clone(); if (!it.sky) top.y += it.main ? 2.6 : 1.8;
+      const top = it.top || it.pos.clone(); if (!it.top && !it.sky) top.y += it.main ? 2.6 : 1.8;
       const d = Math.hypot(it.pos.x - p.x, it.pos.z - p.z);
       const s = w.toScreen(top);
       const onScreen = s && s.x > ox + 10 && s.x < ox + vw - 10 && s.y > oy + 10 && s.y < oy + vh - 10;

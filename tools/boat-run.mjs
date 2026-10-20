@@ -24,6 +24,7 @@ await p.evaluate(() => { const w = window.__game.current; const it = [...w.inter
 await p.evaluate(() => { const w = window.__game.current, boat = [...w.interact.items].find((i) => /thuyền/i.test(i.label || '')).pos; const ducks = []; w.scene.traverse((o) => { if (o.isSprite && Math.abs(o.position.y - boat.y) < 0.2 && o !== boat) ducks.push(o); }); window.__duckMin = 9; const T = window.__game.current; const b = T.scene.children.find((o) => o.userData?.oars); T.every(() => { const inv = b.quaternion.clone().invert(); for (const d of ducks) { const l = d.position.clone().sub(b.position).applyQuaternion(inv); window.__duckMin = Math.min(window.__duckMin, Math.hypot(l.x / 2.4, l.z / 1.6)); } }); });
 const t0 = Date.now();
 for (const t of [0.4, 1.5, 3, 5, 8, 11, 14, 17, 20]) { await p.waitForTimeout(Math.max(0, t * 1000 - (Date.now() - t0))); await p.screenshot({ path: `../test-shots/${tag}-${t}.png` }); }
+{ const t1 = Date.now(); while (Date.now() - t1 < 40000 && await p.evaluate(() => window.__game.current.locked)) await p.waitForTimeout(250); console.log('ride over after', ((Date.now() - t0) / 1000).toFixed(1) + 's real,', (await p.evaluate(() => window.__rideTime))?.toFixed(1) + 's game time, back on shore:', !(await p.evaluate(() => window.__game.current.locked))); await p.screenshot({ path: `../test-shots/${tag}-end.png` }); }
 console.log('closest duck (1 = touching an oar tip or the bow)', await p.evaluate(() => window.__duckMin.toFixed(2)));
 console.log(errs.length ? errs : 'no errors');
 await b.close();
