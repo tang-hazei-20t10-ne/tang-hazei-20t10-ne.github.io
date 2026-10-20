@@ -9,9 +9,11 @@ import { house, treeSprite, bushSprite, fence } from '../two/props.js';
 import { audio } from '../core/audio.js';
 import { ui, wait, esc, el } from '../core/ui.js';
 import { state } from '../core/state.js';
-import { upscale } from '../core/photo.js';
+import { upscale, photoToAlbum } from '../core/photo.js';
+import { paintStatue, showPair, minoFigure, miniFigure, statuePhoto, MINO_PICK } from './cafe_statue.js';
 
 const C = content.cafe;
+const S = C.statue;
 
 const WD = { dk: '#4e3326', md: '#6e4630', lt: '#8c5c3e', hi: '#b07a52', top: '#c99566', lip: '#e0b07a' };
 const G = { dk: '#3f6e43', md: '#56925a', lt: '#78b36a', hi: '#9fd07f', stem: '#4d6b38' };
@@ -349,6 +351,7 @@ function smallCup(color, art, glass) {
 
 export default async function cafe(game) {
   let drink = null; const cups = [];
+  const sill = []; // painted figures drying on the window sill
   let room = null, counter = null;
   const scene = new Scene2D(game, {
     id: 'cafe', worldW: 0, walkable: false, hazei: false, partner: false, time: 'afternoon', inputMode: 'none', action: false, groundFromBottom: 30,
@@ -361,6 +364,7 @@ export default async function cafe(game) {
       const { wx0, wx1, wy0, wy1, ah } = layout(W, H, gy), ww = wx1 - wx0, wh = wy1 - wy0;
       // the cat sunning itself in the garden, and a butterfly over the flowers
       x.drawImage(catSprite('sleep', Math.floor(s.t * 0.8) % 2, 'orange'), wx0 + Math.round(ww * 0.5) - 9, wy1 - 17);
+      sill.forEach((im, i) => im && x.drawImage(im, wx0 + Math.round(ww * 0.18) + i * 15, wy1 - im.height + 1));
       x.save(); x.beginPath(); x.rect(wx0, wy0 + ah + 2, ww, wh - ah - 2); x.clip();
       const bt = s.t * 0.35, bx = wx0 + ww * (0.5 + 0.4 * Math.sin(bt)), by = wy0 + wh * (0.62 + 0.1 * Math.sin(bt * 2.3));
       x.drawImage(butterflySprite(Math.floor(s.t * 6) % 2, '#f6c45f'), Math.round(bx), Math.round(by));
@@ -454,16 +458,38 @@ export default async function cafe(game) {
   scene.sparkles(tx(), scene.groundY - 36, 10);
   await wait(800);
   await ui.dialog(C.moments);
+  // the barista brings over a tray of plaster figures
+  await wait(500);
+  scene.say(barista, S.offer, 3600);
+  await wait(2800);
+  await ui.dialog([{ who: 'partner', text: S.invite }]);
 
   // cozy actions
   let leave;
   const left = new Promise((r) => { leave = r; });
-  let sipI = 0;
-  ui.actions([
+  let sipI = 0, his = null, busy = false;
+  const paint = async () => {
+    if (busy) return;
+    busy = true;
+    const res = await paintStatue();
+    if (res) {
+      hz.forceMood = 'happy'; setTimeout(() => { hz.forceMood = null; }, 1500);
+      if (!his) { his = minoFigure(MINO_PICK[res.id]); await showPair(res.img, his, S.show); }
+      await photoToAlbum(statuePhoto(res.img, his), { caption: S.caption, title: S.photoTitle });
+      sill[0] = miniFigure(res.img); sill[1] = miniFigure(his);
+      audio.sfx('clink'); scene.say(barista, S.dry, 2800);
+      hz.emote('sparkle'); pt.emote('laugh');
+      setActions();
+    }
+    busy = false;
+  };
+  const setActions = () => ui.actions([
+    { label: '🎨 ' + (his ? S.again : S.action), cls: his ? '' : 'gold', onClick: paint },
     { label: '☕ ' + C.sip, onClick: async () => { audio.sfx('sip'); hz.forcePose = 'sip'; await wait(900); hz.forcePose = 'sit'; hz.forceMood = 'happy'; scene.say(hz, C.sipReact[sipI++ % C.sipReact.length], 2200); pt.emote(['thumb', 'laugh', 'sparkle'][sipI % 3]); setTimeout(() => { hz.forceMood = null; }, 1500); } },
     { label: '🪟 ' + C.lookOut, onClick: () => { hz.dir = -1; ui.note(C.lookOutReact, 3000); pt.emote('note'); setTimeout(() => { hz.dir = 1; }, 3000); } },
     { label: C.leave + ' →', cls: '', onClick: () => leave() },
   ]);
+  setActions();
   await left;
   await game.leave(scene);
   await done;

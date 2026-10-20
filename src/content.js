@@ -550,6 +550,31 @@ export default {
     lookOut: 'Nhìn ra cửa sổ',
     lookOutReact: 'Ngoài kia có bé mèo đang phơi nắng.',
     leave: 'Ra biển thôi',
+    // Tô tượng thạch cao
+    statue: {
+      action: 'Tô tượng',
+      again: 'Tô thêm tượng',
+      offer: 'Quán mình có tô tượng thạch cao nè, hai bạn tô thử không?',
+      invite: M.caPhe.ruToTuong,
+      pickTitle: 'Chọn một bé tượng',
+      pickHint: 'Tượng thạch cao trắng tinh, đang chờ cậu tô màu nè.',
+      hint: 'Chạm vào từng phần để tô cả phần đó, chọn cọ nhỏ để chấm thêm chi tiết.',
+      tools: { fill: 'Tô cả phần', brush: 'Cọ nhỏ', undo: 'Hoàn tác', done: 'Xong rồi' },
+      painting: 'Đang tô',
+      figures: { cat: 'Mèo may mắn', bunny: 'Thỏ ôm cà rốt', bear: 'Gấu ôm tim', cactus: 'Xương rồng nở hoa' },
+      parts: {
+        base: 'Đế', body: 'Thân', belly: 'Bụng', tail: 'Đuôi', feet: 'Chân', paw: 'Tay vẫy', paws: 'Tay', head: 'Đầu', ears: 'Tai', inner: 'Trong tai',
+        eyes: 'Mắt', nose: 'Mũi', cheeks: 'Má', collar: 'Vòng cổ', bell: 'Chuông', carrot: 'Cà rốt', leaves: 'Lá cà rốt', muzzle: 'Mõm', heart: 'Trái tim',
+        arms: 'Nhánh', spines: 'Gai', flower: 'Hoa', fcenter: 'Nhuỵ hoa', soil: 'Đất', rim: 'Miệng chậu', pot: 'Chậu',
+      },
+      paints: ['Trắng', 'Kem', 'Hồng phấn', 'Đỏ hồng', 'Cam', 'Vàng', 'Bạc hà', 'Xanh lá', 'Xanh trời', 'Xanh dương', 'Tím lavender', 'Nâu', 'Đen', 'Nhũ vàng'],
+      revealTitle: 'Tượng của tụi mình',
+      show: M.caPhe.khoeTuong,
+      place: 'Đặt lên bậu cửa sổ',
+      dry: 'Để đó nắng chiều hong khô liền á!',
+      caption: 'Tượng tụi mình tô',
+      photoTitle: 'Tô tượng ở quán cà phê',
+    },
   },
 
   seaside: {

@@ -101,14 +101,14 @@ body.has-dialog .touch-pad { opacity: .25; pointer-events: none; }
 
 /* interaction prompt */
 #prompt { position: absolute; left: 50%; bottom: calc(22px + var(--safe-b)); transform: translateX(-50%); z-index: 45; display: flex; align-items: center; gap: 10px; padding: 6px 14px 8px 8px; font-family: var(--pixel); font-size: 24px; opacity: 0; transition: opacity .2s; pointer-events: none; }
-#prompt.show { opacity: 1; }
+#prompt.show { opacity: 1; pointer-events: auto; }
 #prompt .key { position: relative; width: 38px; height: 38px; display: grid; place-items: center; }
 #prompt .key b { position: relative; z-index: 1; font-size: 22px; }
 #prompt .key svg { position: absolute; inset: 0; transform: rotate(-90deg); }
 #prompt .key circle.bg { fill: #ffe9d2; stroke: var(--ink); stroke-width: 3; }
 #prompt .key circle.fg { fill: none; stroke: var(--rose); stroke-width: 5; stroke-linecap: round; }
 body.touch #prompt { bottom: calc(130px + var(--safe-b)); }
-body.has-dialog #prompt { opacity: 0 !important; }
+body.has-dialog #prompt { opacity: 0 !important; pointer-events: none; }
 
 /* touch controls */
 .touch-pad { position: absolute; inset: 0; pointer-events: none; z-index: 32; transition: opacity .3s; }
@@ -220,6 +220,23 @@ body.has-dialog #actions { opacity: 0; pointer-events: none; }
 
 /* photo booth */
 #modal .sheet.booth { width: min(860px, 100%); }
+/* café: painting a plaster figure */
+.statue-wrap { display: flex; gap: 14px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+.statue-wrap canvas.stage { height: min(48vh, 360px); aspect-ratio: 52 / 52; image-rendering: pixelated; border: 3px solid var(--ink); border-radius: 10px; touch-action: none; cursor: crosshair; }
+#modal .sheet.statue h2 { padding-right: 52px; }
+@media (max-height: 500px) { .statue-wrap canvas.stage { height: min(72vh, 300px); } #modal .sheet.statue .sub { display: none; } }
+.statue-side { flex: 1 1 240px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.statue-side .now { font-family: var(--pixel); font-size: 22px; min-height: 22px; color: var(--ink-soft); }
+.statue-side .swatch { width: 34px; height: 34px; }
+.swatch.gold { background: linear-gradient(135deg, #f8e08a, #d9a43a 55%, #fff1b8); }
+.tool-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.tool-row .btn, .statue-side .row .btn { font-size: 20px; padding: 6px 10px 8px; }
+.tool-row .btn.on { background: var(--gold); box-shadow: inset 0 -4px 0 #d79a3a, 0 4px 0 rgba(30, 15, 25, .35); }
+.statue-pair { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; }
+.statue-pair figure { margin: 0; text-align: center; }
+.statue-pair canvas { width: 144px; height: 184px; image-rendering: pixelated; }
+.statue-pair figcaption { font-family: var(--pixel); font-size: 24px; }
+.mino-say { text-align: center; font-weight: 600; margin: 10px 0 0; }
 .booth-wrap { display: flex; gap: 16px; align-items: flex-start; }
 .booth-strip { flex: none; width: 120px; padding: 8px 8px 6px; background: #fffaf2; border: 3px solid var(--ink); border-radius: 6px; box-shadow: 0 4px 0 rgba(30,15,25,.25); display: flex; flex-direction: column; gap: 6px; transform: rotate(-1.5deg); }
 .booth-slot { aspect-ratio: 64 / 52; border: 2px dashed #d8c4b8; border-radius: 3px; background: #f6efe6; overflow: hidden; }

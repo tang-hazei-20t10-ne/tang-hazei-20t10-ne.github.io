@@ -11,11 +11,10 @@ export class Interactor {
     this.holding = false;
     this.busy = false;
     this.enabled = true;
-    // the prompt itself is pressable (mouse users)
+    // the prompt itself is pressable (mouse users), only while it shows: see #prompt.show
     const p = ui.promptEl;
     if (!p.dataset.wired) {
       p.dataset.wired = '1';
-      p.style.pointerEvents = 'auto';
       p.addEventListener('pointerdown', (e) => { e.stopPropagation(); input.btn.act = true; if (!input.blocked) input.actionPressed = true; });
       const off = () => { input.btn.act = false; };
       p.addEventListener('pointerup', off); p.addEventListener('pointerleave', off); p.addEventListener('pointercancel', off);
